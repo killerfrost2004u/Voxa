@@ -4,7 +4,7 @@
 
 ![Status](https://img.shields.io/badge/Status-In%20Development-orange?style=flat-square)
 ![Tech](https://img.shields.io/badge/Stack-Next.js%20%7C%20Supabase%20%7C%20OpenAI-blue?style=flat-square)
-![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![License](https://img.shields.io/badge/License-GPLv3-blue?style=flat-square)
 
 ## 🚀 About The Project
 **Voxa** is a next-generation Recruitment Management System (RMS) designed to automate high-volume hiring for Customer Service and Sales roles.
