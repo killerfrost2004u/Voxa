@@ -1,2 +1,35 @@
-# Voxa
-Voxa: The AI-powered recruitment platform that replaces resumes with voice. Automating candidate screening, language validation, and hiring pipelines with Next.js, Supabase, and AI. 🎙️🚀
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment Variables (CRITICAL: Never share these!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.local
+
+# Vercel
+.vercel
