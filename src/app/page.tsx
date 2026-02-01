@@ -1,5 +1,5 @@
 import Link from "next/link";
-import VoiceRecorder from "../app/components/VoiceRecorder";
+import VoiceRecorder from "@/app/components/VoiceRecorder"; // Using the clean @ alias
 
 export default function Home() {
   return (
@@ -13,7 +13,6 @@ export default function Home() {
       {/* Content */}
       <div className="z-10 flex flex-col items-center text-center space-y-8 px-4 w-full">
         <div className="p-8 bg-white/5 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-md">
-          {/* The "V" Logo Concept in Text Form */}
           <h1 className="text-7xl md:text-9xl font-extrabold tracking-tighter bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent">
             VOXA
           </h1>
@@ -28,8 +27,17 @@ export default function Home() {
           </p>
         </div>
 
-        {/* The New AI Voice Recorder */}
-        <div className="mt-8 w-full max-w-md">
+        {/* 1. Recruiter Access (The Dashboard Link) */}
+        <div className="mt-4">
+          <Link href="/dashboard">
+            <button className="px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/20 rounded-full font-bold text-sm transition-all flex items-center gap-2 backdrop-blur-md">
+              View Recruiter Dashboard →
+            </button>
+          </Link>
+        </div>
+
+        {/* 2. Candidate Access (The Voice Recorder) */}
+        <div className="mt-4 w-full max-w-md">
           <VoiceRecorder />
         </div>
       </div>

@@ -58,12 +58,12 @@ export default function VoiceRecorder() {
     }
   };
 
-  // Submit to Gemini AI
+  // Submit to Gemini AI (With Save to Dashboard)
   const handleSubmit = async () => {
     if (!audioBlob) return;
 
     setIsAnalyzing(true);
-    setResult(null); // Clear previous results immediately
+    setResult(null);
 
     const formData = new FormData();
     formData.append("audio", audioBlob, "recording.webm");
@@ -76,17 +76,38 @@ export default function VoiceRecorder() {
 
       const data = await response.json();
 
-      // Safety Check: Did the server return an error?
       if (data.error) {
         alert("AI Error: " + data.error);
-        setResult(null);
       } else {
         setResult(data);
+
+        // ✨ NEW: Save this result to Local Storage for the Dashboard to find
+        const newCandidate = {
+          id: Date.now(), // Unique ID based on time
+          name: "New Applicant (You)", // We don't have a name field yet, so we use this
+          role: "Customer Service",
+          score:
+            data.language_level.includes("C") ||
+            data.language_level.includes("B2")
+              ? "95%"
+              : "72%",
+          status: data.recommendation,
+          sentiment: data.sentiment,
+          summary: data.summary,
+        };
+
+        // Get existing list or start empty
+        const existing = JSON.parse(
+          localStorage.getItem("voxa_candidates") || "[]",
+        );
+        localStorage.setItem(
+          "voxa_candidates",
+          JSON.stringify([newCandidate, ...existing]),
+        );
       }
     } catch (error) {
       console.error("Upload failed", error);
       alert("Failed to connect to the server.");
-      setResult(null);
     } finally {
       setIsAnalyzing(false);
     }
