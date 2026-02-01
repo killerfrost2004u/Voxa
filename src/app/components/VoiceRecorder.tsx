@@ -2,7 +2,14 @@
 
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Mic, Square, RotateCcw, UploadCloud, Loader2 } from "lucide-react";
+import {
+  Mic,
+  Square,
+  RotateCcw,
+  UploadCloud,
+  FileAudio,
+  Loader2,
+} from "lucide-react";
 
 export default function VoiceRecorder() {
   const [isRecording, setIsRecording] = useState(false);
@@ -11,14 +18,17 @@ export default function VoiceRecorder() {
   const [timer, setTimer] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<any | null>(null);
+  const [uploadMode, setUploadMode] = useState(false); // New State for Upload Mode
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Start Recording
+  // --- RECORDING FUNCTIONS ---
   const startRecording = async () => {
     try {
+      setUploadMode(false);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorderRef.current = new MediaRecorder(stream);
 
@@ -35,8 +45,7 @@ export default function VoiceRecorder() {
 
       mediaRecorderRef.current.start();
       setIsRecording(true);
-      setResult(null); // Reset previous results
-
+      setResult(null);
       setTimer(0);
       timerIntervalRef.current = setInterval(() => {
         setTimer((prev) => prev + 1);
@@ -46,7 +55,6 @@ export default function VoiceRecorder() {
     }
   };
 
-  // Stop Recording
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
@@ -58,7 +66,19 @@ export default function VoiceRecorder() {
     }
   };
 
-  // Submit to Gemini AI (With Save to Dashboard)
+  // --- NEW: FILE UPLOAD FUNCTION ---
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setUploadMode(true);
+      setAudioBlob(file);
+      setAudioUrl(URL.createObjectURL(file));
+      setResult(null);
+      setTimer(0); // Reset timer visual
+    }
+  };
+
+  // --- SUBMIT FUNCTION ---
   const handleSubmit = async () => {
     if (!audioBlob) return;
 
@@ -66,7 +86,7 @@ export default function VoiceRecorder() {
     setResult(null);
 
     const formData = new FormData();
-    formData.append("audio", audioBlob, "recording.webm");
+    formData.append("audio", audioBlob, "recording.webm"); // API handles format conversion
 
     try {
       const response = await fetch("/api/analyze", {
@@ -81,11 +101,11 @@ export default function VoiceRecorder() {
       } else {
         setResult(data);
 
-        // ✨ NEW: Save this result to Local Storage for the Dashboard to find
+        // Save to Dashboard (Local Storage for now, Google Sheets later)
         const newCandidate = {
-          id: Date.now(), // Unique ID based on time
-          name: "New Applicant (You)", // We don't have a name field yet, so we use this
-          role: "Customer Service",
+          id: Date.now(),
+          name: uploadMode ? "Uploaded Candidate" : "Voice Applicant (You)",
+          role: "General Application",
           score:
             data.language_level.includes("C") ||
             data.language_level.includes("B2")
@@ -96,7 +116,6 @@ export default function VoiceRecorder() {
           summary: data.summary,
         };
 
-        // Get existing list or start empty
         const existing = JSON.parse(
           localStorage.getItem("voxa_candidates") || "[]",
         );
@@ -121,7 +140,7 @@ export default function VoiceRecorder() {
 
   return (
     <div className="flex flex-col items-center gap-6 p-6 w-full max-w-lg mx-auto">
-      {/* Visualizer */}
+      {/* Visualizer / Status Circle */}
       <div className="relative flex items-center justify-center w-48 h-48">
         {isRecording && (
           <motion.div
@@ -131,49 +150,87 @@ export default function VoiceRecorder() {
           />
         )}
         <div
-          className={`z-10 flex flex-col items-center justify-center w-32 h-32 rounded-full border-4 transition-all duration-300 ${isRecording ? "border-red-500 bg-red-500/10" : "border-blue-500 bg-blue-900/30"}`}>
+          className={`z-10 flex flex-col items-center justify-center w-32 h-32 rounded-full border-4 transition-all duration-300 ${
+            isRecording
+              ? "border-red-500 bg-red-500/10"
+              : uploadMode
+                ? "border-purple-500 bg-purple-900/30"
+                : "border-blue-500 bg-blue-900/30"
+          }`}>
           {isRecording ? (
             <span className="text-3xl font-mono text-red-400 animate-pulse">
               {formatTime(timer)}
             </span>
+          ) : uploadMode ? (
+            <FileAudio className="w-12 h-12 text-purple-400" />
           ) : (
             <Mic className="w-12 h-12 text-blue-400" />
           )}
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex gap-4">
-        {!isRecording && !audioUrl && (
-          <button
-            onClick={startRecording}
-            className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold shadow-lg shadow-blue-500/30 transition-all">
-            Start Recording
-          </button>
-        )}
+      {/* Controls Row */}
+      <div className="flex flex-col gap-4 w-full items-center">
+        {/* Main Action Buttons */}
+        <div className="flex gap-4">
+          {!isRecording && !audioUrl && (
+            <>
+              {/* Record Button */}
+              <button
+                onClick={startRecording}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2">
+                <Mic size={18} /> Record Voice
+              </button>
 
-        {isRecording && (
-          <button
-            onClick={stopRecording}
-            className="px-8 py-3 bg-red-600 hover:bg-red-500 text-white rounded-full font-bold shadow-lg shadow-red-500/30 transition-all flex items-center gap-2">
-            <Square size={18} fill="currentColor" /> Stop
-          </button>
-        )}
+              {/* Upload Button */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-full font-bold transition-all flex items-center gap-2">
+                <UploadCloud size={18} /> Upload File
+              </button>
+              {/* Hidden Input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept="audio/*"
+                className="hidden"
+              />
+            </>
+          )}
 
-        {/* Playback & Submit */}
+          {isRecording && (
+            <button
+              onClick={stopRecording}
+              className="px-8 py-3 bg-red-600 hover:bg-red-500 text-white rounded-full font-bold shadow-lg shadow-red-500/30 transition-all flex items-center gap-2">
+              <Square size={18} fill="currentColor" /> Stop Recording
+            </button>
+          )}
+        </div>
+
+        {/* Playback & Submit (Shows after recording/upload) */}
         {!isRecording && audioUrl && !isAnalyzing && !result && (
-          <div className="flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-4">
-            <audio src={audioUrl} controls className="w-64" />
+          <div className="flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-4 w-full">
+            <div className="w-full bg-white/5 p-4 rounded-xl border border-white/10 flex flex-col items-center gap-2">
+              <span className="text-xs text-gray-400 uppercase tracking-widest">
+                {uploadMode ? "File Ready to Analyze" : "Recording Captured"}
+              </span>
+              <audio src={audioUrl} controls className="w-full max-w-[250px]" />
+            </div>
+
             <div className="flex gap-3">
               <button
-                onClick={() => setAudioUrl(null)}
-                className="flex items-center gap-2 px-4 py-2 border border-white/20 hover:bg-white/10 rounded-lg text-sm transition-all">
-                <RotateCcw size={16} /> Retry
+                onClick={() => {
+                  setAudioUrl(null);
+                  setUploadMode(false);
+                }}
+                className="flex items-center gap-2 px-4 py-2 border border-white/20 hover:bg-white/10 rounded-lg text-sm transition-all text-gray-300">
+                <RotateCcw size={16} /> Reset
               </button>
               <button
                 onClick={handleSubmit}
                 className="flex items-center gap-2 px-6 py-2 bg-green-600 hover:bg-green-500 rounded-lg font-bold shadow-lg shadow-green-500/20 transition-all">
-                <UploadCloud size={18} /> Submit Application
+                <UploadCloud size={18} /> Analyze Candidate
               </button>
             </div>
           </div>
@@ -181,19 +238,21 @@ export default function VoiceRecorder() {
 
         {/* Loading State */}
         {isAnalyzing && (
-          <div className="flex items-center gap-2 text-blue-400">
-            <Loader2 className="animate-spin" /> Analyzing Voice...
+          <div className="flex items-center gap-2 text-blue-400 animate-pulse">
+            <Loader2 className="animate-spin" />
+            {uploadMode
+              ? "Processing Uploaded File..."
+              : "Analyzing Voice Data..."}
           </div>
         )}
       </div>
 
-      {/* 🏆 THE RESULT CARD (Shows after AI Analysis) */}
+      {/* Result Card */}
       {result && (
         <div className="mt-6 p-6 bg-white/10 border border-white/20 rounded-xl w-full text-left animate-in zoom-in-95 duration-300">
           <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
             🎙️ AI Analysis Complete
           </h3>
-
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="p-3 bg-black/30 rounded-lg">
               <p className="text-xs text-gray-400 uppercase">Fluency Level</p>
@@ -208,26 +267,23 @@ export default function VoiceRecorder() {
               </p>
             </div>
           </div>
-
           <div className="mb-4">
             <p className="text-xs text-gray-400 uppercase mb-1">
               Candidate Summary
             </p>
             <p className="text-sm text-gray-200">{result.summary}</p>
           </div>
-
-          {/* SAFER RECOMMENDATION BOX */}
           {result.recommendation && (
             <div
               className={`p-3 rounded-lg text-center font-bold ${result.recommendation === "Hire" ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>
               Recommendation: {result.recommendation.toUpperCase()}
             </div>
           )}
-
           <button
             onClick={() => {
               setAudioUrl(null);
               setResult(null);
+              setUploadMode(false);
             }}
             className="mt-4 w-full py-2 text-sm text-gray-400 hover:text-white border border-transparent hover:border-white/20 rounded-lg">
             Test Another Candidate

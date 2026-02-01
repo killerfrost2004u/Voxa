@@ -1,0 +1,184 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[80vh] px-4 text-center relative overflow-hidden">
+
+    <div class="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
+        <div class="absolute top-[-10%] left-[20%] w-96 h-96 bg-blue-600/20 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-[-10%] right-[20%] w-96 h-96 bg-purple-600/20 rounded-full blur-[100px]"></div>
+    </div>
+
+    <div class="z-10 space-y-6 mb-12">
+        <h1 class="text-6xl md:text-8xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400">
+            VOXA
+        </h1>
+        <p class="text-2xl text-gray-300 font-light">Hire at the speed of sound.</p>
+    </div>
+
+    <div class="z-10 w-full max-w-md glass rounded-2xl p-8 shadow-2xl">
+
+        <div id="status-ring" class="w-32 h-32 mx-auto rounded-full border-4 border-blue-500 bg-blue-900/30 flex items-center justify-center mb-6 transition-all duration-300">
+            <i data-lucide="mic" id="mic-icon" class="w-12 h-12 text-blue-400"></i>
+            <span id="timer" class="hidden text-3xl font-mono text-red-400 animate-pulse">0:00</span>
+        </div>
+
+        <div class="flex flex-col gap-4">
+            <button id="btn-record" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-full font-bold shadow-lg shadow-blue-500/30 transition-all text-white">
+                Start Recording
+            </button>
+            <button id="btn-stop" class="hidden w-full py-3 bg-red-600 hover:bg-red-500 rounded-full font-bold shadow-lg shadow-red-500/30 transition-all text-white">
+                Stop Recording
+            </button>
+            <div id="playback-area" class="hidden space-y-4">
+                <audio id="audio-player" controls class="w-full"></audio>
+                <div class="flex gap-2">
+                    <button id="btn-retry" class="flex-1 py-2 border border-white/20 hover:bg-white/10 rounded-lg text-sm text-gray-300">Retry</button>
+                    <button id="btn-submit" class="flex-1 py-2 bg-green-600 hover:bg-green-500 rounded-lg font-bold text-white shadow-lg shadow-green-500/20">
+                        Submit Analysis
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-card" class="hidden mt-6 p-4 bg-white/5 border border-white/20 rounded-xl text-left animate-fade-in">
+            <h3 class="text-xl font-bold mb-4">🎙️ AI Analysis</h3>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="p-3 bg-black/30 rounded-lg">
+                    <p class="text-xs text-gray-400 uppercase">Level</p>
+                    <p class="text-xl font-bold text-blue-400" id="res-level">--</p>
+                </div>
+                <div class="p-3 bg-black/30 rounded-lg">
+                    <p class="text-xs text-gray-400 uppercase">Sentiment</p>
+                    <p class="text-xl font-bold text-purple-400" id="res-sentiment">--</p>
+                </div>
+            </div>
+            <p class="text-xs text-gray-400 uppercase">Summary</p>
+            <p class="text-sm text-gray-200 mb-4" id="res-summary">--</p>
+            <div id="res-rec-box" class="p-3 rounded-lg text-center font-bold bg-gray-700">
+                Recommendation: <span id="res-rec">--</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Vanilla JS Logic for Recording ---
+    let mediaRecorder;
+    let audioChunks = [];
+    let audioBlob;
+    let timerInterval;
+    let seconds = 0;
+
+    const btnRecord = document.getElementById('btn-record');
+    const btnStop = document.getElementById('btn-stop');
+    const btnSubmit = document.getElementById('btn-submit');
+    const btnRetry = document.getElementById('btn-retry');
+    const playbackArea = document.getElementById('playback-area');
+    const audioPlayer = document.getElementById('audio-player');
+    const statusRing = document.getElementById('status-ring');
+    const micIcon = document.getElementById('mic-icon');
+    const timerDisplay = document.getElementById('timer');
+    const resultCard = document.getElementById('result-card');
+
+    // 1. Start Recording
+    btnRecord.onclick = async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.start();
+
+        mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+        mediaRecorder.onstop = () => {
+            audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            audioPlayer.src = audioUrl;
+            audioChunks = [];
+        };
+
+        // UI Updates
+        btnRecord.classList.add('hidden');
+        btnStop.classList.remove('hidden');
+        statusRing.classList.remove('border-blue-500', 'bg-blue-900/30');
+        statusRing.classList.add('border-red-500', 'bg-red-500/10');
+        micIcon.classList.add('hidden');
+        timerDisplay.classList.remove('hidden');
+
+        // Timer
+        seconds = 0;
+        timerInterval = setInterval(() => {
+            seconds++;
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            timerDisplay.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }, 1000);
+    };
+
+    // 2. Stop Recording
+    btnStop.onclick = () => {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        clearInterval(timerInterval);
+
+        // UI Updates
+        btnStop.classList.add('hidden');
+        playbackArea.classList.remove('hidden');
+        statusRing.classList.remove('border-red-500', 'bg-red-500/10', 'animate-pulse');
+        statusRing.classList.add('border-blue-500', 'bg-blue-900/30');
+        timerDisplay.classList.add('hidden');
+        micIcon.classList.remove('hidden');
+    };
+
+    // 3. Retry
+    btnRetry.onclick = () => {
+        playbackArea.classList.add('hidden');
+        btnRecord.classList.remove('hidden');
+        resultCard.classList.add('hidden');
+    };
+
+    // 4. Submit to Flask API
+    btnSubmit.onclick = async () => {
+        btnSubmit.innerText = "Analyzing...";
+        btnSubmit.disabled = true;
+
+        const formData = new FormData();
+        formData.append("audio", audioBlob);
+
+        try {
+            const response = await fetch('/api/analyze', { method: 'POST', body: formData });
+            const data = await response.json();
+
+            // Show Results
+            resultCard.classList.remove('hidden');
+            document.getElementById('res-level').innerText = data.language_level;
+            document.getElementById('res-sentiment').innerText = data.sentiment;
+            document.getElementById('res-summary').innerText = data.summary;
+            document.getElementById('res-rec').innerText = data.recommendation.toUpperCase();
+
+            // Color logic
+            const recBox = document.getElementById('res-rec-box');
+            if(data.recommendation === "Hire" || data.recommendation === "Interview") {
+                recBox.className = "p-3 rounded-lg text-center font-bold bg-green-500/20 text-green-400";
+            } else {
+                recBox.className = "p-3 rounded-lg text-center font-bold bg-yellow-500/20 text-yellow-400";
+            }
+
+            // Save to Local Storage for Dashboard
+            const existing = JSON.parse(localStorage.getItem("voxa_candidates") || "[]");
+            existing.unshift({
+                id: Date.now(),
+                name: "Web Applicant",
+                role: "General",
+                score: data.language_level.includes("B2") ? "92%" : "75%",
+                status: data.recommendation,
+                summary: data.summary
+            });
+            localStorage.setItem("voxa_candidates", JSON.stringify(existing));
+
+        } catch (err) {
+            alert("Error connecting to server");
+        } finally {
+            btnSubmit.innerText = "Submit Analysis";
+            btnSubmit.disabled = false;
+        }
+    };
+</script>
+{% endblock %}
