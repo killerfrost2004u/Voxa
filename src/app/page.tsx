@@ -1,4 +1,5 @@
 import Link from "next/link";
+import VoiceRecorder from "../app/components/VoiceRecorder";
 
 export default function Home() {
   return (
@@ -10,7 +11,7 @@ export default function Home() {
       </div>
 
       {/* Content */}
-      <div className="z-10 flex flex-col items-center text-center space-y-8 px-4">
+      <div className="z-10 flex flex-col items-center text-center space-y-8 px-4 w-full">
         <div className="p-8 bg-white/5 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-md">
           {/* The "V" Logo Concept in Text Form */}
           <h1 className="text-7xl md:text-9xl font-extrabold tracking-tighter bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent">
@@ -27,13 +28,9 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 mt-8">
-          <button className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-full font-bold text-lg transition-all shadow-lg hover:shadow-blue-500/50">
-            Start Hiring
-          </button>
-          <button className="px-8 py-4 bg-transparent border border-white/20 hover:bg-white/10 rounded-full font-medium text-lg transition-all">
-            Candidate Login
-          </button>
+        {/* The New AI Voice Recorder */}
+        <div className="mt-8 w-full max-w-md">
+          <VoiceRecorder />
         </div>
       </div>
     </main>
