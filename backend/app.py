@@ -61,7 +61,6 @@ def get_jobs():
     try:
         encoded_name = urllib.parse.quote(SHEET_NAME)
         url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_name}"
-
         print(f"📥 Fetching sheet data...")
         response = requests.get(url)
         response.raise_for_status()
@@ -71,14 +70,12 @@ def get_jobs():
         transposed_data = list(map(list, itertools.zip_longest(*raw_data, fillvalue="")))
 
         jobs = []
-
         for i, col in enumerate(transposed_data):
             if i == 0: continue
             if len(col) < 10: continue
 
             company = col[1].strip()
             title = col[2].strip()
-
             if not company or not title: continue
 
             raw_hours = col[4].strip()
@@ -86,16 +83,13 @@ def get_jobs():
 
             # Detect Job Type & Shift
             search_text = (title + " " + clean_hours + " " + col[10]).lower()
-
             types = []
             if "part time" in search_text or "part-time" in search_text:
                 types.append("Part Time")
             else:
                 types.append("Full Time")
-
             if "rotational" in search_text:
                 types.append("Rotational")
-
             final_type = " / ".join(types)
 
             reqs_list = clean_text_list(col[3]) + clean_text_list(col[7])
@@ -113,10 +107,8 @@ def get_jobs():
                 "description": col[10].strip(),
                 "logo": (company[:2]).upper()
             })
-
         print(f"📤 Sent {len(jobs)} jobs.")
         return jsonify(jobs)
-
     except Exception as e:
         print(f"❌ Error: {e}")
         return jsonify({"error": str(e)}), 500
@@ -149,12 +141,10 @@ def login():
         conn = get_db_connection()
         if not conn: return jsonify({"error": "DB Connection Failed"}), 500
         cursor = conn.cursor()
-        # [UPDATED QUERY] Added 'Email' to the SELECT statement
         cursor.execute("SELECT UserID, FullName, Email, PasswordHash FROM Users WHERE Email = ?", (data['email'],))
         user = cursor.fetchone()
 
         if user and bcrypt.checkpw(data['password'].encode('utf-8'), user.PasswordHash.encode('utf-8')):
-            # [UPDATED RESPONSE] Including 'email' in the return object
             return jsonify({
                 "message": "Success",
                 "user": {
@@ -165,6 +155,74 @@ def login():
 
         return jsonify({"error": "Invalid credentials"}), 401
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'conn' in locals() and conn: conn.close()
+
+
+# --- CONTACT ROUTE ---
+@app.route('/api/contact', methods=['POST'])
+def contact_us():
+    try:
+        data = request.json
+        if not all(k in data for k in ('name', 'email', 'subject', 'message')):
+            return jsonify({"error": "Missing fields"}), 400
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "DB Connection Failed"}), 500
+
+        cursor = conn.cursor()
+        query = "INSERT INTO ContactMessages (FullName, Email, Subject, Message) VALUES (?, ?, ?, ?)"
+        cursor.execute(query, (data['name'], data['email'], data['subject'], data['message']))
+        conn.commit()
+
+        print(f"📩 New Message from {data['email']}: {data['subject']}")
+        return jsonify({"message": "Message received successfully"}), 201
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'conn' in locals() and conn: conn.close()
+
+
+# --- APPLICATION ROUTE ---
+@app.route('/api/apply', methods=['POST'])
+def apply_for_job():
+    try:
+        data = request.json
+        required_fields = ['title', 'company', 'name', 'email', 'phone', 'english', 'experience']
+        if not all(k in data for k in required_fields):
+            return jsonify({"error": "Missing fields"}), 400
+
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "DB Connection Failed"}), 500
+
+        cursor = conn.cursor()
+        query = """
+            INSERT INTO JobApplications 
+            (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        cursor.execute(query, (
+            data['title'],
+            data['company'],
+            data['name'],
+            data['email'],
+            data['phone'],
+            data.get('whatsapp', ''),
+            data['english'],
+            data['experience']
+        ))
+        conn.commit()
+
+        print(f"🚀 New Application: {data['name']} applied for {data['title']}")
+        return jsonify({"message": "Application submitted successfully"}), 201
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         if 'conn' in locals() and conn: conn.close()

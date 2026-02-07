@@ -71,47 +71,6 @@ function renderPageContent() {
     }
 }
 
-// --- APPLY FUNCTION (Redirect to Apply Page) ---
-function applyForJob() {
-    const title = document.getElementById('modal-title').textContent;
-    const company = document.getElementById('modal-company').textContent;
-    const id = jobs.find(j => j.title === title && j.company === company)?.id || 0;
-
-    // Redirect to the new application page with query params
-    window.location.href = `apply.html?id=${id}&title=${encodeURIComponent(title)}&company=${encodeURIComponent(company)}`;
-}
-
-// --- HANDLE APPLICATION FORM SUBMISSION (apply.html) ---
-if (document.getElementById('application-form')) {
-    document.getElementById('application-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const params = new URLSearchParams(window.location.search);
-        const title = params.get('title') || 'Unknown Job';
-        const company = params.get('company') || 'Unknown Company';
-        
-        // Create App Object
-        const application = {
-            title: title,
-            company: company,
-            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            status: 'Applied'
-        };
-
-        // Save to LocalStorage
-        const apps = JSON.parse(localStorage.getItem('my_applications')) || [];
-        
-        // Prevent duplicates
-        if (!apps.some(app => app.title === title && app.company === company)) {
-            apps.unshift(application);
-            localStorage.setItem('my_applications', JSON.stringify(apps));
-        }
-
-        alert("Application Submitted Successfully!");
-        window.location.href = 'dashboard.html';
-    });
-}
-
 // --- DASHBOARD LOGIC ---
 window.loadDashboardData = function() {
     const apps = JSON.parse(localStorage.getItem('my_applications')) || [];
@@ -164,7 +123,7 @@ window.loadDashboardData = function() {
                     <div class="company">${job.company}</div>
                 </div>
                 <div class="actions">
-                    <button class="btn-primary" onclick="window.location.href='apply.html?title=${encodeURIComponent(job.title)}&company=${encodeURIComponent(job.company)}'">Apply</button>
+                    <button class="btn-primary" onclick="openJobDetails(${job.id})">Apply</button>
                     <button class="btn-remove" onclick="removeSavedJob(${job.id})"><i class="fas fa-trash-alt"></i> Remove</button>
                 </div>
             `;
@@ -178,6 +137,42 @@ window.removeSavedJob = function(id) {
     saved = saved.filter(j => j.id !== id);
     localStorage.setItem('my_saved_jobs', JSON.stringify(saved));
     loadDashboardData(); 
+}
+
+// --- APPLY FUNCTION ---
+function applyForJob() {
+    const title = document.getElementById('modal-title').textContent;
+    const company = document.getElementById('modal-company').textContent;
+    const id = jobs.find(j => j.title === title && j.company === company)?.id || 0;
+
+    window.location.href = `apply.html?id=${id}&title=${encodeURIComponent(title)}&company=${encodeURIComponent(company)}`;
+}
+
+// --- HANDLE APPLICATION FORM ---
+if (document.getElementById('application-form')) {
+    document.getElementById('application-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const params = new URLSearchParams(window.location.search);
+        const title = params.get('title') || 'Unknown Job';
+        const company = params.get('company') || 'Unknown Company';
+        
+        const application = {
+            title: title,
+            company: company,
+            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            status: 'Applied'
+        };
+
+        const apps = JSON.parse(localStorage.getItem('my_applications')) || [];
+        if (!apps.some(app => app.title === title && app.company === company)) {
+            apps.unshift(application);
+            localStorage.setItem('my_applications', JSON.stringify(apps));
+        }
+
+        alert("Application Submitted Successfully!");
+        window.location.href = 'dashboard.html';
+    });
 }
 
 // --- SAVE JOB ---
@@ -220,6 +215,13 @@ window.applyFilters = function() {
 
     renderAllJobs(filtered);
     document.getElementById('job-count').textContent = `Showing ${filtered.length} Jobs`;
+}
+
+// --- SALARY FILTER (NEW FUNCTION) ---
+window.filterSalaries = function() {
+    const query = document.getElementById('salary-search').value.toLowerCase();
+    const filtered = salaryStats.filter(s => s.title.toLowerCase().includes(query));
+    renderSalaries(filtered);
 }
 
 window.updateSalaryLabel = function(val) {
@@ -362,6 +364,12 @@ function renderSalaries(data) {
     const container = document.getElementById('salaries-container');
     if (!container) return;
     container.innerHTML = "";
+    
+    if (data.length === 0) {
+        container.innerHTML = `<p style="text-align:center; color:#888;">No salaries found matching your search.</p>`;
+        return;
+    }
+
     const maxVal = Math.max(...data.map(d => d.avg)) || 20000;
     data.forEach(stat => {
         let width = (stat.avg / maxVal) * 100;
@@ -437,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <a href="dashboard.html" class="btn-text"><i class="fas fa-user-circle"></i> ${user.name.split(' ')[0]}</a>
             <a onclick="globalLogout()" class="btn-primary" style="cursor:pointer;">Logout</a>
         `;
-    } else if (authButtons) { // Standard Auth Buttons for non-logged in users
+    } else if (authButtons) {
         authButtons.innerHTML = `
             <a href="login.html" class="btn-text">Log In</a>
             <a href="login.html" class="btn-primary">Sign Up</a>

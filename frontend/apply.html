@@ -18,7 +18,7 @@
             outline: none;
             color: var(--text-main);
             font-family: 'Inter', sans-serif;
-            appearance: none; /* Removes default arrow */
+            appearance: none;
             background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a3a3a3%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
             background-repeat: no-repeat;
             background-position: right 1rem center;
@@ -34,9 +34,11 @@
             <a href="index.html" class="logo">Dark<span>Wolves</span></a>
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About Us</a></li>
                 <li><a href="jobs.html">Find Jobs</a></li>
                 <li><a href="companies.html">Companies</a></li>
                 <li><a href="salaries.html">Salaries</a></li>
+                <li><a href="contact.html">Contact Us</a></li>
             </ul>
             <div class="auth-buttons">
                 </div>
@@ -114,7 +116,7 @@
 
     <script src="js/script.js"></script>
     <script>
-        // Initialize Page Data
+        // Initialize Page Data (Get Job Title/Company from URL)
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             const title = params.get('title');
@@ -131,6 +133,71 @@
                 document.getElementById('app-email').value = user.email || '';
             }
         });
+
+        // Handle Form Submission
+        document.getElementById('application-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            btn.textContent = "Submitting...";
+            btn.disabled = true;
+
+            // Get Job Details from URL (or fallback to text content)
+            const params = new URLSearchParams(window.location.search);
+            const jobTitle = params.get('title') || document.getElementById('apply-job-title').textContent;
+            const jobCompany = params.get('company') || document.getElementById('apply-company').textContent;
+
+            const applicationData = {
+                title: jobTitle,
+                company: jobCompany,
+                name: document.getElementById('app-name').value,
+                email: document.getElementById('app-email').value,
+                phone: document.getElementById('app-phone').value,
+                whatsapp: document.getElementById('app-whatsapp').value,
+                english: document.getElementById('app-english').value,
+                experience: document.getElementById('app-experience').value
+            };
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(applicationData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert("Application Submitted Successfully! Good luck.");
+                    // Optional: Save to local storage briefly so dashboard still looks populated until we fix backend fetching
+                    saveToLocalBackup(applicationData);
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert("Error: " + (result.error || "Failed to submit application"));
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Failed to connect to the server.");
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // Helper to keep Dashboard working temporarily
+        function saveToLocalBackup(data) {
+            const apps = JSON.parse(localStorage.getItem('my_applications')) || [];
+            if (!apps.some(app => app.title === data.title && app.company === data.company)) {
+                apps.unshift({
+                    title: data.title,
+                    company: data.company,
+                    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                    status: 'Applied'
+                });
+                localStorage.setItem('my_applications', JSON.stringify(apps));
+            }
+        }
     </script>
 </body>
 </html>
