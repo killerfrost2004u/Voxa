@@ -591,3 +591,112 @@ h3 { margin-bottom: 0.5rem; color: #ff6600; font-size: 1rem; display: flex; alig
     font-weight: 900;
     font-size: 1.1rem;
 }
+
+
+/* ... [KEEP YOUR EXISTING CSS ABOVE] ... */
+
+/* --- NEW MODAL STYLES (Paste this at the bottom) --- */
+
+.modal-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr; /* Salary smaller, Details wider */
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    background: #222;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #333;
+}
+
+.info-box.main-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-right: 1px solid #333;
+    padding-right: 1rem;
+}
+
+.icon-large {
+    font-size: 2.2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.text-highlight {
+    font-size: 1.1rem;
+    color: #fff;
+    display: block;
+    line-height: 1.3;
+}
+
+.info-stack {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.2rem; /* Space between Location and Hours */
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.info-row i {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    width: 24px;
+    text-align: center;
+}
+
+.info-row div {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Requirements List Styling */
+.requirements-container ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.requirements-container li {
+    position: relative;
+    padding-left: 28px;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #e0e0e0;
+    border-bottom: 1px solid #2a2a2a;
+    padding-bottom: 8px;
+}
+
+.requirements-container li:last-child {
+    border-bottom: none;
+}
+
+.requirements-container li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--primary-color);
+    font-weight: 900;
+    font-size: 1.1rem;
+}
+
+/* Mobile responsive for modal */
+@media (max-width: 600px) {
+    .modal-grid-2 {
+        grid-template-columns: 1fr;
+    }
+    .info-box.main-box {
+        border-right: none;
+        border-bottom: 1px solid #333;
+        padding-bottom: 1rem;
+        padding-right: 0;
+    }
+}

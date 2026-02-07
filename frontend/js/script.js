@@ -1,11 +1,12 @@
 const API_URL = "http://127.0.0.1:5000/api";
 let jobs = []; 
 
-// 1. Fetch Data
+// 1. Fetch Real Data
 async function loadJobs() {
     try {
         const response = await fetch(`${API_URL}/jobs`);
         if (!response.ok) throw new Error("Failed to fetch jobs");
+        
         jobs = await response.json(); 
         
         // Refresh UI
@@ -14,7 +15,7 @@ async function loadJobs() {
         if(document.getElementById('job-count')) document.getElementById('job-count').textContent = `Showing ${jobs.length} Jobs`;
 
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error loading jobs:", error);
     }
 }
 loadJobs();
@@ -72,33 +73,30 @@ function renderAllJobs(data) {
     });
 }
 
-// 3. UPDATED Modal Logic (Pretty Bullets & Hours)
+// 3. MODAL LOGIC (Updated)
 function openJobDetails(jobId) {
     const job = jobs.find(j => j.id === jobId);
     if (!job) return;
 
-    // Basic Info
+    // Fill Basic Info
     document.getElementById('modal-title').textContent = job.title;
     document.getElementById('modal-company').textContent = job.company;
     document.getElementById('modal-salary').textContent = job.salary;
     document.getElementById('modal-location').textContent = job.location;
+    document.getElementById('modal-hours').textContent = job.hours;
     document.getElementById('modal-logo').textContent = job.logo;
     
-    // PRETTY HOURS
-    document.getElementById('modal-hours').innerHTML = `<span style="color:#ff6600; font-weight:bold;">⏰</span> ${job.hours}`;
-
-    // PRETTY BULLET POINTS
+    // Fill Requirements List
     const reqContainer = document.getElementById('modal-requirements');
     if (Array.isArray(job.requirements) && job.requirements.length > 0) {
-        // Generate HTML List
-        reqContainer.innerHTML = `<ul class="job-requirements-list">
+        reqContainer.innerHTML = `<ul>
             ${job.requirements.map(item => `<li>${item}</li>`).join('')}
         </ul>`;
     } else {
-        reqContainer.textContent = "No specific requirements listed.";
+        reqContainer.innerHTML = "<p class='text-muted'>No specific requirements listed.</p>";
     }
 
-    // Description & Training
+    // Fill Description & Training
     document.getElementById('modal-description').textContent = job.description || "No description provided.";
     document.getElementById('modal-training').textContent = job.training || "Not specified.";
 
@@ -108,6 +106,12 @@ function openJobDetails(jobId) {
 function closeJobModal() {
     document.getElementById('job-modal').classList.remove('open');
 }
+
+function applyForJob() {
+    alert("Application Started! (This is a demo)");
+    closeJobModal();
+}
+
 window.addEventListener('click', (e) => {
     if (e.target === document.getElementById('job-modal')) closeJobModal();
 });
@@ -130,6 +134,7 @@ window.globalLogout = function() {
     window.location.href = 'index.html';
 }
 
+// 5. Filters
 window.filterHomeJobs = function() {
     const keyword = document.getElementById('job-search').value.toLowerCase();
     const location = document.getElementById('location-search').value.toLowerCase();
