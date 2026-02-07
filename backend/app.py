@@ -81,7 +81,6 @@ def get_jobs():
             raw_hours = col[4].strip()
             clean_hours = " ".join(raw_hours.split())
 
-            # Detect Job Type & Shift
             search_text = (title + " " + clean_hours + " " + col[10]).lower()
             types = []
             if "part time" in search_text or "part-time" in search_text:
@@ -107,7 +106,6 @@ def get_jobs():
                 "description": col[10].strip(),
                 "logo": (company[:2]).upper()
             })
-        # print(f"📤 Sent {len(jobs)} jobs.")
         return jsonify(jobs)
     except Exception as e:
         print(f"❌ Error: {e}")
@@ -160,7 +158,6 @@ def login():
         if 'conn' in locals() and conn: conn.close()
 
 
-# --- CONTACT ROUTE ---
 @app.route('/api/contact', methods=['POST'])
 def contact_us():
     try:
@@ -187,7 +184,6 @@ def contact_us():
         if 'conn' in locals() and conn: conn.close()
 
 
-# --- APPLICATION ROUTE (MUST BE UNINDENTED) ---
 @app.route('/api/apply', methods=['POST'])
 def apply_for_job():
     try:
@@ -223,6 +219,41 @@ def apply_for_job():
 
     except Exception as e:
         print(f"❌ Error: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'conn' in locals() and conn: conn.close()
+
+
+# --- NEW DASHBOARD ROUTE ---
+@app.route('/api/dashboard/<email>', methods=['GET'])
+def get_user_dashboard(email):
+    try:
+        conn = get_db_connection()
+        if not conn: return jsonify({"error": "DB Connection Failed"}), 500
+
+        cursor = conn.cursor()
+
+        # Fetch Applications
+        cursor.execute("""
+            SELECT JobTitle, Company, SubmittedAt
+            FROM JobApplications 
+            WHERE Email = ? 
+            ORDER BY SubmittedAt DESC
+        """, (email,))
+
+        applications = []
+        for row in cursor.fetchall():
+            applications.append({
+                "title": row.JobTitle,
+                "company": row.Company,
+                "date": row.SubmittedAt.strftime('%Y-%m-%d'),
+                "status": "Applied"  # Default status for now
+            })
+
+        return jsonify({"applications": applications})
+
+    except Exception as e:
+        print(f"❌ Dashboard Error: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         if 'conn' in locals() and conn: conn.close()

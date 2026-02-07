@@ -152,7 +152,7 @@
             <div class="avatar" id="user-avatar">?</div>
             <div>
                 <h4 id="user-name" style="color:white; font-size:0.9rem;">Guest</h4>
-                <a onclick="logout()" class="logout-link">Logout</a>
+                <a onclick="logout()" class="logout-link" style="color: var(--text-muted); cursor: pointer; font-size: 0.8rem;">Logout</a>
             </div>
         </div>
     </aside>
@@ -264,7 +264,7 @@
     <script src="js/script.js"></script>
     <script>
         // Init Dashboard Logic
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const userStr = localStorage.getItem('user');
             if (!userStr) {
                 window.location.href = 'login.html';
@@ -279,20 +279,97 @@
             
             // Populate Settings Form
             document.getElementById('settings-name').value = user.name;
-            // [CRITICAL UPDATE] Ensure we use user.email here
             document.getElementById('settings-email').value = user.email || 'hunter@darkwolves.com';
 
-            // Load Data
-            loadDashboardData();
+            // --- FETCH DATA FROM BACKEND ---
+            await fetchAndRenderDashboard(user.email);
+            
+            // Load Saved Jobs (from local storage for now, or update logic if you add backend for saved jobs)
+            loadSavedJobs(); 
         });
 
-        function switchTab(tabName, element) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            // Show selected tab
-            document.getElementById(`tab-${tabName}`).classList.add('active');
+        async function fetchAndRenderDashboard(email) {
+            try {
+                // Ensure this URL matches your backend
+                const response = await fetch(`http://127.0.0.1:5000/api/dashboard/${email}`);
+                if (!response.ok) throw new Error("Failed to fetch dashboard data");
+                
+                const data = await response.json();
+                const apps = data.applications || [];
+
+                // Update Counts
+                document.getElementById('stat-applied').textContent = apps.length;
+
+                // Render Dashboard Table (First 5)
+                const dashTableBody = document.querySelector('#dashboard-table tbody');
+                dashTableBody.innerHTML = apps.length ? '' : '<tr><td colspan="4" style="text-align:center; color:#666;">No hunts started yet.</td></tr>';
+                apps.slice(0, 5).forEach(app => {
+                    dashTableBody.innerHTML += `
+                        <tr>
+                            <td style="color:white; font-weight:600;">${app.title}</td>
+                            <td>${app.company}</td>
+                            <td>${app.date}</td>
+                            <td><span class="status-badge status-applied">${app.status}</span></td>
+                        </tr>
+                    `;
+                });
+
+                // Render Full Applications Table
+                const appTableBody = document.querySelector('#applications-table tbody');
+                appTableBody.innerHTML = apps.length ? '' : '<tr><td colspan="5" style="text-align:center; color:#666;">No applications yet.</td></tr>';
+                apps.forEach(app => {
+                    appTableBody.innerHTML += `
+                        <tr>
+                            <td style="color:white; font-weight:600;">${app.title}</td>
+                            <td>${app.company}</td>
+                            <td>${app.date}</td>
+                            <td><span class="status-badge status-applied">${app.status}</span></td>
+                            <td><a href="#" style="color:var(--primary-color)">View</a></td>
+                        </tr>
+                    `;
+                });
+
+            } catch (error) {
+                console.error("Dashboard Load Error:", error);
+                // Fallback to local storage if API fails
+                // loadDashboardData(); // from script.js
+            }
+        }
+
+        function loadSavedJobs() {
+            const saved = JSON.parse(localStorage.getItem('my_saved_jobs')) || [];
+            document.getElementById('stat-saved').textContent = saved.length;
             
-            // Update Sidebar UI
+            const container = document.getElementById('saved-jobs-container');
+            container.innerHTML = saved.length ? '' : '<p style="color:#666;">No saved jobs.</p>';
+            
+            saved.forEach(job => {
+                container.innerHTML += `
+                    <div class="job-card-wide">
+                        <div class="logo-box">${job.logo || 'DW'}</div>
+                        <div class="job-info">
+                            <h3>${job.title}</h3>
+                            <div class="company">${job.company}</div>
+                        </div>
+                        <div class="actions">
+                            <button class="btn-primary" onclick="window.location.href='apply.html?title=${encodeURIComponent(job.title)}&company=${encodeURIComponent(job.company)}'">Apply</button>
+                            <button class="btn-remove" onclick="removeSavedJob(${job.id})" style="background:transparent; border:1px solid #333; color:#aaa; padding:0.6rem; border-radius:6px; margin-left:10px; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        window.removeSavedJob = function(id) {
+            let saved = JSON.parse(localStorage.getItem('my_saved_jobs')) || [];
+            saved = saved.filter(j => j.id !== id);
+            localStorage.setItem('my_saved_jobs', JSON.stringify(saved));
+            loadSavedJobs(); 
+        }
+
+        function switchTab(tabName, element) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             if(element) element.classList.add('active');
         }
