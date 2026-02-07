@@ -8,8 +8,7 @@
   --text-main: #ffffff; /* White text */
   --text-muted: #a3a3a3; /* Gray text */
   --border-color: #333333; /* Dark borders */
-  --shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
 }
 
 * {
@@ -260,7 +259,7 @@ ul {
 .job-card-header {
   display: flex;
   align-items: center;
-  gap: 0px; /* Reduced to 5px to be very close */
+  gap: 0px; /* Reduced to 0px to be very close */
   margin-bottom: 15px;
 }
 
