@@ -46,7 +46,7 @@
                     <label>Keywords</label>
                     <div class="input-with-icon">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="keyword-filter" placeholder="Job title...">
+                        <input type="text" id="keyword-filter" placeholder="Job title..." onkeyup="applyFilters()">
                     </div>
                 </div>
                 
@@ -54,7 +54,7 @@
                     <label>Location</label>
                     <div class="input-with-icon">
                         <i class="fas fa-map-marker-alt"></i>
-                        <input type="text" id="location-filter" placeholder="City...">
+                        <input type="text" id="location-filter" placeholder="City..." onkeyup="applyFilters()">
                     </div>
                 </div>
 
@@ -64,17 +64,21 @@
                         <label><input type="checkbox" value="Full Time" onchange="applyFilters()"> Full Time</label>
                         <label><input type="checkbox" value="Part Time" onchange="applyFilters()"> Part Time</label>
                         <label><input type="checkbox" value="Rotational" onchange="applyFilters()"> Rotational</label>
+                        <label><input type="checkbox" value="Remote" onchange="applyFilters()"> Remote</label>
                     </div>
                 </div>
 
                 <div class="filter-item">
-                    <label>Salary Range</label>
-                    <input type="range" min="30" max="200" value="50" class="slider" id="salary-range">
-                    <div class="range-value" style="color:var(--text-muted); margin-top:5px;">Min: <span id="salary-val" style="color:var(--primary-color)">50</span>k</div>
+                    <label>Min Salary</label>
+                    <input type="range" min="0" max="50" value="0" class="slider" id="salary-range" 
+                           oninput="updateSalaryLabel(this.value); applyFilters()">
+                    <div class="range-value" style="color:var(--text-muted); margin-top:5px;">
+                        Min: <span id="salary-val" style="color:var(--primary-color)">0</span>k EGP
+                    </div>
                 </div>
 
                 <button class="btn-primary full-width" onclick="applyFilters()">Apply Filters</button>
-                <button class="reset-btn" onclick="location.reload()">Reset</button>
+                <button class="reset-btn" onclick="resetFilters()">Reset</button>
             </div>
         </aside>
 
@@ -83,7 +87,7 @@
                 <span id="job-count">Loading Jobs...</span>
                 <div class="sort-box">
                     <label>Sort by:</label>
-                    <select id="sort-jobs" onchange="sortJobs()">
+                    <select id="sort-jobs" onchange="applyFilters()">
                         <option value="newest">Newest</option>
                         <option value="salary">Highest Salary</option>
                     </select>
@@ -96,7 +100,6 @@
             <div class="pagination">
                 <button class="page-btn disabled"><i class="fas fa-chevron-left"></i></button>
                 <button class="page-btn active">1</button>
-                <button class="page-btn">2</button>
                 <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
             </div>
         </main>
@@ -107,7 +110,7 @@
             <button class="close-modal" onclick="closeJobModal()">&times;</button>
             
             <div class="modal-header">
-                <div id="modal-logo" class="company-logo-large">DW</div>
+                <div id="modal-logo" class="company-logo-large" style="margin:0;">DW</div>
                 <div>
                     <h2 id="modal-title">Job Title</h2>
                     <p id="modal-company" class="text-muted">Company Name</p>

@@ -11,79 +11,43 @@ async function loadJobs() {
         
         jobs = await response.json(); 
         
-        // --- DATA NORMALIZATION (Fix WFH vs Remote) ---
-        // This ensures "WFH", "Work from home", etc. all show up as "Remote"
+        // --- DATA NORMALIZATION ---
         jobs.forEach(job => {
             const loc = job.location ? job.location.toLowerCase() : '';
             const type = job.type ? job.type.toLowerCase() : '';
-            
-            // Define variations of Remote work
             const remoteKeywords = ['wfh', 'work from home', 'remotely', 'home'];
             
-            // Check if this job is remote based on Location or Type
-            const isRemote = remoteKeywords.some(k => loc.includes(k) || type.includes(k));
-            
-            if (isRemote) {
-                // 1. Standardize the display text
-                // If the location was just "WFH", change it to "Remote" for consistency
-                if (loc.length < 20 && (loc.includes('wfh') || loc.includes('home'))) {
-                    job.location = "Remote"; 
-                }
-                // 2. Add a flag for easy filtering later
-                job.isRemote = true;
+            job.isRemote = remoteKeywords.some(k => loc.includes(k) || type.includes(k));
+            if (job.isRemote && loc.length < 20 && (loc.includes('wfh') || loc.includes('home'))) {
+                job.location = "Remote"; 
             }
+
+            let salaryNum = 0;
+            const matches = job.salary.match(/(\d+(\.\d+)?)/g);
+            if (matches) {
+                let val = parseFloat(matches[0]);
+                if ((val < 100 || job.salary.toLowerCase().includes('k')) && !job.salary.includes('hour') && !job.salary.includes('$')) {
+                     val *= 1000;
+                }
+                salaryNum = val;
+            }
+            job.salaryNum = salaryNum;
         });
 
-        // --- Process Companies & Salaries ---
         processCompanies(jobs);
         processSalaries(jobs);
 
-        // --- CHECK URL PARAMETERS (For Search) ---
+        // --- CHECK URL PARAMETERS ---
         const urlParams = new URLSearchParams(window.location.search);
-        const query = urlParams.get('keyword') ? urlParams.get('keyword').toLowerCase() : '';
-        const loc = urlParams.get('location') ? urlParams.get('location').toLowerCase() : '';
+        const query = urlParams.get('keyword');
+        const loc = urlParams.get('location');
 
-        // Filter jobs based on URL params
-        let displayJobs = jobs;
-        if (query || loc) {
-            displayJobs = jobs.filter(job => {
-                const titleMatch = job.title.toLowerCase().includes(query) || job.company.toLowerCase().includes(query);
-                
-                let locMatch = false;
-                if (!loc) {
-                    locMatch = true;
-                } else {
-                    // Smart Search: If user searches "Remote", include WFH/isRemote items
-                    if (loc === 'remote') {
-                        locMatch = job.isRemote || job.location.toLowerCase().includes('remote');
-                    } else {
-                        locMatch = job.location.toLowerCase().includes(loc);
-                    }
-                }
-                return titleMatch && locMatch;
-            });
-        }
-
-        // --- RENDER LOGIC ---
-
-        if(document.getElementById('jobs-container')) {
-            renderHomeJobs(jobs); 
-        }
-        
-        if(document.getElementById('all-jobs-container')) {
-            renderAllJobs(displayJobs);
-            document.getElementById('job-count').textContent = `Showing ${displayJobs.length} Jobs`;
-            
-            if(document.getElementById('keyword-filter')) document.getElementById('keyword-filter').value = urlParams.get('keyword') || '';
-            if(document.getElementById('location-filter')) document.getElementById('location-filter').value = urlParams.get('location') || '';
-        }
-
-        if(document.getElementById('companies-container')) renderCompanies(companies);
-        if(document.getElementById('salaries-container')) renderSalaries(salaryStats);
-
-        if(document.getElementById('company-profile-header')) {
-            const companyName = urlParams.get('company');
-            if(companyName) renderCompanyProfile(companyName, jobs);
+        if (document.getElementById('all-jobs-container') && (query || loc)) {
+            if(document.getElementById('keyword-filter')) document.getElementById('keyword-filter').value = query || '';
+            if(document.getElementById('location-filter')) document.getElementById('location-filter').value = loc || '';
+            applyFilters();
+        } else {
+            renderPageContent();
         }
 
     } catch (error) {
@@ -92,41 +56,187 @@ async function loadJobs() {
 }
 loadJobs();
 
-// --- NEW: HOME PAGE TABS FILTER ---
+function renderPageContent() {
+    if(document.getElementById('jobs-container')) renderHomeJobs(jobs);
+    if(document.getElementById('all-jobs-container')) {
+        renderAllJobs(jobs);
+        document.getElementById('job-count').textContent = `Showing ${jobs.length} Jobs`;
+    }
+    if(document.getElementById('companies-container')) renderCompanies(companies);
+    if(document.getElementById('salaries-container')) renderSalaries(salaryStats);
+    if(document.getElementById('company-profile-header')) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const companyName = urlParams.get('company');
+        if(companyName) renderCompanyProfile(companyName, jobs);
+    }
+}
+
+// --- DASHBOARD LOGIC (NEW) ---
+window.loadDashboardData = function() {
+    // 1. Get Applications from LocalStorage
+    const apps = JSON.parse(localStorage.getItem('my_applications')) || [];
+    const saved = JSON.parse(localStorage.getItem('my_saved_jobs')) || [];
+
+    // 2. Update Counters
+    if(document.getElementById('stat-applied')) document.getElementById('stat-applied').textContent = apps.length;
+    if(document.getElementById('stat-saved')) document.getElementById('stat-saved').textContent = saved.length;
+
+    // 3. Render Dashboard Table (Recent 5)
+    const dashTable = document.querySelector('#dashboard-table tbody');
+    if(dashTable) {
+        dashTable.innerHTML = apps.length ? '' : '<tr><td colspan="4" style="text-align:center; color:#666;">No hunts started yet.</td></tr>';
+        apps.slice(0, 5).forEach(app => {
+            dashTable.innerHTML += `
+                <tr>
+                    <td style="color:white; font-weight:600;">${app.title}</td>
+                    <td>${app.company}</td>
+                    <td>${app.date}</td>
+                    <td><span class="status-badge status-applied">Applied</span></td>
+                </tr>
+            `;
+        });
+    }
+
+    // 4. Render Full Applications Table
+    const appTable = document.querySelector('#applications-table tbody');
+    if(appTable) {
+        appTable.innerHTML = apps.length ? '' : '<tr><td colspan="5" style="text-align:center;">No applications yet.</td></tr>';
+        apps.forEach(app => {
+            appTable.innerHTML += `
+                <tr>
+                    <td style="color:white; font-weight:600;">${app.title}</td>
+                    <td>${app.company}</td>
+                    <td>${app.date}</td>
+                    <td><span class="status-badge status-applied">Applied</span></td>
+                    <td><a href="#" style="color:var(--primary-color)">View</a></td>
+                </tr>
+            `;
+        });
+    }
+
+    // 5. Render Saved Jobs
+    const savedContainer = document.getElementById('saved-jobs-container');
+    if(savedContainer) {
+        savedContainer.innerHTML = saved.length ? '' : '<p style="color:#666;">No saved jobs.</p>';
+        saved.forEach(job => {
+            // Reuse existing card style but simpler
+            const card = document.createElement('div');
+            card.classList.add('job-card-wide');
+            card.innerHTML = `
+                <div class="logo-box">${job.logo || 'DW'}</div>
+                <div class="job-info">
+                    <h3>${job.title}</h3>
+                    <div class="company">${job.company}</div>
+                </div>
+                <div class="actions">
+                    <button class="btn-primary" onclick="openJobDetails(${job.id})">Apply</button>
+                    <button class="btn-text" onclick="removeSavedJob(${job.id})" style="color:#ef4444; font-size:0.8rem;">Remove</button>
+                </div>
+            `;
+            savedContainer.appendChild(card);
+        });
+    }
+}
+
+// Remove saved job helper
+window.removeSavedJob = function(id) {
+    let saved = JSON.parse(localStorage.getItem('my_saved_jobs')) || [];
+    saved = saved.filter(j => j.id !== id);
+    localStorage.setItem('my_saved_jobs', JSON.stringify(saved));
+    loadDashboardData(); // Refresh UI
+}
+
+// --- APPLY FUNCTION (UPDATED to Save to Dashboard) ---
+function applyForJob() {
+    // Get currently opened job details from modal
+    const title = document.getElementById('modal-title').textContent;
+    const company = document.getElementById('modal-company').textContent;
+    
+    // Create App Object
+    const application = {
+        title: title,
+        company: company,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        status: 'Applied'
+    };
+
+    // Save to LocalStorage
+    const apps = JSON.parse(localStorage.getItem('my_applications')) || [];
+    apps.unshift(application); // Add to top
+    localStorage.setItem('my_applications', JSON.stringify(apps));
+
+    alert("Application Sent! Check your Dashboard.");
+    closeJobModal();
+    
+    // Redirect to dashboard if user wants (optional, but good UX)
+    // window.location.href = 'dashboard.html';
+}
+
+// --- EXISTING FILTERS & HELPERS (Keep as is) ---
+window.applyFilters = function() {
+    const keyword = document.getElementById('keyword-filter').value.toLowerCase();
+    const location = document.getElementById('location-filter').value.toLowerCase();
+    const minSalary = parseInt(document.getElementById('salary-range').value) * 1000;
+    const sortValue = document.getElementById('sort-jobs').value;
+    const checkedTypes = Array.from(document.querySelectorAll('.checkbox-group input:checked')).map(cb => cb.value.toLowerCase());
+
+    let filtered = jobs.filter(job => {
+        const matchKeyword = job.title.toLowerCase().includes(keyword) || job.company.toLowerCase().includes(keyword);
+        const matchLocation = job.location.toLowerCase().includes(location);
+        let matchType = true;
+        if (checkedTypes.length > 0) {
+            matchType = checkedTypes.some(t => {
+                if (t === 'remote') return job.isRemote;
+                return job.type.toLowerCase().includes(t);
+            });
+        }
+        let matchSalary = true;
+        if (minSalary > 0) matchSalary = job.salaryNum >= minSalary;
+        return matchKeyword && matchLocation && matchType && matchSalary;
+    });
+
+    if (sortValue === 'salary') filtered.sort((a, b) => b.salaryNum - a.salaryNum);
+    else filtered.sort((a, b) => b.id - a.id); 
+
+    renderAllJobs(filtered);
+    document.getElementById('job-count').textContent = `Showing ${filtered.length} Jobs`;
+}
+
+window.updateSalaryLabel = function(val) {
+    document.getElementById('salary-val').textContent = val;
+}
+
+window.resetFilters = function() {
+    document.getElementById('keyword-filter').value = "";
+    document.getElementById('location-filter').value = "";
+    document.getElementById('salary-range').value = 0;
+    updateSalaryLabel(0);
+    document.querySelectorAll('.checkbox-group input').forEach(cb => cb.checked = false);
+    document.getElementById('sort-jobs').value = "newest";
+    window.history.pushState({}, document.title, window.location.pathname);
+    applyFilters();
+}
+
 window.filterHomeTabs = function(element, category) {
-    // 1. Update UI (Visual Active State)
     const options = document.querySelectorAll('.view-options span');
     options.forEach(opt => opt.classList.remove('active'));
     element.classList.add('active');
-
-    // 2. Filter Data
     let filteredJobs = jobs;
-
-    if (category === 'full time') {
-        filteredJobs = jobs.filter(job => job.type.toLowerCase().includes('full'));
-    } else if (category === 'remote') {
-        // Use the isRemote flag we created during normalization
-        filteredJobs = jobs.filter(job => job.isRemote || job.location.toLowerCase().includes('remote'));
-    }
-
-    // 3. Render
+    if (category === 'full time') filteredJobs = jobs.filter(job => job.type.toLowerCase().includes('full'));
+    else if (category === 'remote') filteredJobs = jobs.filter(job => job.isRemote);
     renderHomeJobs(filteredJobs);
 }
 
-// --- SEARCH FUNCTION (Index Page) ---
 window.searchJobs = function() {
     const keyword = document.getElementById('job-search').value;
     const location = document.getElementById('location-search').value;
     window.location.href = `jobs.html?keyword=${encodeURIComponent(keyword)}&location=${encodeURIComponent(location)}`;
 }
 
-// --- HELPERS ---
 function processCompanies(data) {
     const companyMap = {};
     data.forEach(job => {
-        if (!companyMap[job.company]) {
-            companyMap[job.company] = { name: job.company, logo: job.logo, openJobs: 0 };
-        }
+        if (!companyMap[job.company]) companyMap[job.company] = { name: job.company, logo: job.logo, openJobs: 0 };
         companyMap[job.company].openJobs++;
     });
     companies = Object.values(companyMap);
@@ -136,17 +246,8 @@ function processSalaries(data) {
     const roleMap = {};
     data.forEach(job => {
         let title = job.title.split('(')[0].split('-')[0].trim();
-        let amount = 0;
-        const matches = job.salary.match(/(\d+(\.\d+)?)/g);
-        if (matches) {
-            let val = parseFloat(matches[0]);
-            if ((val < 100 || job.salary.toLowerCase().includes('k')) && !job.salary.includes('hour') && !job.salary.includes('$')) {
-                 val *= 1000;
-            }
-            amount = val;
-        }
         if (!roleMap[title]) roleMap[title] = { title: title, total: 0, count: 0, rawSalaries: [] };
-        if (amount > 0) { roleMap[title].total += amount; roleMap[title].count++; }
+        if (job.salaryNum > 0) { roleMap[title].total += job.salaryNum; roleMap[title].count++; }
         roleMap[title].rawSalaries.push(job.salary);
     });
     salaryStats = Object.values(roleMap).map(r => ({
@@ -156,51 +257,28 @@ function processSalaries(data) {
     })).sort((a, b) => b.avg - a.avg);
 }
 
-// --- RENDER FUNCTIONS ---
 function renderHomeJobs(data) {
     const container = document.getElementById('jobs-container');
     if (!container) return;
     container.innerHTML = "";
-    
-    if (data.length === 0) {
-        container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #888;">No jobs found in this category.</p>`;
-        return;
-    }
-
-    data.slice(0, 6).forEach(job => {
-        const jobCard = document.createElement('div');
-        jobCard.classList.add('job-card');
-        jobCard.innerHTML = `
-            <div class="job-card-header">
-                <div class="company-logo">${job.logo}</div>
-                <div class="header-text">
-                    <h3 class="job-title">${job.title}</h3>
-                    <p class="company-name">${job.company}</p>
-                </div>
-            </div>
-            <span class="job-type">${job.type}</span>
-            <div class="job-details">
-                <span><i class="fas fa-map-marker-alt"></i> ${job.location}</span>
-                <span><i class="fas fa-money-bill-wave"></i> ${job.salary}</span>
-            </div>
-            <button class="apply-btn" onclick="openJobDetails(${job.id})">View Details</button>
-        `;
-        container.appendChild(jobCard);
-    });
+    if (data.length === 0) { container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #888;">No jobs found in this category.</p>`; return; }
+    data.slice(0, 6).forEach(job => appendJobCard(container, job, false));
 }
 
 function renderAllJobs(data) {
     const container = document.getElementById('all-jobs-container');
     if (!container) return;
     container.innerHTML = "";
+    if(data.length === 0) { container.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#888;">No jobs found matching your criteria.</p>`; return; }
+    data.forEach(job => appendJobCard(container, job, true));
+}
 
-    if(data.length === 0) {
-        container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #888;">No jobs found matching your search.</p>`;
-        return;
-    }
-
-    data.forEach(job => {
-        const card = document.createElement('div');
+function appendJobCard(container, job, isWide) {
+    const card = document.createElement('div');
+    // Function to handle save (prevents bubbling)
+    const saveJob = `event.stopPropagation(); saveJob(${job.id}, '${job.title.replace(/'/g, "\\'")}', '${job.company.replace(/'/g, "\\'")}', '${job.logo}')`;
+    
+    if (isWide) {
         card.classList.add('job-card-wide');
         card.innerHTML = `
             <div class="logo-box">${job.logo}</div>
@@ -215,10 +293,40 @@ function renderAllJobs(data) {
             </div>
             <div class="actions">
                 <button class="btn-primary" onclick="openJobDetails(${job.id})">View Details</button>
+                <button class="btn-text" onclick="${saveJob}" style="font-size:0.8rem; color:var(--text-muted);"><i class="fas fa-bookmark"></i> Save</button>
             </div>
         `;
-        container.appendChild(card);
-    });
+    } else {
+        card.classList.add('job-card');
+        card.innerHTML = `
+            <div class="job-card-header">
+                <div class="company-logo">${job.logo}</div>
+                <div class="header-text">
+                    <h3 class="job-title">${job.title}</h3>
+                    <p class="company-name">${job.company}</p>
+                </div>
+            </div>
+            <span class="job-type">${job.type}</span>
+            <div class="job-details">
+                <span><i class="fas fa-map-marker-alt"></i> ${job.location}</span>
+                <span><i class="fas fa-money-bill-wave"></i> ${job.salary}</span>
+            </div>
+            <button class="apply-btn" onclick="openJobDetails(${job.id})">View Details</button>
+        `;
+    }
+    container.appendChild(card);
+}
+
+// --- SAVE JOB FUNCTION (NEW) ---
+window.saveJob = function(id, title, company, logo) {
+    const saved = JSON.parse(localStorage.getItem('my_saved_jobs')) || [];
+    if(saved.some(j => j.id === id)) {
+        alert("Job already saved!");
+        return;
+    }
+    saved.push({id, title, company, logo});
+    localStorage.setItem('my_saved_jobs', JSON.stringify(saved));
+    alert("Job Saved to Dashboard!");
 }
 
 function renderCompanies(data) {
@@ -282,51 +390,9 @@ function renderCompanyProfile(companyName, allJobs) {
     `;
     const jobsContainer = document.getElementById('company-jobs-container');
     jobsContainer.innerHTML = "";
-    companyJobs.forEach(job => {
-        const card = document.createElement('div');
-        card.classList.add('job-card-wide');
-        card.innerHTML = `
-            <div class="logo-box">${job.logo}</div>
-            <div class="job-info">
-                <h3>${job.title}</h3>
-                <div class="company">${job.company}</div>
-                <div class="meta">
-                    <span><i class="fas fa-map-marker-alt"></i> ${job.location}</span>
-                    <span><i class="fas fa-money-bill-wave"></i> ${job.salary}</span>
-                    <span><i class="fas fa-clock"></i> ${job.hours}</span>
-                </div>
-            </div>
-            <div class="actions">
-                <button class="btn-primary" onclick="openJobDetails(${job.id})">View Details</button>
-            </div>
-        `;
-        jobsContainer.appendChild(card);
-    });
+    companyJobs.forEach(job => appendJobCard(jobsContainer, job, true));
 }
 
-window.filterCompanies = function() {
-    const term = document.getElementById('company-search').value.toLowerCase();
-    const filtered = companies.filter(c => c.name.toLowerCase().includes(term));
-    renderCompanies(filtered);
-}
-
-window.filterSalaries = function() {
-    const term = document.getElementById('salary-search').value.toLowerCase();
-    const filtered = salaryStats.filter(s => s.title.toLowerCase().includes(term));
-    renderSalaries(filtered);
-}
-
-window.filterHomeJobs = function() {
-    const keyword = document.getElementById('keyword-filter') ? document.getElementById('keyword-filter').value.toLowerCase() : '';
-    const location = document.getElementById('location-filter') ? document.getElementById('location-filter').value.toLowerCase() : '';
-    const filtered = jobs.filter(job => 
-        (job.title.toLowerCase().includes(keyword) || job.company.toLowerCase().includes(keyword)) &&
-        job.location.toLowerCase().includes(location)
-    );
-    renderAllJobs(filtered);
-}
-
-// --- MODAL ---
 function openJobDetails(jobId) {
     const job = jobs.find(j => j.id === jobId);
     if (!job) return;
@@ -349,7 +415,7 @@ function openJobDetails(jobId) {
 }
 
 function closeJobModal() { document.getElementById('job-modal').classList.remove('open'); }
-function applyForJob() { alert("Application Started!"); closeJobModal(); }
+
 window.addEventListener('click', (e) => { if (e.target === document.getElementById('job-modal')) closeJobModal(); });
 
 // --- AUTH ---

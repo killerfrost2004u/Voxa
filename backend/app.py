@@ -7,7 +7,7 @@ import csv
 import io
 import urllib.parse
 import itertools
-import re  # Added for regex splitting
+import re
 
 app = Flask(__name__)
 CORS(app)
@@ -37,32 +37,20 @@ def get_db_connection():
 
 # --- HELPER: CLEAN TEXT TO LIST ---
 def clean_text_list(text):
-    """Splits text into a clean list of bullet points."""
     if not text: return []
-
-    # 1. Replace common bullet separators with newlines
     text = text.replace('\r', '\n').replace('•', '\n')
-
-    # 2. Split by " - " (hyphen with spaces) which often separates requirements
     text = text.replace(' - ', '\n')
-
     lines = text.split('\n')
-
     cleaned_items = []
     for line in lines:
-        # 3. Split by multiple spaces (common in Sheets)
         parts = re.split(r'\s{2,}', line)
-
         for part in parts:
             part = part.strip()
-            # Remove common bullet characters
             for char in ['*', '-', '•', '🔹', '✅', '🛑', '👉', '📝', '✨', '>', '▪', '▪️']:
                 if part.startswith(char):
                     part = part[1:].strip()
-
             if part and len(part) > 1:
                 cleaned_items.append(part)
-
     return cleaned_items
 
 
@@ -93,11 +81,28 @@ def get_jobs():
 
             if not company or not title: continue
 
-            # Clean Hours
             raw_hours = col[4].strip()
             clean_hours = " ".join(raw_hours.split())
 
-            # Combine Requirements
+            # --- NEW: Detect Job Type & Shift ---
+            # Search in Title, Hours, and Description for keywords
+            search_text = (title + " " + clean_hours + " " + col[10]).lower()
+
+            types = []
+
+            # 1. Check Part Time vs Full Time
+            if "part time" in search_text or "part-time" in search_text:
+                types.append("Part Time")
+            else:
+                types.append("Full Time")  # Default if not part time
+
+            # 2. Check Rotational
+            if "rotational" in search_text:
+                types.append("Rotational")
+
+            # Join them (e.g. "Full Time / Rotational" or "Part Time")
+            final_type = " / ".join(types)
+
             reqs_list = clean_text_list(col[3]) + clean_text_list(col[7])
 
             jobs.append({
@@ -106,7 +111,7 @@ def get_jobs():
                 "company": company,
                 "location": col[8].strip() or "Remote",
                 "salary": col[6].strip() or "Competitive",
-                "type": "Full Time",
+                "type": final_type,  # Now dynamic
                 "hours": clean_hours or "Not Specified",
                 "training": col[9].strip(),
                 "requirements": reqs_list,
