@@ -23,34 +23,40 @@
                 <a href="login.html" class="btn-text">Log In</a>
                 <a href="login.html" class="btn-primary">Sign Up</a>
             </div>
-            <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+            <div class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
         </div>
     </nav>
 
-    <header class="page-header">
+    <header class="page-header bg-green">
         <div class="container">
-            <h1>Salary Estimates</h1>
-            <p>See what the pack is earning.</p>
+            <h1>Market Salaries</h1>
+            <p>Explore compensation packages across different roles.</p>
+            
             <div class="search-bar" style="margin-top: 2rem; max-width: 600px;">
                 <div class="input-group">
-                    <i class="fas fa-search-dollar"></i>
-                    <input type="text" id="salary-search" placeholder="Job title...">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="salary-search" placeholder="Search for a job title (e.g. Telesales)..." onkeyup="filterSalaries()">
                 </div>
-                <button class="btn-primary" onclick="filterSalaries()">Search</button>
             </div>
         </div>
     </header>
 
     <section class="section-padding">
         <div class="container">
-            <h2 style="margin-bottom: 2rem; color: var(--text-main);">Top Paying Roles</h2>
             <div class="salaries-list" id="salaries-container">
-                </div>
+                <p style="text-align:center; color:#888;">Loading salary data...</p>
+            </div>
         </div>
     </section>
 
     <footer>
-        <div class="container"><div class="footer-bottom"><p>&copy; 2024 Dark Wolves. All rights reserved.</p></div></div>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2024 Dark Wolves. All rights reserved.</p>
+            </div>
+        </div>
     </footer>
 
     <script src="js/script.js"></script>

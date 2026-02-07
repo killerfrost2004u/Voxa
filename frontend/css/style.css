@@ -230,7 +230,7 @@ ul {
   margin-top: 0.5rem;
 }
 
-/* --- Job Cards (Grid & Wide) --- */
+/* --- Job Cards (Grid) --- */
 .jobs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -243,9 +243,7 @@ ul {
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1.5rem;
-  transition:
-    transform 0.3s,
-    box-shadow 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s;
   display: flex;
   flex-direction: column;
 }
@@ -255,11 +253,11 @@ ul {
   border-color: var(--primary-color);
 }
 
-/* --- UPDATED HEADER (VERY CLOSE GAP) --- */
+/* --- Grid Header --- */
 .job-card-header {
   display: flex;
   align-items: center;
-  gap: 10px; /* Reduced to 0px to be very close */
+  gap: 5px; 
   margin-bottom: 15px;
 }
 
@@ -308,9 +306,11 @@ ul {
   margin-bottom: 1rem;
 }
 
+/* --- [UPDATED] Job Details: Stacked Vertically --- */
 .job-details {
   display: flex;
-  gap: 1rem;
+  flex-direction: column; /* Stack Location and Salary */
+  gap: 0.5rem;            /* Add spacing between rows */
   margin-bottom: 1.5rem;
   font-size: 0.9rem;
   color: var(--text-muted);
@@ -458,10 +458,8 @@ ul {
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s;
+  gap: 10px;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 .job-card-wide:hover {
   transform: translateY(-2px);
@@ -578,7 +576,7 @@ ul {
   font-size: 2rem;
   font-weight: bold;
   color: var(--primary-color);
-  margin: 0 0 1rem 150px;
+  margin: 0 0 1rem;
 }
 .company-rating {
   color: #f59e0b;
@@ -699,7 +697,7 @@ ul {
 }
 .modal-header {
   display: flex;
-  gap: 1rem;
+  gap: 10px;
   align-items: center;
   margin-bottom: 1.5rem;
   border-bottom: 1px solid #333;

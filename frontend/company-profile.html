@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dark Wolves | Find Your Path</title>
+    <title>Company Profile | Dark Wolves</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
         <div class="container">
             <a href="index.html" class="logo">Dark<span>Wolves</span></a>
             <ul class="nav-links">
-                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="index.html">Home</a></li>
                 <li><a href="jobs.html">Find Jobs</a></li>
                 <li><a href="companies.html">Companies</a></li>
                 <li><a href="salaries.html">Salaries</a></li>
@@ -29,104 +29,66 @@
         </div>
     </nav>
 
-    <header class="hero">
-        <div class="container">
-            <h1>Hunt for the job that suits your <span>passion</span></h1>
-            <p>Join the pack. Thousands of opportunities in tech and engineering await.</p>
-            
-            <div class="search-bar">
-                <div class="input-group">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="job-search" placeholder="Job title or keyword" 
-                           onkeypress="if(event.key==='Enter') searchJobs()">
-                </div>
-                <div class="input-group">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <input type="text" id="location-search" placeholder="City or Country" 
-                           onkeypress="if(event.key==='Enter') searchJobs()">
-                </div>
-                <button class="btn-primary" onclick="searchJobs()">Search</button>
-            </div>
-            
-            <div class="popular-tags">
-                <span>Popular:</span>
-                <a href="jobs.html?keyword=Telesales">Telesales</a>
-                <a href="jobs.html?keyword=Customer%20Support">Customer Support</a>
-                <a href="jobs.html?location=Remote">Remote</a>
-            </div>
+    <header class="page-header">
+        <div class="container" id="company-profile-header">
+            <p style="text-align:center; color:#888;">Loading company profile...</p>
         </div>
     </header>
 
     <section class="section-padding">
         <div class="container">
             <div class="section-header">
-                <h2>Latest Opportunities</h2>
-                <div class="view-options">
-                    <span class="active">All</span>
-                    <span>Full Time</span>
-                    <span>Remote</span>
-                </div>
+                <h2>Available Positions</h2>
             </div>
 
-            <div class="jobs-grid" id="jobs-container">
+            <div class="jobs-list" id="company-jobs-container">
                 </div>
-            
-            <div class="load-more">
-                <a href="jobs.html" class="btn-secondary">View All Jobs</a>
-            </div>
         </div>
     </section>
 
     <div id="job-modal" class="modal-overlay">
         <div class="modal-content">
             <button class="close-modal" onclick="closeJobModal()">&times;</button>
-            
             <div class="modal-header">
-                <div id="modal-logo" class="company-logo-large" style="margin:0;">DW</div>
+                <div id="modal-logo" class="company-logo-large" style="margin: 0;">DW</div>
                 <div>
                     <h2 id="modal-title">Job Title</h2>
                     <p id="modal-company" class="text-muted">Company Name</p>
                 </div>
             </div>
-
             <div class="modal-grid-2">
                 <div class="info-box main-box">
                     <i class="fas fa-money-bill-wave icon-large"></i>
                     <div>
                         <span class="label">Salary Package</span>
-                        <strong id="modal-salary" class="text-highlight">10k - 15k</strong>
+                        <strong id="modal-salary" class="text-highlight">...</strong>
                     </div>
                 </div>
-
                 <div class="info-stack">
                     <div class="info-row">
                         <i class="fas fa-map-marker-alt"></i>
                         <div>
                             <span class="label">Location</span>
-                            <strong id="modal-location">Cairo</strong>
+                            <strong id="modal-location">...</strong>
                         </div>
                     </div>
                     <div class="info-row">
                         <i class="fas fa-clock"></i>
                         <div>
                             <span class="label">Working Hours</span>
-                            <strong id="modal-hours">9 AM - 5 PM</strong>
+                            <strong id="modal-hours">...</strong>
                         </div>
                     </div>
                 </div>
             </div>
-
             <div class="modal-body">
                 <h3><i class="fas fa-file-alt"></i> Description</h3>
                 <p id="modal-description" class="text-block">...</p>
-
                 <h3><i class="fas fa-check-circle"></i> Requirements</h3>
                 <div id="modal-requirements" class="requirements-container"></div>
-                
                 <h3><i class="fas fa-chalkboard-teacher"></i> Training</h3>
                 <p id="modal-training" class="text-block">...</p>
             </div>
-
             <div class="modal-footer">
                 <button class="btn-primary full-width" onclick="applyForJob()">Apply Now</button>
             </div>
@@ -135,28 +97,9 @@
 
     <footer>
         <div class="container">
-            <div class="footer-col">
-                <a href="#" class="logo">Dark<span>Wolves</span></a>
-                <p>Connecting talent with opportunity. The hunt begins here.</p>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Dark Wolves. All rights reserved.</p>
             </div>
-            <div class="footer-col">
-                <h4>For Candidates</h4>
-                <a href="jobs.html">Browse Jobs</a>
-                <a href="#">Candidate Dashboard</a>
-            </div>
-            <div class="footer-col">
-                <h4>For Employers</h4>
-                <a href="#">Post a Job</a>
-                <a href="#">Pricing</a>
-            </div>
-            <div class="footer-col">
-                <h4>Support</h4>
-                <a href="#">Help Center</a>
-                <a href="#">Privacy Policy</a>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2024 Dark Wolves. All rights reserved.</p>
         </div>
     </footer>
 
