@@ -279,6 +279,7 @@
             
             // Populate Settings Form
             document.getElementById('settings-name').value = user.name;
+            // [CRITICAL UPDATE] Ensure we use user.email here
             document.getElementById('settings-email').value = user.email || 'hunter@darkwolves.com';
 
             // Load Data

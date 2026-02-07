@@ -84,23 +84,18 @@ def get_jobs():
             raw_hours = col[4].strip()
             clean_hours = " ".join(raw_hours.split())
 
-            # --- NEW: Detect Job Type & Shift ---
-            # Search in Title, Hours, and Description for keywords
+            # Detect Job Type & Shift
             search_text = (title + " " + clean_hours + " " + col[10]).lower()
 
             types = []
-
-            # 1. Check Part Time vs Full Time
             if "part time" in search_text or "part-time" in search_text:
                 types.append("Part Time")
             else:
-                types.append("Full Time")  # Default if not part time
+                types.append("Full Time")
 
-            # 2. Check Rotational
             if "rotational" in search_text:
                 types.append("Rotational")
 
-            # Join them (e.g. "Full Time / Rotational" or "Part Time")
             final_type = " / ".join(types)
 
             reqs_list = clean_text_list(col[3]) + clean_text_list(col[7])
@@ -111,7 +106,7 @@ def get_jobs():
                 "company": company,
                 "location": col[8].strip() or "Remote",
                 "salary": col[6].strip() or "Competitive",
-                "type": final_type,  # Now dynamic
+                "type": final_type,
                 "hours": clean_hours or "Not Specified",
                 "training": col[9].strip(),
                 "requirements": reqs_list,
@@ -127,7 +122,6 @@ def get_jobs():
         return jsonify({"error": str(e)}), 500
 
 
-# ... (Auth Routes remain unchanged) ...
 @app.route('/api/signup', methods=['POST'])
 def signup():
     try:
@@ -155,10 +149,20 @@ def login():
         conn = get_db_connection()
         if not conn: return jsonify({"error": "DB Connection Failed"}), 500
         cursor = conn.cursor()
-        cursor.execute("SELECT UserID, FullName, PasswordHash FROM Users WHERE Email = ?", (data['email'],))
+        # [UPDATED QUERY] Added 'Email' to the SELECT statement
+        cursor.execute("SELECT UserID, FullName, Email, PasswordHash FROM Users WHERE Email = ?", (data['email'],))
         user = cursor.fetchone()
+
         if user and bcrypt.checkpw(data['password'].encode('utf-8'), user.PasswordHash.encode('utf-8')):
-            return jsonify({"message": "Success", "user": {"name": user.FullName}}), 200
+            # [UPDATED RESPONSE] Including 'email' in the return object
+            return jsonify({
+                "message": "Success",
+                "user": {
+                    "name": user.FullName,
+                    "email": user.Email
+                }
+            }), 200
+
         return jsonify({"error": "Invalid credentials"}), 401
     except Exception as e:
         return jsonify({"error": str(e)}), 500
