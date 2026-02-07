@@ -1,129 +1,87 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify
 from flask_cors import CORS
-import pyodbc
-import bcrypt
 import requests
 import csv
 import io
+import urllib.parse
+import itertools
 
 app = Flask(__name__)
 CORS(app)
 
 # --- CONFIGURATION ---
-# 1. Database Connection
-# IMPORTANT: Replace 'localhost\SQLEXPRESS' with your actual server name if different.
-# If you are not sure, run 'osql -L' in cmd to find it.
 SERVER_NAME = r'localhost\SQLEXPRESS'
-
-conn_str = (
-    f"DRIVER={{ODBC Driver 17 for SQL Server}};"
-    f"SERVER={SERVER_NAME};"
-    f"DATABASE=DarkWolvesDB;"
-    f"Trusted_Connection=yes;"
-    f"TrustServerCertificate=yes;"
-)
-
-# 2. Google Sheet Configuration
 SHEET_ID = "1oYDMBIXMCrIdfDbf-EFhuPal0NYo5jphkkX3AWYonjU"
-SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid=0"
+SHEET_NAME = "Wolves Master sheet 2"
 
 
-def get_db_connection():
-    try:
-        return pyodbc.connect(conn_str)
-    except Exception as e:
-        print(f"❌ Database Error: {e}")
-        return None
-
-
-# --- NEW ROUTE: Fetch Jobs from Google Sheet ---
 @app.route('/api/jobs', methods=['GET'])
 def get_jobs():
     try:
-        # 1. Download the sheet as CSV
-        response = requests.get(SHEET_URL)
+        # 1. Fetch the CSV
+        encoded_name = urllib.parse.quote(SHEET_NAME)
+        url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_name}"
+
+        print(f"📥 Fetching: {url}")
+        response = requests.get(url)
         response.raise_for_status()
 
-        # 2. Parse the CSV data
-        # Use 'utf-8-sig' to handle potential BOM characters from Excel/Google Sheets
-        csv_file = io.StringIO(response.content.decode('utf-8-sig'))
-        reader = csv.DictReader(csv_file)
+        # 2. Parse CSV
+        csv_content = response.content.decode('utf-8-sig')
+        # Read all rows into a list of lists
+        raw_data = list(csv.reader(io.StringIO(csv_content)))
+
+        # 3. TRANSPOSE DATA (Flip Rows and Columns)
+        # Zip converts columns to rows
+        transposed_data = list(map(list, itertools.zip_longest(*raw_data, fillvalue="")))
+
+        print(f"🔄 Transposed Data: Found {len(transposed_data)} columns (potential jobs).")
 
         jobs = []
-        for i, row in enumerate(reader):
-            # Safe parsing with defaults
-            company_name = row.get("Company Name", "N/A")
+
+        # 4. Iterate through the NEW rows (which were originally columns)
+        # We start from index 1 because index 0 is likely the labels ("Company Name", "Job Title", etc.)
+
+        # Let's verify which index holds what based on your Raw Data dump:
+        # Original Row 1 = Company Name -> Now Column 1
+        # Original Row 2 = Job Title -> Now Column 2
+        # Original Row 6 = Salary -> Now Column 6
+        # Original Row 8 = Location -> Now Column 8
+
+        for i, col in enumerate(transposed_data):
+            if i == 0: continue  # Skip the headers column (the one that says "Company Name", "Job Title"...)
+
+            # Extract fields by their ORIGINAL Row Index
+            # Safety check: ensure column has enough rows
+            if len(col) < 10: continue
+
+            company = col[1].strip()  # Row 1
+            title = col[2].strip()  # Row 2
+            salary = col[6].strip()  # Row 6
+            location = col[8].strip()  # Row 8
+            offer_text = col[10].strip()  # Row 10 (Offer Details)
+
+            # Skip empty columns
+            if not company or not title:
+                continue
 
             jobs.append({
-                "id": i + 1,
-                "title": row.get("Role", "N/A"),
-                "company": company_name,
-                "location": row.get("Location", "Remote"),
-                "salary": row.get("Salary", "Competitive"),
-                "type": row.get("Type", "Full Time"),
-                # Create a fake logo from the first 2 letters of company name
-                "logo": (company_name[:2] if company_name else "DW").upper()
+                "id": i,
+                "title": title,
+                "company": company,
+                "location": location if location else "Remote",
+                "salary": salary if salary else "Competitive",
+                "type": "Full Time",  # Default
+                "description": offer_text[:100] + "...",
+                "logo": (company[:2]).upper()
             })
 
+        print(f"📤 Returning {len(jobs)} jobs.")
         return jsonify(jobs)
 
     except Exception as e:
-        print(f"Sheet Error: {e}")
-        return jsonify({"error": "Failed to load jobs from sheet"}), 500
-
-
-# --- Auth Routes ---
-@app.route('/api/signup', methods=['POST'])
-def signup():
-    try:
-        data = request.json
-        if not data or not all(k in data for k in ('fullName', 'email', 'password')):
-            return jsonify({"error": "Missing fields"}), 400
-
-        hashed_pw = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-        conn = get_db_connection()
-        if not conn: return jsonify({"error": "Database Connection Failed"}), 500
-
-        cursor = conn.cursor()
-        # Check if email exists
-        cursor.execute("SELECT UserID FROM Users WHERE Email = ?", (data['email'],))
-        if cursor.fetchone():
-            return jsonify({"error": "Email already exists"}), 409
-
-        cursor.execute("INSERT INTO Users (FullName, Email, PasswordHash) VALUES (?, ?, ?)",
-                       (data['fullName'], data['email'], hashed_pw))
-        conn.commit()
-        return jsonify({"message": "User created"}), 201
-    except Exception as e:
-        print(f"Signup Error: {e}")
+        print(f"❌ Error: {e}")
         return jsonify({"error": str(e)}), 500
-    finally:
-        if 'conn' in locals() and conn: conn.close()
-
-
-@app.route('/api/login', methods=['POST'])
-def login():
-    try:
-        data = request.json
-        if not data or not all(k in data for k in ('email', 'password')):
-            return jsonify({"error": "Missing fields"}), 400
-
-        conn = get_db_connection()
-        if not conn: return jsonify({"error": "Database Connection Failed"}), 500
-
-        cursor = conn.cursor()
-        cursor.execute("SELECT UserID, FullName, PasswordHash FROM Users WHERE Email = ?", (data['email'],))
-        user = cursor.fetchone()
-
-        if user and bcrypt.checkpw(data['password'].encode('utf-8'), user.PasswordHash.encode('utf-8')):
-            return jsonify({"message": "Success", "user": {"name": user.FullName}}), 200
-        return jsonify({"error": "Invalid credentials"}), 401
-    except Exception as e:
-        print(f"Login Error: {e}")
-        return jsonify({"error": str(e)}), 500
-    finally:
-        if 'conn' in locals() and conn: conn.close()
 
 
 if __name__ == '__main__':
