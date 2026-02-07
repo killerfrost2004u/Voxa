@@ -7,7 +7,7 @@ import csv
 import io
 import urllib.parse
 import itertools
-import re  # Added for better splitting
+import re  # Added for regex splitting
 
 app = Flask(__name__)
 CORS(app)
@@ -43,7 +43,7 @@ def clean_text_list(text):
     # 1. Replace common bullet separators with newlines
     text = text.replace('\r', '\n').replace('•', '\n')
 
-    # 2. Split by " - " (hyphen with spaces)
+    # 2. Split by " - " (hyphen with spaces) which often separates requirements
     text = text.replace(' - ', '\n')
 
     lines = text.split('\n')
@@ -56,7 +56,7 @@ def clean_text_list(text):
         for part in parts:
             part = part.strip()
             # Remove common bullet characters
-            for char in ['*', '-', '•', '🔹', '✅', '🛑', '👉', '📝', '✨', '>']:
+            for char in ['*', '-', '•', '🔹', '✅', '🛑', '👉', '📝', '✨', '>', '▪', '▪️']:
                 if part.startswith(char):
                     part = part[1:].strip()
 

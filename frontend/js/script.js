@@ -29,13 +29,21 @@ function renderHomeJobs(data) {
     data.slice(0, 6).forEach(job => {
         const jobCard = document.createElement('div');
         jobCard.classList.add('job-card');
+        
+        // UPDATED LAYOUT: Logo next to Title/Company
         jobCard.innerHTML = `
-            <div class="job-header">
+            <div class="job-card-header">
                 <div class="company-logo">${job.logo}</div>
+                <div class="header-text">
+                    <h3 class="job-title">${job.title}</h3>
+                    <p class="company-name">${job.company}</p>
+                </div>
+            </div>
+            
+            <div class="job-tags">
                 <span class="job-type">${job.type}</span>
             </div>
-            <h3 class="job-title">${job.title}</h3>
-            <p class="company-name">${job.company}</p>
+
             <div class="job-details">
                 <span><i class="fas fa-map-marker-alt"></i> ${job.location}</span>
                 <span><i class="fas fa-money-bill-wave"></i> ${job.salary}</span>
@@ -73,7 +81,7 @@ function renderAllJobs(data) {
     });
 }
 
-// 3. MODAL LOGIC (Updated)
+// 3. MODAL LOGIC
 function openJobDetails(jobId) {
     const job = jobs.find(j => j.id === jobId);
     if (!job) return;
