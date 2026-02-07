@@ -1,5 +1,7 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
+import pyodbc
+import bcrypt
 import requests
 import csv
 import io
@@ -14,6 +16,46 @@ SERVER_NAME = r'localhost\SQLEXPRESS'
 SHEET_ID = "1oYDMBIXMCrIdfDbf-EFhuPal0NYo5jphkkX3AWYonjU"
 SHEET_NAME = "Wolves Master sheet 2"
 
+# --- DATABASE CONNECTION ---
+conn_str = (
+    f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+    f"SERVER={SERVER_NAME};"
+    f"DATABASE=DarkWolvesDB;"
+    f"Trusted_Connection=yes;"
+    f"TrustServerCertificate=yes;"
+)
+
+
+def get_db_connection():
+    try:
+        return pyodbc.connect(conn_str)
+    except Exception as e:
+        print(f"❌ Database Error: {e}")
+        return None
+
+
+# --- HELPER: CLEAN TEXT TO LIST ---
+def clean_text_list(text):
+    """Splits text into a clean list of bullet points."""
+    if not text: return []
+    # Replace common separators with newlines
+    text = text.replace('\r', '\n').replace('•', '\n').replace('-', '\n')
+    lines = text.split('\n')
+
+    cleaned_items = []
+    for line in lines:
+        line = line.strip()
+        # Remove common bullet characters at the start
+        for char in ['*', '-', '•', '🔹', '✅', '🛑', '👉', '📝', '✨']:
+            if line.startswith(char):
+                line = line[1:].strip()
+
+        if line and len(line) > 2:  # Ignore tiny junk lines
+            cleaned_items.append(line)
+    return cleaned_items
+
+
+# --- ROUTES ---
 
 @app.route('/api/jobs', methods=['GET'])
 def get_jobs():
@@ -33,47 +75,85 @@ def get_jobs():
 
         jobs = []
 
-        # 3. Extract Data (Mapping columns based on your sheet layout)
+        # 3. Extract Data
         for i, col in enumerate(transposed_data):
-            if i == 0: continue  # Skip label column
+            if i == 0: continue  # Skip labels
             if len(col) < 10: continue
 
-            # Map Rows to Variables
-            company = col[1].strip()  # Row 1
-            title = col[2].strip()  # Row 2
-            reqs_1 = col[3].strip()  # Row 3 (Account Type)
-            hours = col[4].strip()  # Row 4
-            salary = col[6].strip()  # Row 6
-            reqs_2 = col[7].strip()  # Row 7 (Who can apply)
-            location = col[8].strip()  # Row 8
-            training = col[9].strip()  # Row 9
-            full_desc = col[10].strip()  # Row 10 (Full Offer)
+            company = col[1].strip()
+            title = col[2].strip()
 
             if not company or not title: continue
 
-            # Combine requirements for cleaner display
-            full_requirements = f"{reqs_1}\n{reqs_2}"
+            # Clean up the Hours (remove excessive spaces)
+            raw_hours = col[4].strip()
+            clean_hours = " ".join(raw_hours.split())
+
+            # Process Requirements into a List
+            # Combining "Account Type" (Row 3) and "Who can apply" (Row 7)
+            reqs_list = clean_text_list(col[3]) + clean_text_list(col[7])
 
             jobs.append({
                 "id": i,
                 "title": title,
                 "company": company,
-                "location": location if location else "Remote",
-                "salary": salary if salary else "Competitive",
+                "location": col[8].strip() or "Remote",
+                "salary": col[6].strip() or "Competitive",
                 "type": "Full Time",
-                "hours": hours,
-                "training": training,
-                "requirements": full_requirements,
-                "description": full_desc if full_desc else "No description provided.",
+                "hours": clean_hours or "Not Specified",
+                "training": col[9].strip(),
+                "requirements": reqs_list,  # Now sending a List []
+                "description": col[10].strip(),
                 "logo": (company[:2]).upper()
             })
 
-        print(f"📤 Sent {len(jobs)} jobs with full details.")
+        print(f"📤 Sent {len(jobs)} jobs.")
         return jsonify(jobs)
 
     except Exception as e:
         print(f"❌ Error: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+# ... (Auth Routes remain unchanged, keep them here) ...
+@app.route('/api/signup', methods=['POST'])
+def signup():
+    try:
+        data = request.json
+        if not data or not all(k in data for k in ('fullName', 'email', 'password')):
+            return jsonify({"error": "Missing fields"}), 400
+        hashed_pw = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        conn = get_db_connection()
+        if not conn: return jsonify({"error": "Database Connection Failed"}), 500
+        cursor = conn.cursor()
+        cursor.execute("SELECT UserID FROM Users WHERE Email = ?", (data['email'],))
+        if cursor.fetchone(): return jsonify({"error": "Email already exists"}), 409
+        cursor.execute("INSERT INTO Users (FullName, Email, PasswordHash) VALUES (?, ?, ?)",
+                       (data['fullName'], data['email'], hashed_pw))
+        conn.commit()
+        return jsonify({"message": "User created"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'conn' in locals() and conn: conn.close()
+
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    try:
+        data = request.json
+        conn = get_db_connection()
+        if not conn: return jsonify({"error": "Database Connection Failed"}), 500
+        cursor = conn.cursor()
+        cursor.execute("SELECT UserID, FullName, PasswordHash FROM Users WHERE Email = ?", (data['email'],))
+        user = cursor.fetchone()
+        if user and bcrypt.checkpw(data['password'].encode('utf-8'), user.PasswordHash.encode('utf-8')):
+            return jsonify({"message": "Success", "user": {"name": user.FullName}}), 200
+        return jsonify({"error": "Invalid credentials"}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'conn' in locals() and conn: conn.close()
 
 
 if __name__ == '__main__':

@@ -557,3 +557,37 @@ footer .container { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 
 .close-modal:hover { color: white; }
 .btn-primary.full-width { width: 100%; padding: 1rem; font-size: 1.1rem; }
 h3 { margin-bottom: 0.5rem; color: #ff6600; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+
+
+/* --- Pretty Bullet Points in Modal --- */
+.job-requirements-list {
+    list-style: none; /* Remove default dots */
+    padding: 0;
+    margin: 0;
+}
+
+.job-requirements-list li {
+    position: relative;
+    padding-left: 28px;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #e0e0e0;
+    border-bottom: 1px solid #333;
+    padding-bottom: 8px;
+}
+
+.job-requirements-list li:last-child {
+    border-bottom: none;
+}
+
+/* Custom Checkmark Icon */
+.job-requirements-list li::before {
+    content: "✓"; 
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #ff6600; /* Dark Wolves Orange */
+    font-weight: 900;
+    font-size: 1.1rem;
+}

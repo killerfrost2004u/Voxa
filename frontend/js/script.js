@@ -1,36 +1,29 @@
 const API_URL = "http://127.0.0.1:5000/api";
 let jobs = []; 
 
-// 1. Fetch Real Data
+// 1. Fetch Data
 async function loadJobs() {
     try {
         const response = await fetch(`${API_URL}/jobs`);
         if (!response.ok) throw new Error("Failed to fetch jobs");
-        
         jobs = await response.json(); 
         
-        // Render
-        const homeContainer = document.getElementById('jobs-container');
-        if (homeContainer) renderHomeJobs(jobs);
-
-        const allContainer = document.getElementById('all-jobs-container');
-        if (allContainer) renderAllJobs(jobs);
-
-        const countSpan = document.getElementById('job-count');
-        if(countSpan) countSpan.textContent = `Showing ${jobs.length} Jobs`;
+        // Refresh UI
+        if(document.getElementById('jobs-container')) renderHomeJobs(jobs);
+        if(document.getElementById('all-jobs-container')) renderAllJobs(jobs);
+        if(document.getElementById('job-count')) document.getElementById('job-count').textContent = `Showing ${jobs.length} Jobs`;
 
     } catch (error) {
-        console.error("Error loading jobs:", error);
+        console.error("Error:", error);
     }
 }
 loadJobs();
 
-// 2. Render Functions (Updated onclick)
-const homeJobsContainer = document.getElementById('jobs-container');
-
+// 2. Render Functions
 function renderHomeJobs(data) {
-    if (!homeJobsContainer) return;
-    homeJobsContainer.innerHTML = "";
+    const container = document.getElementById('jobs-container');
+    if (!container) return;
+    container.innerHTML = "";
     
     data.slice(0, 6).forEach(job => {
         const jobCard = document.createElement('div');
@@ -48,15 +41,14 @@ function renderHomeJobs(data) {
             </div>
             <button class="apply-btn" onclick="openJobDetails(${job.id})">View Details</button>
         `;
-        homeJobsContainer.appendChild(jobCard);
+        container.appendChild(jobCard);
     });
 }
 
-const allJobsContainer = document.getElementById('all-jobs-container');
-
 function renderAllJobs(data) {
-    if (!allJobsContainer) return;
-    allJobsContainer.innerHTML = "";
+    const container = document.getElementById('all-jobs-container');
+    if (!container) return;
+    container.innerHTML = "";
 
     data.forEach(job => {
         const card = document.createElement('div');
@@ -76,49 +68,51 @@ function renderAllJobs(data) {
                 <button class="btn-primary" onclick="openJobDetails(${job.id})">View Details</button>
             </div>
         `;
-        allJobsContainer.appendChild(card);
+        container.appendChild(card);
     });
 }
 
-// 3. New Modal Logic
+// 3. UPDATED Modal Logic (Pretty Bullets & Hours)
 function openJobDetails(jobId) {
     const job = jobs.find(j => j.id === jobId);
     if (!job) return;
 
-    // Fill Modal Data
+    // Basic Info
     document.getElementById('modal-title').textContent = job.title;
     document.getElementById('modal-company').textContent = job.company;
     document.getElementById('modal-salary').textContent = job.salary;
     document.getElementById('modal-location').textContent = job.location;
-    document.getElementById('modal-hours').textContent = job.hours || "Not Specified";
     document.getElementById('modal-logo').textContent = job.logo;
     
-    document.getElementById('modal-description').textContent = job.description;
-    document.getElementById('modal-requirements').textContent = job.requirements;
-    document.getElementById('modal-training').textContent = job.training || "None";
+    // PRETTY HOURS
+    document.getElementById('modal-hours').innerHTML = `<span style="color:#ff6600; font-weight:bold;">⏰</span> ${job.hours}`;
 
-    // Show Modal
+    // PRETTY BULLET POINTS
+    const reqContainer = document.getElementById('modal-requirements');
+    if (Array.isArray(job.requirements) && job.requirements.length > 0) {
+        // Generate HTML List
+        reqContainer.innerHTML = `<ul class="job-requirements-list">
+            ${job.requirements.map(item => `<li>${item}</li>`).join('')}
+        </ul>`;
+    } else {
+        reqContainer.textContent = "No specific requirements listed.";
+    }
+
+    // Description & Training
+    document.getElementById('modal-description').textContent = job.description || "No description provided.";
+    document.getElementById('modal-training').textContent = job.training || "Not specified.";
+
     document.getElementById('job-modal').classList.add('open');
 }
 
 function closeJobModal() {
     document.getElementById('job-modal').classList.remove('open');
 }
-
-function applyForJob() {
-    alert("Application Started! (This is a demo)");
-    closeJobModal();
-}
-
-// Close modal when clicking outside
 window.addEventListener('click', (e) => {
-    const modal = document.getElementById('job-modal');
-    if (e.target === modal) {
-        closeJobModal();
-    }
+    if (e.target === document.getElementById('job-modal')) closeJobModal();
 });
 
-// 4. Auth Logic (Keep this)
+// 4. Auth Logic
 document.addEventListener('DOMContentLoaded', () => {
     const userStr = localStorage.getItem('user');
     const authButtons = document.querySelector('.auth-buttons');
@@ -136,7 +130,6 @@ window.globalLogout = function() {
     window.location.href = 'index.html';
 }
 
-// 5. Search Filters (Keep this)
 window.filterHomeJobs = function() {
     const keyword = document.getElementById('job-search').value.toLowerCase();
     const location = document.getElementById('location-search').value.toLowerCase();
