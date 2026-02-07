@@ -8,9 +8,12 @@ CORS(app)
 
 # --- Database Connection ---
 # ⚠️ MAKE SURE YOU RAN THE SQL SCRIPT IN SSMS FIRST!
+# --- Database Connection ---
+# REPLACE 'YOUR_SERVER_NAME_HERE' with the name you copied from SSMS
+# Example: r'SERVER=DESKTOP-8J5K3\SQLEXPRESS;'
 conn_str = (
     r'DRIVER={ODBC Driver 17 for SQL Server};'
-    r'SERVER=localhost;'
+    r'SERVER=localhost\SQLEXPRESS;'  
     r'DATABASE=DarkWolvesDB;'
     r'Trusted_Connection=yes;'
 )

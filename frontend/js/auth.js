@@ -73,7 +73,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
             // Save user info to LocalStorage
             localStorage.setItem('user', JSON.stringify(data.user));
             alert(`Welcome back, ${data.user.name}!`);
-            window.location.href = 'index.html'; // Redirect to home
+            window.location.href = 'dashboard.html';
         } else {
             throw new Error(data.error || "Login failed");
         }

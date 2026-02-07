@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hunter Dashboard | Dark Wolves</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Dashboard Specific Styles */
+        body { display: flex; min-height: 100vh; }
+        
+        .sidebar {
+            width: 260px;
+            background: #141414;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.5rem;
+            position: fixed;
+            height: 100%;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 2rem;
+            background: var(--bg-body);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            color: var(--text-muted);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: #2a1a0a;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .nav-item i { margin-right: 12px; width: 20px; text-align: center; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: #141414;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-info h3 { font-size: 2rem; color: var(--text-main); margin-bottom: 0.2rem; }
+        .stat-info p { color: var(--text-muted); font-size: 0.9rem; }
+        
+        .stat-icon {
+            width: 50px; height: 50px;
+            background: #2a1a0a;
+            color: var(--primary-color);
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            border: 1px solid var(--primary-color);
+        }
+
+        .table-container {
+            background: #141414;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            overflow-x: auto;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 1rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); }
+        td { padding: 1rem; color: var(--text-main); border-bottom: 1px solid #222; }
+        
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-pending { background: #333; color: #aaa; }
+        .status-interview { background: #2a1a0a; color: var(--primary-color); border: 1px solid var(--primary-color); }
+        .status-rejected { background: #2a0a0a; color: #ef4444; border: 1px solid #ef4444; }
+
+        .user-profile {
+            margin-top: auto;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .avatar {
+            width: 40px; height: 40px;
+            background: var(--primary-color);
+            color: #fff;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <a href="index.html" class="logo" style="margin-bottom: 2rem;">Dark<span>Wolves</span></a>
+        
+        <nav>
+            <div class="nav-item active">
+                <i class="fas fa-th-large"></i> Dashboard
+            </div>
+            <div class="nav-item" onclick="window.location.href='jobs.html'">
+                <i class="fas fa-briefcase"></i> Browse Jobs
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-file-alt"></i> Applications
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-bookmark"></i> Saved Jobs
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-cog"></i> Settings
+            </div>
+        </nav>
+
+        <div class="user-profile">
+            <div class="avatar" id="user-avatar">?</div>
+            <div>
+                <h4 id="user-name" style="color:white; font-size:0.9rem;">Guest</h4>
+                <a onclick="logout()" class="logout-link">Logout</a>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+            <div>
+                <h1 style="color:white;">Welcome back, <span id="header-name" style="color:var(--primary-color);">Hunter</span></h1>
+                <p style="color:var(--text-muted);">Here is your daily activity report.</p>
+            </div>
+            <button class="btn-primary" onclick="window.location.href='jobs.html'">Find New Hunt</button>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>12</h3>
+                    <p>Applications Sent</p>
+                </div>
+                <div class="stat-icon"><i class="fas fa-paper-plane"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>3</h3>
+                    <p>Interviews Scheduled</p>
+                </div>
+                <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>5</h3>
+                    <p>Profile Views</p>
+                </div>
+                <div class="stat-icon"><i class="fas fa-eye"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>85%</h3>
+                    <p>Profile Completion</p>
+                </div>
+                <div class="stat-icon"><i class="fas fa-user-circle"></i></div>
+            </div>
+        </div>
+
+        <h3 style="color:white; margin-bottom:1rem;">Recent Applications</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Company</th>
+                        <th>Date Applied</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Senior Frontend Developer</td>
+                        <td>TechFlow</td>
+                        <td>Oct 24, 2024</td>
+                        <td><span class="status-badge status-interview">Interview</span></td>
+                        <td><a href="#" style="color:var(--primary-color)">View Details</a></td>
+                    </tr>
+                    <tr>
+                        <td>Product Designer</td>
+                        <td>Creative Studio</td>
+                        <td>Oct 22, 2024</td>
+                        <td><span class="status-badge status-pending">Pending</span></td>
+                        <td><a href="#" style="color:var(--primary-color)">View Details</a></td>
+                    </tr>
+                    <tr>
+                        <td>Backend Engineer</td>
+                        <td>ServerSide</td>
+                        <td>Oct 20, 2024</td>
+                        <td><span class="status-badge status-rejected">Rejected</span></td>
+                        <td><a href="#" style="color:var(--primary-color)">View Details</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // Check Login Status on Load
+        document.addEventListener('DOMContentLoaded', () => {
+            const userStr = localStorage.getItem('user');
+            if (!userStr) {
+                alert('You must join the pack first!');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const user = JSON.parse(userStr);
+            document.getElementById('user-name').textContent = user.name;
+            document.getElementById('header-name').textContent = user.name.split(' ')[0]; // First name only
+            document.getElementById('user-avatar').textContent = user.name.charAt(0).toUpperCase();
+        });
+
+        function logout() {
+            if(confirm('Leave the pack?')) {
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html>

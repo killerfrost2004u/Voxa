@@ -519,3 +519,15 @@ footer .container { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 
         width: 100%;
     }
 }
+
+.logout-link {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: color 0.3s;
+    text-decoration: none;
+}
+
+.logout-link:hover {
+    color: #ef4444 !important; /* Red color */
+}

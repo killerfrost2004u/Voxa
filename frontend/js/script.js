@@ -1,4 +1,4 @@
-// --- 1. Real Data from "Wolves Master sheet 2" ---
+[cite_start]// --- 1. Real Data from "Wolves Master sheet 2" [cite: 1] ---
 
 const jobs = [
     { 
@@ -478,4 +478,37 @@ if (salariesContainer) {
         const filtered = salaries.filter(s => s.title.toLowerCase().includes(term));
         renderSalaries(filtered);
     }
+}
+
+// --- 7. Global Authentication Logic (Keeps user logged in) ---
+document.addEventListener('DOMContentLoaded', () => {
+    const userStr = localStorage.getItem('user');
+    const authButtons = document.querySelector('.auth-buttons');
+
+    if (authButtons) {
+        if (userStr) {
+            // User IS logged in: Show Name & Logout
+            const user = JSON.parse(userStr);
+            const firstName = user.name.split(' ')[0];
+            
+            authButtons.innerHTML = `
+                <a href="dashboard.html" class="btn-text" style="display:flex; align-items:center; gap:8px; text-decoration:none;">
+                    <i class="fas fa-user-circle"></i> ${firstName}
+                </a>
+                <a onclick="globalLogout()" class="btn-primary" style="cursor:pointer;">Logout</a>
+            `;
+        } else {
+            // User is NOT logged in: Show Log In / Sign Up
+            authButtons.innerHTML = `
+                <a href="login.html" class="btn-text">Log In</a>
+                <a href="login.html" class="btn-primary">Sign Up</a>
+            `;
+        }
+    }
+});
+
+// Global Logout Function
+window.globalLogout = function() {
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
 }
