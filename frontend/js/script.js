@@ -11,7 +11,30 @@ async function loadJobs() {
         
         jobs = await response.json(); 
         
-        // --- Process Data ---
+        // --- DATA NORMALIZATION (Fix WFH vs Remote) ---
+        // This ensures "WFH", "Work from home", etc. all show up as "Remote"
+        jobs.forEach(job => {
+            const loc = job.location ? job.location.toLowerCase() : '';
+            const type = job.type ? job.type.toLowerCase() : '';
+            
+            // Define variations of Remote work
+            const remoteKeywords = ['wfh', 'work from home', 'remotely', 'home'];
+            
+            // Check if this job is remote based on Location or Type
+            const isRemote = remoteKeywords.some(k => loc.includes(k) || type.includes(k));
+            
+            if (isRemote) {
+                // 1. Standardize the display text
+                // If the location was just "WFH", change it to "Remote" for consistency
+                if (loc.length < 20 && (loc.includes('wfh') || loc.includes('home'))) {
+                    job.location = "Remote"; 
+                }
+                // 2. Add a flag for easy filtering later
+                job.isRemote = true;
+            }
+        });
+
+        // --- Process Companies & Salaries ---
         processCompanies(jobs);
         processSalaries(jobs);
 
@@ -20,37 +43,44 @@ async function loadJobs() {
         const query = urlParams.get('keyword') ? urlParams.get('keyword').toLowerCase() : '';
         const loc = urlParams.get('location') ? urlParams.get('location').toLowerCase() : '';
 
-        // Filter jobs based on URL params (if any)
+        // Filter jobs based on URL params
         let displayJobs = jobs;
         if (query || loc) {
-            displayJobs = jobs.filter(job => 
-                (job.title.toLowerCase().includes(query) || job.company.toLowerCase().includes(query)) &&
-                job.location.toLowerCase().includes(loc)
-            );
+            displayJobs = jobs.filter(job => {
+                const titleMatch = job.title.toLowerCase().includes(query) || job.company.toLowerCase().includes(query);
+                
+                let locMatch = false;
+                if (!loc) {
+                    locMatch = true;
+                } else {
+                    // Smart Search: If user searches "Remote", include WFH/isRemote items
+                    if (loc === 'remote') {
+                        locMatch = job.isRemote || job.location.toLowerCase().includes('remote');
+                    } else {
+                        locMatch = job.location.toLowerCase().includes(loc);
+                    }
+                }
+                return titleMatch && locMatch;
+            });
         }
 
         // --- RENDER LOGIC ---
 
-        // 1. Home Page (Always show latest 6)
         if(document.getElementById('jobs-container')) {
             renderHomeJobs(jobs); 
         }
         
-        // 2. Jobs Page (Show Filtered Results)
         if(document.getElementById('all-jobs-container')) {
             renderAllJobs(displayJobs);
             document.getElementById('job-count').textContent = `Showing ${displayJobs.length} Jobs`;
             
-            // Pre-fill sidebar inputs
             if(document.getElementById('keyword-filter')) document.getElementById('keyword-filter').value = urlParams.get('keyword') || '';
             if(document.getElementById('location-filter')) document.getElementById('location-filter').value = urlParams.get('location') || '';
         }
 
-        // 3. Other Pages
         if(document.getElementById('companies-container')) renderCompanies(companies);
         if(document.getElementById('salaries-container')) renderSalaries(salaryStats);
 
-        // 4. Company Profile
         if(document.getElementById('company-profile-header')) {
             const companyName = urlParams.get('company');
             if(companyName) renderCompanyProfile(companyName, jobs);
@@ -62,12 +92,31 @@ async function loadJobs() {
 }
 loadJobs();
 
+// --- NEW: HOME PAGE TABS FILTER ---
+window.filterHomeTabs = function(element, category) {
+    // 1. Update UI (Visual Active State)
+    const options = document.querySelectorAll('.view-options span');
+    options.forEach(opt => opt.classList.remove('active'));
+    element.classList.add('active');
+
+    // 2. Filter Data
+    let filteredJobs = jobs;
+
+    if (category === 'full time') {
+        filteredJobs = jobs.filter(job => job.type.toLowerCase().includes('full'));
+    } else if (category === 'remote') {
+        // Use the isRemote flag we created during normalization
+        filteredJobs = jobs.filter(job => job.isRemote || job.location.toLowerCase().includes('remote'));
+    }
+
+    // 3. Render
+    renderHomeJobs(filteredJobs);
+}
+
 // --- SEARCH FUNCTION (Index Page) ---
 window.searchJobs = function() {
     const keyword = document.getElementById('job-search').value;
     const location = document.getElementById('location-search').value;
-    
-    // Redirect to jobs.html with query parameters
     window.location.href = `jobs.html?keyword=${encodeURIComponent(keyword)}&location=${encodeURIComponent(location)}`;
 }
 
@@ -113,6 +162,11 @@ function renderHomeJobs(data) {
     if (!container) return;
     container.innerHTML = "";
     
+    if (data.length === 0) {
+        container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #888;">No jobs found in this category.</p>`;
+        return;
+    }
+
     data.slice(0, 6).forEach(job => {
         const jobCard = document.createElement('div');
         jobCard.classList.add('job-card');
@@ -211,7 +265,6 @@ function renderSalaries(data) {
     });
 }
 
-// --- FILTERS & PROFILE ---
 function renderCompanyProfile(companyName, allJobs) {
     const companyJobs = allJobs.filter(j => j.company === companyName);
     if(companyJobs.length === 0) {
