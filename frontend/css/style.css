@@ -302,3 +302,147 @@ footer .container { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 
     .job-card-wide { flex-direction: column; align-items: flex-start; }
     .job-card-wide .actions { width: 100%; align-items: flex-start; flex-direction: row; justify-content: space-between; margin-top: 1rem; }
 }
+
+/* --- Companies Page Styles --- */
+
+.section-padding {
+    padding: 4rem 0;
+}
+
+.companies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.company-card {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    transition: 0.3s;
+}
+
+.company-card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-5px);
+    border-color: var(--primary-color);
+}
+
+.company-logo-large {
+    width: 80px;
+    height: 80px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin: 0 auto 1rem;
+}
+
+.company-rating {
+    color: #f59e0b; /* Amber/Orange color */
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.open-jobs-tag {
+    display: inline-block;
+    background: #ecfdf5;
+    color: #059669;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 1rem;
+}
+
+/* --- Salaries Page Styles --- */
+
+/* Optional Green Header variant for Salaries page */
+.page-header.bg-green {
+    background: #059669; /* Emerald green */
+}
+
+.salaries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.salary-card {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.salary-info {
+    flex: 1;
+    min-width: 200px;
+}
+
+.salary-info h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.3rem;
+}
+
+.salary-visual {
+    flex: 2;
+    min-width: 300px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.salary-bar-bg {
+    flex-grow: 1;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    position: relative;
+}
+
+/* The colored part of the bar */
+.salary-bar-fill {
+    height: 100%;
+    background: #059669;
+    border-radius: 4px;
+    position: relative;
+}
+
+/* The marker for the median salary */
+.salary-marker {
+    position: absolute;
+    right: 0;
+    top: -6px;
+    width: 20px;
+    height: 20px;
+    background: var(--white);
+    border: 4px solid #059669;
+    border-radius: 50%;
+}
+
+.salary-value {
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+@media (max-width: 768px) {
+    .salary-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .salary-visual {
+        width: 100%;
+    }
+}

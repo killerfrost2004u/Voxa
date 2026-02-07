@@ -1,14 +1,219 @@
-// --- 1. Mock Data ---
+// --- 1. Real Data from "Wolves Master sheet 2" ---
+
 const jobs = [
-    { id: 1, title: "Frontend Developer", company: "TechFlow", location: "New York, NY", type: "Full Time", salary: "$80k - $120k", logo: "TF" },
-    { id: 2, title: "UX/UI Designer", company: "Creative Studio", location: "Remote", type: "Contract", salary: "$60k - $90k", logo: "CS" },
-    { id: 3, title: "Product Manager", company: "Innovate Inc.", location: "San Francisco, CA", type: "Full Time", salary: "$110k - $150k", logo: "II" },
-    { id: 4, title: "Data Analyst", company: "DataCorp", location: "Austin, TX", type: "Full Time", salary: "$70k - $100k", logo: "DC" },
-    { id: 5, title: "Backend Engineer", company: "ServerSide", location: "Remote", type: "Part Time", salary: "$50/hr", logo: "SS" },
-    { id: 6, title: "Marketing Specialist", company: "GrowthX", location: "London, UK", type: "Full Time", salary: "£40k - £60k", logo: "GX" },
-    { id: 7, title: "DevOps Engineer", company: "CloudNet", location: "Remote", type: "Full Time", salary: "$130k", logo: "CN" },
-    { id: 8, title: "Junior Web Dev", company: "StartUp One", location: "Boston, MA", type: "Entry Level", salary: "$60k", logo: "S1" }
+    { 
+        id: 1, 
+        title: "Back Office Agent", 
+        company: "Ilead", 
+        location: "Nasr City, Cairo", 
+        type: "Full Time", 
+        salary: "11k Net + 3k KPI", 
+        logo: "IL" 
+    },
+    { 
+        id: 2, 
+        title: "Telesales Agent (US Account)", 
+        company: "TTC", 
+        location: "Nasr City, Cairo", 
+        type: "Full Time", 
+        salary: "12k Net + Comms", 
+        logo: "TTC" 
+    },
+    { 
+        id: 3, 
+        title: "Cold Caller (Solar Campaign)", 
+        company: "Win Global Solutions", 
+        location: "Remote / WFH", 
+        type: "Part Time", 
+        salary: "7.5k Basic + Bonus", 
+        logo: "WGS" 
+    },
+    { 
+        id: 4, 
+        title: "Telemarketer Agent", 
+        company: "Evolve LLC", 
+        location: "Nasr City, Cairo", 
+        type: "Full Time", 
+        salary: "10k Basic + 10k Comm", 
+        logo: "EV" 
+    },
+    { 
+        id: 5, 
+        title: "Contract Coordinator", 
+        company: "Real Estate Journey", 
+        location: "Remote", 
+        type: "Full Time", 
+        salary: "17k Basic", 
+        logo: "REJ" 
+    },
+    { 
+        id: 6, 
+        title: "Transfer Agent", 
+        company: "Contact Center Source", 
+        location: "Maadi, Cairo", 
+        type: "Full Time", 
+        salary: "11k Net + 3k KPI", 
+        logo: "CCS" 
+    },
+    { 
+        id: 7, 
+        title: "Canadian Telesales", 
+        company: "LeadBull", 
+        location: "Zahraa El Maadi", 
+        type: "Full Time", 
+        salary: "15k Net + 5k KPI", 
+        logo: "LB" 
+    },
+    { 
+        id: 8, 
+        title: "Inside Sales Agent", 
+        company: "CataLeads", 
+        location: "Nasr City, Cairo", 
+        type: "Full Time", 
+        salary: "$3 - $4 / Hour", 
+        logo: "CL" 
+    },
+    { 
+        id: 9, 
+        title: "Acquisition Specialist", 
+        company: "Volume X", 
+        location: "Remote", 
+        type: "Full Time", 
+        salary: "$4.2 / Hour + Comm", 
+        logo: "VX" 
+    },
+    { 
+        id: 10, 
+        title: "Customer Support (English)", 
+        company: "Teleperformance", 
+        location: "New Cairo", 
+        type: "Rotational", 
+        salary: "Up to 19k EGP", 
+        logo: "TP" 
+    },
+    { 
+        id: 11, 
+        title: "Customer Support (German)", 
+        company: "Teleperformance", 
+        location: "New Cairo", 
+        type: "Full Time", 
+        salary: "Up to 33.7k EGP", 
+        logo: "TP" 
+    },
+    { 
+        id: 12, 
+        title: "Travel Advisor", 
+        company: "Alorica", 
+        location: "Sheikh Zayed", 
+        type: "Full Time", 
+        salary: "Up to 18.7k Gross", 
+        logo: "AL" 
+    },
+    { 
+        id: 13, 
+        title: "Bilingual Support (French)", 
+        company: "IntouchCX", 
+        location: "Maadi Tech Park", 
+        type: "Full Time", 
+        salary: "Up to 30k Gross", 
+        logo: "ICX" 
+    },
+    { 
+        id: 14, 
+        title: "Call Center Agent", 
+        company: "Sutherland", 
+        location: "New Cairo", 
+        type: "Full Time", 
+        salary: "17.3k Net + Allowance", 
+        logo: "SU" 
+    },
+    { 
+        id: 15, 
+        title: "Social Media Specialist", 
+        company: "Outsourcing 4U", 
+        location: "Maadi, Cairo", 
+        type: "Full Time", 
+        salary: "7.5k Net", 
+        logo: "O4U" 
+    }
 ];
+
+const companies = [
+    { 
+        id: 1, 
+        name: "Teleperformance", 
+        rating: 4.8, 
+        reviews: 1500, 
+        openJobs: 3, 
+        logo: "TP", 
+        industry: "BPO / Call Center" 
+    },
+    { 
+        id: 2, 
+        name: "Win Global Solutions", 
+        rating: 4.5, 
+        reviews: 120, 
+        openJobs: 5, 
+        logo: "WGS", 
+        industry: "Solar / Marketing" 
+    },
+    { 
+        id: 3, 
+        name: "Concentrix", 
+        rating: 4.6, 
+        reviews: 900, 
+        openJobs: 2, 
+        logo: "CNX", 
+        industry: "Customer Experience" 
+    },
+    { 
+        id: 4, 
+        name: "Sutherland", 
+        rating: 4.4, 
+        reviews: 500, 
+        openJobs: 1, 
+        logo: "SU", 
+        industry: "IT & BPO" 
+    },
+    { 
+        id: 5, 
+        name: "Volume X", 
+        rating: 4.7, 
+        reviews: 45, 
+        openJobs: 1, 
+        logo: "VX", 
+        industry: "Real Estate Acquisition" 
+    },
+    { 
+        id: 6, 
+        name: "Ilead", 
+        rating: 4.2, 
+        reviews: 80, 
+        openJobs: 2, 
+        logo: "IL", 
+        industry: "Medical / DME" 
+    },
+    { 
+        id: 7, 
+        name: "Alorica", 
+        rating: 4.3, 
+        reviews: 300, 
+        openJobs: 4, 
+        logo: "AL", 
+        industry: "Travel & Support" 
+    }
+];
+
+const salaries = [
+    { title: "German Customer Support", avg: 33, range: "30k - 33.7k", percent: 95 },
+    { title: "French Customer Support", avg: 24, range: "20k - 30k", percent: 80 },
+    { title: "English Call Center", avg: 15, range: "10k - 19k", percent: 50 },
+    { title: "Real Estate Coordinator", avg: 17, range: "14k - 20k", percent: 60 },
+    { title: "Telesales Agent", avg: 12, range: "8k - 15k + Comm", percent: 40 },
+    { title: "Cold Caller (Remote)", avg: 8, range: "7k - 14k", percent: 30 },
+    { title: "Acquisition Specialist", avg: 25, range: "$4.2/hr (~25k EGP)", percent: 85 }
+];
+
 
 // --- 2. Shared Modal Logic (Available on all pages) ---
 const modal = document.getElementById('apply-modal');
@@ -122,7 +327,7 @@ if (allJobsContainer) {
                     </div>
                 </div>
                 <div class="actions">
-                    <span class="tag">New</span>
+                    <span class="tag">Active</span>
                     <button class="btn-primary" onclick="openModal('${job.title}')">Apply</button>
                 </div>
             `;
@@ -150,10 +355,6 @@ if (allJobsContainer) {
             // Checkbox matching (if none checked, return true for all)
             const matchType = checkedTypes.length === 0 || checkedTypes.includes(job.type);
 
-            // Mock Salary Logic (Filter if salary string contains number > slider)
-            // This is a simple mock. In real apps, you'd parse the salary integer.
-            // For now, we just return true to demonstrate the UI flow.
-            
             return matchKeyword && matchLocation && matchType;
         });
 
@@ -166,8 +367,13 @@ if (allJobsContainer) {
         let sortedJobs = [...jobs]; // Copy array
 
         if (sortValue === 'salary') {
-            // Mock sort: assume longer string = higher salary for demo
-            sortedJobs.sort((a, b) => b.salary.length - a.salary.length);
+            // Sorting based on approximate salary value
+            sortedJobs.sort((a, b) => {
+                // Extract the first number from the salary string to compare
+                const valA = parseInt(a.salary.replace(/\D/g, '')) || 0;
+                const valB = parseInt(b.salary.replace(/\D/g, '')) || 0;
+                return valB - valA;
+            });
         } else {
             // Sort by ID (Newest first)
             sortedJobs.sort((a, b) => b.id - a.id);
@@ -182,5 +388,94 @@ if (allJobsContainer) {
         slider.oninput = function() {
             output.innerHTML = this.value;
         }
+    }
+}
+
+
+// --- 5. Companies Page Logic ---
+const companiesContainer = document.getElementById('companies-container');
+
+if (companiesContainer) {
+    function renderCompanies(data) {
+        companiesContainer.innerHTML = "";
+        data.forEach(company => {
+            // Generate Stars HTML
+            let starsHtml = '';
+            for(let i=1; i<=5; i++) {
+                if(i <= Math.floor(company.rating)) {
+                    starsHtml += '<i class="fas fa-star"></i>';
+                } else if (i === Math.ceil(company.rating) && !Number.isInteger(company.rating)) {
+                    starsHtml += '<i class="fas fa-star-half-alt"></i>';
+                } else {
+                    starsHtml += '<i class="far fa-star"></i>';
+                }
+            }
+
+            const card = document.createElement('div');
+            card.className = 'company-card';
+            card.innerHTML = `
+                <div class="company-logo-large">${company.logo}</div>
+                <h3>${company.name}</h3>
+                <div class="company-rating">
+                    ${starsHtml} <span>(${company.reviews} Reviews)</span>
+                </div>
+                <p style="color:var(--text-light); font-size:0.9rem;">${company.industry}</p>
+                <div class="open-jobs-tag">${company.openJobs} Open Jobs</div>
+                <button class="btn-secondary" style="margin-top:1rem; width:100%;">View Profile</button>
+            `;
+            companiesContainer.appendChild(card);
+        });
+    }
+
+    renderCompanies(companies);
+
+    // Filter Logic for Companies
+    window.filterCompanies = function() {
+        const term = document.getElementById('company-search').value.toLowerCase();
+        const filtered = companies.filter(c => c.name.toLowerCase().includes(term));
+        renderCompanies(filtered);
+    }
+}
+
+
+// --- 6. Salaries Page Logic ---
+const salariesContainer = document.getElementById('salaries-container');
+
+if (salariesContainer) {
+    function renderSalaries(data) {
+        salariesContainer.innerHTML = "";
+        data.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'salary-card';
+            card.innerHTML = `
+                <div class="salary-info">
+                    <h3>${item.title}</h3>
+                    <p style="color:var(--text-light);">Average Salary</p>
+                    <div style="font-size:1.5rem; font-weight:bold; color:#059669;">${item.avg}k <span style="font-size:0.9rem; color:var(--text-light); font-weight:400;">/ year (est)</span></div>
+                </div>
+                <div class="salary-visual">
+                    <span style="font-size:0.8rem; font-weight:600;">Low</span>
+                    <div class="salary-bar-bg">
+                        <div class="salary-bar-fill" style="width: ${item.percent}%;">
+                            <div class="salary-marker"></div>
+                        </div>
+                    </div>
+                    <span style="font-size:0.8rem; font-weight:600;">High</span>
+                </div>
+                <div class="salary-range" style="width:100%; text-align:right; font-size:0.9rem; color:var(--text-light); margin-top:0.5rem;">
+                    Range: ${item.range}
+                </div>
+            `;
+            salariesContainer.appendChild(card);
+        });
+    }
+
+    renderSalaries(salaries);
+
+    // Filter Logic for Salaries
+    window.filterSalaries = function() {
+        const term = document.getElementById('salary-search').value.toLowerCase();
+        const filtered = salaries.filter(s => s.title.toLowerCase().includes(term));
+        renderSalaries(filtered);
     }
 }

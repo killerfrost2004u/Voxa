@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salaries | CareerCore</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">Career<span>Core</span></a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="jobs.html">Find Jobs</a></li>
+                <li><a href="companies.html">Companies</a></li>
+                <li><a href="salaries.html" class="active">Salaries</a></li>
+            </ul>
+            <div class="auth-buttons">
+                <a href="#" class="btn-text">Log In</a>
+                <a href="#" class="btn-primary">Sign Up</a>
+            </div>
+            <div class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <header class="page-header bg-green"> <div class="container">
+            <h1>Estimate Your Salary</h1>
+            <p>See how much you can earn in different roles and locations.</p>
+            
+            <div class="search-bar" style="margin-top: 2rem; max-width: 600px;">
+                <div class="input-group">
+                    <i class="fas fa-search-dollar"></i>
+                    <input type="text" id="salary-search" placeholder="Search job title (e.g. Designer)...">
+                </div>
+                <button class="btn-primary" onclick="filterSalaries()">Search</button>
+            </div>
+        </div>
+    </header>
+
+    <section class="section-padding">
+        <div class="container">
+            <h2 style="margin-bottom: 2rem;">Top Paying Jobs</h2>
+            <div class="salaries-list" id="salaries-container">
+                </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2024 CareerCore. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
