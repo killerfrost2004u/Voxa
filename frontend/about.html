@@ -25,16 +25,21 @@
             color: var(--text-muted);
         }
         
-        /* Wolf SVG Animation (Optional Pulse) */
-        .wolf-svg {
+        /* Wolf Image Styling */
+        .wolf-img {
             width: 150px; 
             height: 150px; 
             margin-bottom: 1.5rem; 
-            filter: drop-shadow(0 0 15px var(--primary-color));
+            border-radius: 50%; /* Make it circular */
+            border: 3px solid var(--primary-color);
+            box-shadow: 0 0 20px rgba(255, 102, 0, 0.4);
+            object-fit: cover; /* Ensures image fills the circle */
             transition: transform 0.3s ease;
+            cursor: pointer; /* Indicates clickable */
         }
-        .wolf-svg:hover {
+        .wolf-img:hover {
             transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 102, 0, 0.6);
         }
     </style>
 </head>
@@ -82,17 +87,15 @@
                 </div>
                 <div style="background: var(--bg-card); padding: 3rem; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; box-shadow: 0 0 30px rgba(0,0,0,0.5);">
                     
-                    <svg class="wolf-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-                        <defs>
-                            <linearGradient id="wolfGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:#ff8800;stop-opacity:1" />
-                                <stop offset="100%" style="stop-color:#ff4400;stop-opacity:1" />
-                            </linearGradient>
-                        </defs>
-                        <path fill="url(#wolfGrad)" d="M50,15 L25,35 L30,60 L50,90 L70,60 L75,35 L50,15 Z M50,80 L38,58 L35,40 L50,25 L65,40 L62,58 L50,80 Z M35,40 L42,45 L45,55 L38,58 L35,40 Z M65,40 L62,58 L55,55 L58,45 L65,40 Z M50,55 L45,45 L55,45 L50,55 Z" stroke="#111" stroke-width="1"/>
-                        <path fill="#111" d="M38,45 L42,48 L38,51 Z M62,45 L58,48 L62,51 Z" opacity="0.8"/> </svg>
+                    <a href="jobs.html" title="Start Hunting">
+                        <img src="images/illustration-of-wolf-head-logo-icon-concept-orange-color-for-e-sport-team-badge-or-company-branding-vector.jpg" 
+                             alt="Dark Wolves Logo" 
+                             class="wolf-img">
+                    </a>
 
-                    <h3 style="color: white; font-size: 1.5rem;">Join the Hunt</h3>
+                    <h3 style="color: white; font-size: 1.5rem; margin-bottom: 1.5rem;">Join the Hunt</h3>
+                    
+                    <a href="jobs.html" class="btn-primary" style="padding: 0.8rem 2rem; font-size: 1.1rem;">Start Now</a>
                 </div>
             </div>
         </div>
