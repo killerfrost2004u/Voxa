@@ -71,17 +71,55 @@ function renderPageContent() {
     }
 }
 
-// --- DASHBOARD LOGIC (NEW) ---
+// --- APPLY FUNCTION (Redirect to Apply Page) ---
+function applyForJob() {
+    const title = document.getElementById('modal-title').textContent;
+    const company = document.getElementById('modal-company').textContent;
+    const id = jobs.find(j => j.title === title && j.company === company)?.id || 0;
+
+    // Redirect to the new application page with query params
+    window.location.href = `apply.html?id=${id}&title=${encodeURIComponent(title)}&company=${encodeURIComponent(company)}`;
+}
+
+// --- HANDLE APPLICATION FORM SUBMISSION (apply.html) ---
+if (document.getElementById('application-form')) {
+    document.getElementById('application-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const params = new URLSearchParams(window.location.search);
+        const title = params.get('title') || 'Unknown Job';
+        const company = params.get('company') || 'Unknown Company';
+        
+        // Create App Object
+        const application = {
+            title: title,
+            company: company,
+            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            status: 'Applied'
+        };
+
+        // Save to LocalStorage
+        const apps = JSON.parse(localStorage.getItem('my_applications')) || [];
+        
+        // Prevent duplicates
+        if (!apps.some(app => app.title === title && app.company === company)) {
+            apps.unshift(application);
+            localStorage.setItem('my_applications', JSON.stringify(apps));
+        }
+
+        alert("Application Submitted Successfully!");
+        window.location.href = 'dashboard.html';
+    });
+}
+
+// --- DASHBOARD LOGIC ---
 window.loadDashboardData = function() {
-    // 1. Get Applications from LocalStorage
     const apps = JSON.parse(localStorage.getItem('my_applications')) || [];
     const saved = JSON.parse(localStorage.getItem('my_saved_jobs')) || [];
 
-    // 2. Update Counters
     if(document.getElementById('stat-applied')) document.getElementById('stat-applied').textContent = apps.length;
     if(document.getElementById('stat-saved')) document.getElementById('stat-saved').textContent = saved.length;
 
-    // 3. Render Dashboard Table (Recent 5)
     const dashTable = document.querySelector('#dashboard-table tbody');
     if(dashTable) {
         dashTable.innerHTML = apps.length ? '' : '<tr><td colspan="4" style="text-align:center; color:#666;">No hunts started yet.</td></tr>';
@@ -97,7 +135,6 @@ window.loadDashboardData = function() {
         });
     }
 
-    // 4. Render Full Applications Table
     const appTable = document.querySelector('#applications-table tbody');
     if(appTable) {
         appTable.innerHTML = apps.length ? '' : '<tr><td colspan="5" style="text-align:center;">No applications yet.</td></tr>';
@@ -114,12 +151,10 @@ window.loadDashboardData = function() {
         });
     }
 
-    // 5. Render Saved Jobs
     const savedContainer = document.getElementById('saved-jobs-container');
     if(savedContainer) {
         savedContainer.innerHTML = saved.length ? '' : '<p style="color:#666;">No saved jobs.</p>';
         saved.forEach(job => {
-            // Reuse existing card style but simpler
             const card = document.createElement('div');
             card.classList.add('job-card-wide');
             card.innerHTML = `
@@ -129,8 +164,8 @@ window.loadDashboardData = function() {
                     <div class="company">${job.company}</div>
                 </div>
                 <div class="actions">
-                    <button class="btn-primary" onclick="openJobDetails(${job.id})">Apply</button>
-                    <button class="btn-text" onclick="removeSavedJob(${job.id})" style="color:#ef4444; font-size:0.8rem;">Remove</button>
+                    <button class="btn-primary" onclick="window.location.href='apply.html?title=${encodeURIComponent(job.title)}&company=${encodeURIComponent(job.company)}'">Apply</button>
+                    <button class="btn-remove" onclick="removeSavedJob(${job.id})"><i class="fas fa-trash-alt"></i> Remove</button>
                 </div>
             `;
             savedContainer.appendChild(card);
@@ -138,41 +173,26 @@ window.loadDashboardData = function() {
     }
 }
 
-// Remove saved job helper
 window.removeSavedJob = function(id) {
     let saved = JSON.parse(localStorage.getItem('my_saved_jobs')) || [];
     saved = saved.filter(j => j.id !== id);
     localStorage.setItem('my_saved_jobs', JSON.stringify(saved));
-    loadDashboardData(); // Refresh UI
+    loadDashboardData(); 
 }
 
-// --- APPLY FUNCTION (UPDATED to Save to Dashboard) ---
-function applyForJob() {
-    // Get currently opened job details from modal
-    const title = document.getElementById('modal-title').textContent;
-    const company = document.getElementById('modal-company').textContent;
-    
-    // Create App Object
-    const application = {
-        title: title,
-        company: company,
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        status: 'Applied'
-    };
-
-    // Save to LocalStorage
-    const apps = JSON.parse(localStorage.getItem('my_applications')) || [];
-    apps.unshift(application); // Add to top
-    localStorage.setItem('my_applications', JSON.stringify(apps));
-
-    alert("Application Sent! Check your Dashboard.");
-    closeJobModal();
-    
-    // Redirect to dashboard if user wants (optional, but good UX)
-    // window.location.href = 'dashboard.html';
+// --- SAVE JOB ---
+window.saveJob = function(id, title, company, logo) {
+    const saved = JSON.parse(localStorage.getItem('my_saved_jobs')) || [];
+    if(saved.some(j => j.id === id)) {
+        alert("Job already saved!");
+        return;
+    }
+    saved.push({id, title, company, logo});
+    localStorage.setItem('my_saved_jobs', JSON.stringify(saved));
+    alert("Job Saved to Dashboard!");
 }
 
-// --- EXISTING FILTERS & HELPERS (Keep as is) ---
+// --- FILTERS ---
 window.applyFilters = function() {
     const keyword = document.getElementById('keyword-filter').value.toLowerCase();
     const location = document.getElementById('location-filter').value.toLowerCase();
@@ -275,7 +295,6 @@ function renderAllJobs(data) {
 
 function appendJobCard(container, job, isWide) {
     const card = document.createElement('div');
-    // Function to handle save (prevents bubbling)
     const saveJob = `event.stopPropagation(); saveJob(${job.id}, '${job.title.replace(/'/g, "\\'")}', '${job.company.replace(/'/g, "\\'")}', '${job.logo}')`;
     
     if (isWide) {
@@ -292,8 +311,10 @@ function appendJobCard(container, job, isWide) {
                 </div>
             </div>
             <div class="actions">
-                <button class="btn-primary" onclick="openJobDetails(${job.id})">View Details</button>
-                <button class="btn-text" onclick="${saveJob}" style="font-size:0.8rem; color:var(--text-muted);"><i class="fas fa-bookmark"></i> Save</button>
+                <div class="action-row">
+                    <button class="btn-save" onclick="${saveJob}" title="Save Job"><i class="far fa-bookmark"></i></button>
+                    <button class="btn-primary" onclick="openJobDetails(${job.id})">View Details</button>
+                </div>
             </div>
         `;
     } else {
@@ -315,18 +336,6 @@ function appendJobCard(container, job, isWide) {
         `;
     }
     container.appendChild(card);
-}
-
-// --- SAVE JOB FUNCTION (NEW) ---
-window.saveJob = function(id, title, company, logo) {
-    const saved = JSON.parse(localStorage.getItem('my_saved_jobs')) || [];
-    if(saved.some(j => j.id === id)) {
-        alert("Job already saved!");
-        return;
-    }
-    saved.push({id, title, company, logo});
-    localStorage.setItem('my_saved_jobs', JSON.stringify(saved));
-    alert("Job Saved to Dashboard!");
 }
 
 function renderCompanies(data) {
@@ -427,6 +436,11 @@ document.addEventListener('DOMContentLoaded', () => {
         authButtons.innerHTML = `
             <a href="dashboard.html" class="btn-text"><i class="fas fa-user-circle"></i> ${user.name.split(' ')[0]}</a>
             <a onclick="globalLogout()" class="btn-primary" style="cursor:pointer;">Logout</a>
+        `;
+    } else if (authButtons) { // Standard Auth Buttons for non-logged in users
+        authButtons.innerHTML = `
+            <a href="login.html" class="btn-text">Log In</a>
+            <a href="login.html" class="btn-primary">Sign Up</a>
         `;
     }
 });

@@ -130,7 +130,7 @@ ul { list-style: none; }
 }
 
 .popular-tags { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; font-size: 0.9rem; }
-.popular-tags span { color: var(--text-muted); }
+.popular-tags span { color: var(--text-muted); margin-top: 5px; }
 .popular-tags a {
     background: var(--bg-card);
     padding: 0.3rem 0.8rem;
@@ -427,4 +427,95 @@ footer .container { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 
 @media (max-width: 600px) {
     .modal-grid-2 { grid-template-columns: 1fr; }
     .info-box.main-box { border-right: none; border-bottom: 1px solid #333; padding-bottom: 1rem; padding-right: 0; }
+}
+
+/* ... existing styles ... */
+
+/* --- Save Button Styling --- */
+.btn-save {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px; /* Slightly rounded corners */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+    margin-top: 5px;
+}
+
+.btn-save:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: rgba(255, 102, 0, 0.1); /* Subtle orange tint on hover */
+    transform: translateY(-2px); /* Slight lift */
+    box-shadow: 0 4px 12px rgba(255, 102, 0, 0.2); /* Glow effect */
+}
+
+/* Optional: Active state if you want it to look "filled" when clicked/saved */
+.btn-save.saved {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* Adjust action buttons container in Wide Job Card */
+.job-card-wide .actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.8rem; /* More space between Apply and Save */
+    min-width: 120px;
+}
+
+/* Ensure View Details button matches the height/style balance */
+.job-card-wide .actions .btn-primary {
+    width: 100%;
+}
+
+/* Layout for the buttons row */
+.job-card-wide .action-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    justify-content: flex-end;
+}
+
+/* ... existing styles ... */
+
+/* --- Remove Button Styling (Dashboard) --- */
+.btn-remove {
+    background: transparent;
+    border: 1px solid #ef4444; /* Red border */
+    color: #ef4444; /* Red text */
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-remove:hover {
+    background: rgba(239, 68, 68, 0.1); /* Subtle red tint on hover */
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2); /* Red glow */
+    transform: translateY(-1px);
+}
+
+.btn-remove i {
+    font-size: 0.9rem;
+}
+
+/* Adjust dashboard saved job card actions */
+#saved-jobs-container .job-card-wide .actions {
+    flex-direction: row; /* Align buttons side-by-side */
+    gap: 10px;
+    align-items: center;
 }
