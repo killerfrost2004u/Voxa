@@ -30,7 +30,7 @@ function renderHomeJobs(data) {
         const jobCard = document.createElement('div');
         jobCard.classList.add('job-card');
         
-        // UPDATED LAYOUT: Logo next to Title/Company
+        // UPDATED LAYOUT: Header Groups Logo & Text
         jobCard.innerHTML = `
             <div class="job-card-header">
                 <div class="company-logo">${job.logo}</div>
@@ -40,9 +40,7 @@ function renderHomeJobs(data) {
                 </div>
             </div>
             
-            <div class="job-tags">
-                <span class="job-type">${job.type}</span>
-            </div>
+            <span class="job-type">${job.type}</span>
 
             <div class="job-details">
                 <span><i class="fas fa-map-marker-alt"></i> ${job.location}</span>
