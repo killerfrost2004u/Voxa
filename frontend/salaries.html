@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salaries | CareerCore</title>
+    <title>Salaries | Dark Wolves</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
 
     <nav class="navbar">
         <div class="container">
-            <a href="index.html" class="logo">Career<span>Core</span></a>
+            <a href="index.html" class="logo">Dark<span>Wolves</span></a>
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="jobs.html">Find Jobs</a></li>
@@ -20,23 +20,21 @@
                 <li><a href="salaries.html" class="active">Salaries</a></li>
             </ul>
             <div class="auth-buttons">
-                <a href="#" class="btn-text">Log In</a>
-                <a href="#" class="btn-primary">Sign Up</a>
+                <a href="login.html" class="btn-text">Log In</a>
+                <a href="login.html" class="btn-primary">Sign Up</a>
             </div>
-            <div class="menu-toggle">
-                <i class="fas fa-bars"></i>
-            </div>
+            <div class="menu-toggle"><i class="fas fa-bars"></i></div>
         </div>
     </nav>
 
-    <header class="page-header bg-green"> <div class="container">
-            <h1>Estimate Your Salary</h1>
-            <p>See how much you can earn in different roles and locations.</p>
-            
+    <header class="page-header">
+        <div class="container">
+            <h1>Salary Estimates</h1>
+            <p>See what the pack is earning.</p>
             <div class="search-bar" style="margin-top: 2rem; max-width: 600px;">
                 <div class="input-group">
                     <i class="fas fa-search-dollar"></i>
-                    <input type="text" id="salary-search" placeholder="Search job title (e.g. Designer)...">
+                    <input type="text" id="salary-search" placeholder="Job title...">
                 </div>
                 <button class="btn-primary" onclick="filterSalaries()">Search</button>
             </div>
@@ -45,18 +43,14 @@
 
     <section class="section-padding">
         <div class="container">
-            <h2 style="margin-bottom: 2rem;">Top Paying Jobs</h2>
+            <h2 style="margin-bottom: 2rem; color: var(--text-main);">Top Paying Roles</h2>
             <div class="salaries-list" id="salaries-container">
                 </div>
         </div>
     </section>
 
     <footer>
-        <div class="container">
-            <div class="footer-bottom">
-                <p>&copy; 2024 CareerCore. All rights reserved.</p>
-            </div>
-        </div>
+        <div class="container"><div class="footer-bottom"><p>&copy; 2024 Dark Wolves. All rights reserved.</p></div></div>
     </footer>
 
     <script src="js/script.js"></script>

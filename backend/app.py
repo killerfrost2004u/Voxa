@@ -1,56 +1,67 @@
-from flask import Flask, render_template, request, jsonify
-import time
-import os
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import pyodbc
+import bcrypt
 
 app = Flask(__name__)
+CORS(app)
 
-# Mock Database for Jobs
-JOBS = [
-    {"id": 1, "title": "Call Center Agent", "company": "Vodafone UK", "salary": "18,500 EGP", "location": "Cairo",
-     "type": "On-site"},
-    {"id": 2, "title": "Python Developer", "company": "Voxa AI", "salary": "35,000 EGP", "location": "Remote",
-     "type": "Remote"},
-    {"id": 3, "title": "Sales Representative", "company": "Mountain View", "salary": "12,000 EGP + Comm",
-     "location": "Giza", "type": "On-site"}
-]
-
-
-@app.route('/')
-def home():
-    return render_template('index.html')
+# --- Database Connection ---
+# ⚠️ MAKE SURE YOU RAN THE SQL SCRIPT IN SSMS FIRST!
+conn_str = (
+    r'DRIVER={ODBC Driver 17 for SQL Server};'
+    r'SERVER=localhost;'
+    r'DATABASE=DarkWolvesDB;'
+    r'Trusted_Connection=yes;'
+)
 
 
-@app.route('/jobs')
-def jobs():
-    return render_template('jobs.html', jobs=JOBS)
+def get_db_connection():
+    try:
+        return pyodbc.connect(conn_str)
+    except Exception as e:
+        print(f"Database Error: {e}")
+        return None
 
 
-@app.route('/dashboard')
-def dashboard():
-    return render_template('dashboard.html')
+# --- Routes ---
+@app.route('/api/signup', methods=['POST'])
+def signup():
+    data = request.json
+    hashed_pw = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    conn = get_db_connection()
+    if not conn: return jsonify({"error": "DB Connection Failed"}), 500
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO Users (FullName, Email, PasswordHash) VALUES (?, ?, ?)",
+                       (data['fullName'], data['email'], hashed_pw))
+        conn.commit()
+        return jsonify({"message": "User created"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
 
 
-@app.route('/api/analyze', methods=['POST'])
-def analyze_audio():
-    # Simulate processing delay
-    time.sleep(2)
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.json
+    conn = get_db_connection()
+    if not conn: return jsonify({"error": "DB Connection Failed"}), 500
 
-    # 1. Get the file (we will save this to disk later)
-    if 'audio' not in request.files:
-        return jsonify({"error": "No audio file"}), 400
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT UserID, FullName, PasswordHash FROM Users WHERE Email = ?", (data['email'],))
+        user = cursor.fetchone()
 
-    audio_file = request.files['audio']
-    # filename = secure_filename(audio_file.filename)
-    # audio_file.save(os.path.join('uploads', filename))
-
-    # 2. Return Mock Analysis (Same as before)
-    return jsonify({
-        "language_level": "B2 (Upper Intermediate)",
-        "sentiment": "Confident",
-        "summary": "Candidate demonstrated clear communication skills and mentioned 2 years of experience.",
-        "recommendation": "Interview"
-    })
+        if user and bcrypt.checkpw(data['password'].encode('utf-8'), user.PasswordHash.encode('utf-8')):
+            return jsonify({"message": "Success", "user": {"name": user.FullName}}), 200
+        return jsonify({"error": "Invalid credentials"}), 401
+    finally:
+        conn.close()
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)

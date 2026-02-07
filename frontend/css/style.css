@@ -1,12 +1,14 @@
 :root {
-    --primary-color: #2563eb;
-    --primary-dark: #1e40af;
-    --secondary-color: #f3f4f6;
-    --text-dark: #1f2937;
-    --text-light: #6b7280;
-    --white: #ffffff;
-    --border-color: #e5e7eb;
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    /* Orange & Black Theme */
+    --primary-color: #ff6600;      /* Vibrant Orange */
+    --primary-dark: #cc5200;       /* Darker Orange for hover */
+    --bg-body: #0a0a0a;            /* Very Dark Gray/Black */
+    --bg-card: #141414;            /* Slightly lighter black for cards */
+    --bg-input: #1f1f1f;           /* Input fields background */
+    --text-main: #ffffff;          /* White text */
+    --text-muted: #a3a3a3;         /* Gray text */
+    --border-color: #333333;       /* Dark borders */
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
 }
 
 * {
@@ -17,12 +19,12 @@
 }
 
 body {
-    background-color: #f9fafb;
-    color: var(--text-dark);
+    background-color: var(--bg-body);
+    color: var(--text-main);
     line-height: 1.6;
 }
 
-a { text-decoration: none; color: inherit; }
+a { text-decoration: none; color: inherit; transition: 0.3s; }
 ul { list-style: none; }
 
 .container {
@@ -33,7 +35,7 @@ ul { list-style: none; }
 
 /* --- Navbar --- */
 .navbar {
-    background: var(--white);
+    background: var(--bg-card);
     padding: 1rem 0;
     border-bottom: 1px solid var(--border-color);
     position: sticky;
@@ -50,23 +52,24 @@ ul { list-style: none; }
 .logo {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--text-dark);
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .logo span { color: var(--primary-color); }
 
 .nav-links { display: flex; gap: 2rem; }
 .nav-links a {
-    color: var(--text-light);
+    color: var(--text-muted);
     font-weight: 500;
-    transition: color 0.3s;
 }
 .nav-links a:hover, .nav-links a.active { color: var(--primary-color); }
 
 .auth-buttons { display: flex; gap: 1rem; align-items: center; }
 .btn-primary {
     background-color: var(--primary-color);
-    color: var(--white);
+    color: #fff;
     padding: 0.6rem 1.2rem;
     border-radius: 6px;
     font-weight: 600;
@@ -76,23 +79,24 @@ ul { list-style: none; }
     text-align: center;
 }
 .btn-primary:hover { background-color: var(--primary-dark); }
-.btn-text { font-weight: 600; color: var(--primary-color); }
+.btn-text { font-weight: 600; color: var(--primary-color); cursor: pointer; }
 
-.menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; }
+.menu-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); }
 
-/* --- Hero Section (Home) --- */
+/* --- Hero Section --- */
 .hero {
-    background: linear-gradient(to bottom, #eff6ff, #ffffff);
+    background: linear-gradient(to bottom, #141414, #0a0a0a);
     padding: 4rem 0;
     text-align: center;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.hero h1 { font-size: 3rem; margin-bottom: 1rem; line-height: 1.2; }
+.hero h1 { font-size: 3rem; margin-bottom: 1rem; line-height: 1.2; color: var(--text-main); }
 .hero h1 span { color: var(--primary-color); }
-.hero p { color: var(--text-light); font-size: 1.1rem; margin-bottom: 2.5rem; }
+.hero p { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2.5rem; }
 
 .search-bar {
-    background: var(--white);
+    background: var(--bg-card);
     padding: 1rem;
     border-radius: 8px;
     box-shadow: var(--shadow);
@@ -100,37 +104,56 @@ ul { list-style: none; }
     gap: 1rem;
     max-width: 800px;
     margin: 0 auto 2rem;
+    border: 1px solid var(--border-color);
 }
 
 .input-group {
     flex: 1;
     display: flex;
     align-items: center;
-    background: #f9fafb;
+    background: var(--bg-input);
     padding: 0.5rem 1rem;
     border-radius: 6px;
     border: 1px solid var(--border-color);
 }
-.input-group i { color: var(--text-light); margin-right: 10px; }
-.input-group input { border: none; background: transparent; width: 100%; outline: none; font-size: 1rem; }
+.input-group i { color: var(--text-muted); margin-right: 10px; }
+.input-group input { 
+    border: none; 
+    background: transparent; 
+    width: 100%; 
+    outline: none; 
+    font-size: 1rem;
+    color: var(--text-main); 
+}
 
 .popular-tags { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; font-size: 0.9rem; }
+.popular-tags span { color: var(--text-muted); }
 .popular-tags a {
-    background: var(--white);
+    background: var(--bg-card);
     padding: 0.3rem 0.8rem;
     border-radius: 20px;
     border: 1px solid var(--border-color);
-    color: var(--text-light);
-    transition: 0.3s;
+    color: var(--text-muted);
 }
 .popular-tags a:hover { border-color: var(--primary-color); color: var(--primary-color); }
 
-/* --- Jobs Section (Home Grid) --- */
-.jobs-section { padding: 4rem 0; }
+/* --- General Section & Headers --- */
+.section-padding { padding: 4rem 0; }
 .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-.view-options span { margin-left: 1rem; cursor: pointer; color: var(--text-light); font-weight: 500; }
+.section-header h2 { color: var(--text-main); }
+.view-options span { margin-left: 1rem; cursor: pointer; color: var(--text-muted); font-weight: 500; }
 .view-options span.active { color: var(--primary-color); border-bottom: 2px solid var(--primary-color); }
 
+.page-header {
+    background: #1a1a1a;
+    border-bottom: 1px solid var(--border-color);
+    padding: 3rem 0;
+    margin-bottom: 2rem;
+}
+.page-header h1 { font-size: 2.5rem; color: var(--primary-color); }
+.page-header p { color: var(--text-muted); margin-top: 0.5rem; }
+
+/* --- Job Cards (Grid & Wide) --- */
 .jobs-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -138,9 +161,8 @@ ul { list-style: none; }
     margin-bottom: 3rem;
 }
 
-/* Card Style (Grid View) */
 .job-card {
-    background: var(--white);
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 1.5rem;
@@ -152,143 +174,194 @@ ul { list-style: none; }
 
 .job-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; }
 .company-logo {
-    width: 50px; height: 50px; background: #f3f4f6; border-radius: 8px;
+    width: 50px; height: 50px; background: #2a2a2a; border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
     font-weight: bold; color: var(--primary-color); font-size: 1.2rem;
 }
 .job-type {
     font-size: 0.8rem; padding: 0.2rem 0.6rem; border-radius: 4px;
-    background: #eff6ff; color: var(--primary-color); font-weight: 600;
+    background: #2a1a0a; color: var(--primary-color); font-weight: 600; border: 1px solid var(--primary-color);
 }
-.job-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; }
-.company-name { color: var(--text-light); font-size: 0.9rem; margin-bottom: 1rem; }
-.job-details { display: flex; gap: 1rem; margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-light); }
-.job-details i { margin-right: 5px; }
+.job-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main); }
+.company-name { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; }
+.job-details { display: flex; gap: 1rem; margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted); }
 
 .apply-btn {
     margin-top: auto; width: 100%; padding: 0.8rem;
-    background: var(--white); border: 1px solid var(--primary-color);
+    background: transparent; border: 1px solid var(--primary-color);
     color: var(--primary-color); border-radius: 6px; font-weight: 600;
     cursor: pointer; transition: 0.3s;
 }
-.apply-btn:hover { background: var(--primary-color); color: var(--white); }
+.apply-btn:hover { background: var(--primary-color); color: #fff; }
 
-.load-more { text-align: center; }
+.load-more { text-align: center; margin-top: 2rem;}
 .btn-secondary {
-    background: #e5e7eb; color: var(--text-dark); padding: 0.8rem 2rem;
+    background: var(--bg-card); color: var(--text-main); padding: 0.8rem 2rem;
     border-radius: 6px; font-weight: 600; transition: 0.3s; display: inline-block;
+    border: 1px solid var(--border-color);
 }
-.btn-secondary:hover { background: #d1d5db; }
+.btn-secondary:hover { border-color: var(--primary-color); color: var(--primary-color); }
 
-/* --- Jobs Page Specifics --- */
-.page-header {
-    background: var(--primary-dark); color: var(--white);
-    padding: 3rem 0; margin-bottom: 2rem;
-}
-.page-header h1 { font-size: 2.5rem; }
-.page-header p { color: #cbd5e1; margin-top: 0.5rem; }
-
+/* --- Jobs Page Layout --- */
 .jobs-layout {
     display: grid; grid-template-columns: 280px 1fr; gap: 2rem; padding-bottom: 4rem;
 }
-
-/* Sidebar */
 .sidebar {
-    background: var(--white); border: 1px solid var(--border-color);
+    background: var(--bg-card); border: 1px solid var(--border-color);
     border-radius: 8px; padding: 1.5rem; height: fit-content;
     position: sticky; top: 90px;
 }
-.filter-group h3 { margin-bottom: 1.5rem; font-size: 1.2rem; gap: 10px; display: flex; align-items: center; }
+.filter-group h3 { color: var(--text-main); margin-bottom: 1.5rem; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
 .filter-item { margin-bottom: 1.5rem; }
-.filter-item label { display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem; }
-
-.input-with-icon { position: relative; }
-.input-with-icon i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-light); }
-.input-with-icon input {
-    width: 100%; padding: 0.6rem 0.6rem 0.6rem 2.2rem;
-    border: 1px solid var(--border-color); border-radius: 6px; outline: none;
-}
+.filter-item label { color: var(--text-muted); display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem; }
 .checkbox-group label {
     display: flex; align-items: center; gap: 8px;
-    font-weight: 400; color: var(--text-dark); margin-bottom: 0.3rem; cursor: pointer;
+    font-weight: 400; color: var(--text-muted); margin-bottom: 0.3rem; cursor: pointer;
 }
-.reset-btn { margin-top: 0.5rem; font-size: 0.9rem; text-decoration: underline; cursor: pointer; }
+.input-with-icon { position: relative; }
+.input-with-icon i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+.input-with-icon input {
+    width: 100%; padding: 0.6rem 0.6rem 0.6rem 2.2rem;
+    background: var(--bg-input); border: 1px solid var(--border-color);
+    border-radius: 6px; outline: none; color: var(--text-main);
+}
+.reset-btn { color: var(--text-muted); margin-top: 0.5rem; font-size: 0.9rem; text-decoration: underline; cursor: pointer; border:none; background:none; width: 100%;}
+.reset-btn:hover { color: var(--primary-color); }
 
-/* Feed & List View */
+/* Feed Header */
 .feed-header {
     display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 1.5rem; background: var(--white); padding: 1rem;
-    border-radius: 8px; border: 1px solid var(--border-color);
+    margin-bottom: 1.5rem; background: var(--bg-card); padding: 1rem;
+    border-radius: 8px; border: 1px solid var(--border-color); color: var(--text-muted);
 }
-.sort-box select { padding: 0.4rem; border: 1px solid var(--border-color); border-radius: 4px; margin-left: 5px; }
+.sort-box select { 
+    padding: 0.4rem; border: 1px solid var(--border-color); 
+    border-radius: 4px; margin-left: 5px; 
+    background: var(--bg-input); color: var(--text-main); 
+}
 
-/* Wide Card (List View) */
+/* Wide Job Card */
 .job-card-wide {
-    background: var(--white); border: 1px solid var(--border-color);
+    background: var(--bg-card); border: 1px solid var(--border-color);
     border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem;
     display: flex; align-items: center; gap: 1.5rem;
     transition: transform 0.2s, box-shadow 0.2s;
 }
 .job-card-wide:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--primary-color); }
 .job-card-wide .logo-box {
-    width: 60px; height: 60px; background: #f3f4f6; border-radius: 8px;
+    width: 60px; height: 60px; background: #2a2a2a; border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
     font-weight: bold; color: var(--primary-color); font-size: 1.5rem; flex-shrink: 0;
 }
 .job-card-wide .job-info { flex-grow: 1; }
-.job-card-wide h3 { font-size: 1.1rem; margin-bottom: 0.2rem; }
-.job-card-wide .company { font-size: 0.9rem; color: var(--text-light); margin-bottom: 0.5rem; }
-.job-card-wide .meta { display: flex; gap: 1rem; font-size: 0.85rem; color: var(--text-light); }
+.job-card-wide h3 { font-size: 1.1rem; margin-bottom: 0.2rem; color: var(--text-main); }
+.job-card-wide .company { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+.job-card-wide .meta { display: flex; gap: 1rem; font-size: 0.85rem; color: var(--text-muted); }
 .job-card-wide .actions {
     display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; min-width: 120px;
 }
 .tag {
-    background: #eff6ff; color: var(--primary-color); padding: 0.2rem 0.6rem;
-    border-radius: 4px; font-size: 0.8rem; font-weight: 600;
+    background: #2a1a0a; color: var(--primary-color); padding: 0.2rem 0.6rem;
+    border-radius: 4px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--primary-color);
 }
 
 /* Pagination */
 .pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem; }
 .page-btn {
     width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;
-    border: 1px solid var(--border-color); background: var(--white); border-radius: 4px;
-    cursor: pointer; transition: 0.2s;
+    border: 1px solid var(--border-color); background: var(--bg-card); border-radius: 4px;
+    cursor: pointer; transition: 0.2s; color: var(--text-muted);
 }
 .page-btn.active, .page-btn:hover:not(.disabled) {
-    background: var(--primary-color); color: var(--white); border-color: var(--primary-color);
+    background: var(--primary-color); color: #fff; border-color: var(--primary-color);
 }
 .page-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* --- Companies Page --- */
+.companies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem; }
+.company-card {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: 12px; padding: 2rem; text-align: center; transition: 0.3s;
+}
+.company-card:hover { box-shadow: var(--shadow); transform: translateY(-5px); border-color: var(--primary-color); }
+.company-logo-large {
+    width: 80px; height: 80px; background: #2a2a2a; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; font-weight: bold; color: var(--primary-color); margin: 0 auto 1rem;
+}
+.company-rating { color: #f59e0b; margin-bottom: 0.5rem; font-size: 0.9rem; }
+.company-card h3 { color: var(--text-main); }
+.open-jobs-tag {
+    display: inline-block; background: #2a1a0a; color: var(--primary-color);
+    padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-top: 1rem; border: 1px solid var(--primary-color);
+}
+
+/* --- Salaries Page --- */
+.salaries-list { display: flex; flex-direction: column; gap: 1.5rem; }
+.salary-card {
+    background: var(--bg-card); border: 1px solid var(--border-color);
+    border-radius: 8px; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+.salary-info h3 { font-size: 1.2rem; margin-bottom: 0.3rem; color: var(--text-main); }
+.salary-visual { flex: 2; min-width: 300px; display: flex; align-items: center; gap: 1rem; color: var(--text-muted); }
+.salary-bar-bg { flex-grow: 1; height: 8px; background: #333; border-radius: 4px; position: relative; }
+.salary-bar-fill { height: 100%; background: var(--primary-color); border-radius: 4px; position: relative; }
+.salary-marker {
+    position: absolute; right: 0; top: -6px; width: 20px; height: 20px;
+    background: #fff; border: 4px solid var(--primary-color); border-radius: 50%;
+}
+.salary-value { font-weight: 700; color: var(--primary-color); font-size: 1.5rem; }
 
 /* --- Modal --- */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;
+    background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center;
     opacity: 0; visibility: hidden; transition: 0.3s; z-index: 1000;
 }
 .modal-overlay.open { opacity: 1; visibility: visible; }
 .modal-content {
-    background: var(--white); padding: 2rem; border-radius: 12px;
+    background: var(--bg-card); padding: 2rem; border-radius: 12px;
     width: 100%; max-width: 500px; position: relative;
-    transform: translateY(20px); transition: 0.3s;
+    transform: translateY(20px); transition: 0.3s; border: 1px solid var(--border-color);
 }
 .modal-overlay.open .modal-content { transform: translateY(0); }
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-.close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; color: var(--text-main); }
+.close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
+.close-modal:hover { color: var(--primary-color); }
 .form-group { margin-bottom: 1rem; }
-.form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+.form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-muted); }
 .form-group input, .form-group textarea {
-    width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: 6px; outline: none;
+    width: 100%; padding: 0.8rem; background: var(--bg-input); 
+    border: 1px solid var(--border-color); border-radius: 6px; outline: none; color: var(--text-main);
 }
-.file-upload { border: 2px dashed var(--border-color); padding: 1rem; text-align: center; border-radius: 6px; cursor: pointer; }
+.form-group input:focus { border-color: var(--primary-color); }
+.file-upload { 
+    border: 2px dashed var(--border-color); padding: 1rem; text-align: center; border-radius: 6px; cursor: pointer; color: var(--text-muted); 
+}
+.file-upload:hover { border-color: var(--primary-color); color: var(--primary-color); }
 .full-width { width: 100%; }
 
 /* --- Footer --- */
-footer { background: var(--white); border-top: 1px solid var(--border-color); padding-top: 4rem; margin-top: auto; }
+footer { background: var(--bg-card); border-top: 1px solid var(--border-color); padding-top: 4rem; margin-top: auto; }
 footer .container { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2rem; padding-bottom: 2rem; }
-.footer-col h4 { margin-bottom: 1.2rem; font-size: 1.1rem; }
-.footer-col a { display: block; color: var(--text-light); margin-bottom: 0.8rem; font-size: 0.95rem; }
+.footer-col h4 { margin-bottom: 1.2rem; font-size: 1.1rem; color: var(--text-main); }
+.footer-col a { display: block; color: var(--text-muted); margin-bottom: 0.8rem; font-size: 0.95rem; }
 .footer-col a:hover { color: var(--primary-color); }
-.footer-bottom { border-top: 1px solid var(--border-color); padding: 1.5rem 0; text-align: center; color: var(--text-light); font-size: 0.9rem; }
+.footer-bottom { border-top: 1px solid var(--border-color); padding: 1.5rem 0; text-align: center; color: var(--text-muted); font-size: 0.9rem; }
+
+/* --- Auth Page Specifics --- */
+.auth-container { display: flex; justify-content: center; align-items: center; min-height: 80vh; padding: 2rem; }
+.auth-box {
+    background: var(--bg-card); padding: 2.5rem; border-radius: 12px;
+    box-shadow: var(--shadow); width: 100%; max-width: 400px; border: 1px solid var(--border-color);
+}
+.auth-header { text-align: center; margin-bottom: 2rem; }
+.auth-header h2 { font-size: 1.8rem; margin-bottom: 0.5rem; color: var(--text-main); }
+.toggle-text { text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); }
+.toggle-text a { color: var(--primary-color); font-weight: 600; cursor: pointer; }
+.hidden { display: none; }
+.error-msg { color: #ef4444; font-size: 0.9rem; margin-bottom: 1rem; text-align: center; display: none;}
+.success-msg { color: #22c55e; font-size: 0.9rem; margin-bottom: 1rem; text-align: center; display: none;}
 
 /* Responsive */
 @media (max-width: 768px) {
