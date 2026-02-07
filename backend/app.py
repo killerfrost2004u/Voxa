@@ -18,52 +18,41 @@ SHEET_NAME = "Wolves Master sheet 2"
 @app.route('/api/jobs', methods=['GET'])
 def get_jobs():
     try:
-        # 1. Fetch the CSV
+        # 1. Fetch CSV
         encoded_name = urllib.parse.quote(SHEET_NAME)
         url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_name}"
 
-        print(f"📥 Fetching: {url}")
+        print(f"📥 Fetching sheet data...")
         response = requests.get(url)
         response.raise_for_status()
 
-        # 2. Parse CSV
+        # 2. Parse & Transpose
         csv_content = response.content.decode('utf-8-sig')
-        # Read all rows into a list of lists
         raw_data = list(csv.reader(io.StringIO(csv_content)))
-
-        # 3. TRANSPOSE DATA (Flip Rows and Columns)
-        # Zip converts columns to rows
         transposed_data = list(map(list, itertools.zip_longest(*raw_data, fillvalue="")))
-
-        print(f"🔄 Transposed Data: Found {len(transposed_data)} columns (potential jobs).")
 
         jobs = []
 
-        # 4. Iterate through the NEW rows (which were originally columns)
-        # We start from index 1 because index 0 is likely the labels ("Company Name", "Job Title", etc.)
-
-        # Let's verify which index holds what based on your Raw Data dump:
-        # Original Row 1 = Company Name -> Now Column 1
-        # Original Row 2 = Job Title -> Now Column 2
-        # Original Row 6 = Salary -> Now Column 6
-        # Original Row 8 = Location -> Now Column 8
-
+        # 3. Extract Data (Mapping columns based on your sheet layout)
         for i, col in enumerate(transposed_data):
-            if i == 0: continue  # Skip the headers column (the one that says "Company Name", "Job Title"...)
-
-            # Extract fields by their ORIGINAL Row Index
-            # Safety check: ensure column has enough rows
+            if i == 0: continue  # Skip label column
             if len(col) < 10: continue
 
+            # Map Rows to Variables
             company = col[1].strip()  # Row 1
             title = col[2].strip()  # Row 2
+            reqs_1 = col[3].strip()  # Row 3 (Account Type)
+            hours = col[4].strip()  # Row 4
             salary = col[6].strip()  # Row 6
+            reqs_2 = col[7].strip()  # Row 7 (Who can apply)
             location = col[8].strip()  # Row 8
-            offer_text = col[10].strip()  # Row 10 (Offer Details)
+            training = col[9].strip()  # Row 9
+            full_desc = col[10].strip()  # Row 10 (Full Offer)
 
-            # Skip empty columns
-            if not company or not title:
-                continue
+            if not company or not title: continue
+
+            # Combine requirements for cleaner display
+            full_requirements = f"{reqs_1}\n{reqs_2}"
 
             jobs.append({
                 "id": i,
@@ -71,12 +60,15 @@ def get_jobs():
                 "company": company,
                 "location": location if location else "Remote",
                 "salary": salary if salary else "Competitive",
-                "type": "Full Time",  # Default
-                "description": offer_text[:100] + "...",
+                "type": "Full Time",
+                "hours": hours,
+                "training": training,
+                "requirements": full_requirements,
+                "description": full_desc if full_desc else "No description provided.",
                 "logo": (company[:2]).upper()
             })
 
-        print(f"📤 Returning {len(jobs)} jobs.")
+        print(f"📤 Sent {len(jobs)} jobs with full details.")
         return jsonify(jobs)
 
     except Exception as e:
