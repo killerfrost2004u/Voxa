@@ -7,6 +7,36 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Unique styles for About page stats */
+        .stat-number {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: -webkit-linear-gradient(#fff, var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 20px rgba(255, 102, 0, 0.3);
+        }
+        .stat-label {
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        
+        /* Wolf SVG Animation (Optional Pulse) */
+        .wolf-svg {
+            width: 150px; 
+            height: 150px; 
+            margin-bottom: 1.5rem; 
+            filter: drop-shadow(0 0 15px var(--primary-color));
+            transition: transform 0.3s ease;
+        }
+        .wolf-svg:hover {
+            transform: scale(1.05);
+        }
+    </style>
 </head>
 <body>
 
@@ -15,9 +45,11 @@
             <a href="index.html" class="logo">Dark<span>Wolves</span></a>
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
+                <li><a href="about.html" class="active">About Us</a></li>
                 <li><a href="jobs.html">Find Jobs</a></li>
                 <li><a href="companies.html">Companies</a></li>
                 <li><a href="salaries.html">Salaries</a></li>
+                <li><a href="contact.html">Contact Us</a></li>
             </ul>
             <div class="auth-buttons">
                 <a href="login.html" class="btn-text">Log In</a>
@@ -41,36 +73,50 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;">
                 <div>
                     <h2 style="font-size: 2rem; margin-bottom: 1.5rem; color: var(--text-main);">Our Mission</h2>
-                    <p class="text-block" style="background: transparent; padding: 0; color: var(--text-muted); font-size: 1.1rem;">
-                        Dark Wolves was founded with a single purpose: to empower job seekers in the MENA region. We believe that finding a job shouldn't be a hunt in the dark.
+                    <p class="text-block" style="background: transparent; padding: 0; color: var(--text-muted); font-size: 1.1rem; white-space: normal; text-align: justify; line-height: 1.8;">
+                        Dark Wolves is dedicated to giving job seekers an offer using only their language and style. We bridge the gap, ensuring your skills speak louder than anything else.
                     </p>
-                    <p class="text-block" style="background: transparent; padding: 0; color: var(--text-muted); font-size: 1.1rem; margin-top: 1rem;">
+                    <p class="text-block" style="background: transparent; padding: 0; color: var(--text-muted); font-size: 1.1rem; margin-top: 1rem; white-space: normal; text-align: justify; line-height: 1.8;">
                         We use advanced technology to aggregate thousands of opportunities from top companies, specifically filtering for salaries, locations, and flexible working conditions like remote and rotational shifts.
                     </p>
                 </div>
-                <div style="background: var(--bg-card); padding: 2rem; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
-                    <i class="fas fa-wolf-pack-battalion" style="font-size: 5rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
-                    <h3 style="color: white;">Join the Hunt</h3>
+                <div style="background: var(--bg-card); padding: 3rem; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; box-shadow: 0 0 30px rgba(0,0,0,0.5);">
+                    
+                    <svg class="wolf-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                        <defs>
+                            <linearGradient id="wolfGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ff8800;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#ff4400;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <path fill="url(#wolfGrad)" d="M50,15 L25,35 L30,60 L50,90 L70,60 L75,35 L50,15 Z M50,80 L38,58 L35,40 L50,25 L65,40 L62,58 L50,80 Z M35,40 L42,45 L45,55 L38,58 L35,40 Z M65,40 L62,58 L55,55 L58,45 L65,40 Z M50,55 L45,45 L55,45 L50,55 Z" stroke="#111" stroke-width="1"/>
+                        <path fill="#111" d="M38,45 L42,48 L38,51 Z M62,45 L58,48 L62,51 Z" opacity="0.8"/> </svg>
+
+                    <h3 style="color: white; font-size: 1.5rem;">Join the Hunt</h3>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="section-padding" style="background: #111;">
+    <section class="section-padding" style="background: linear-gradient(to bottom, #111, #0a0a0a); border-top: 1px solid #222;">
         <div class="container">
-            <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); text-align: center;">
-                <div class="stat-card" style="flex-direction: column; text-align: center; border: none; background: transparent;">
-                    <h3 style="font-size: 3rem; color: var(--primary-color);">10k+</h3>
-                    <p>Active Jobs</p>
+            <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); text-align: center; gap: 2rem;">
+                
+                <div class="stat-card" style="flex-direction: column; text-align: center; border: 1px solid #222; background: #141414; padding: 2rem; border-radius: 16px;">
+                    <div class="stat-number">10k+</div>
+                    <p class="stat-label">Active Jobs</p>
                 </div>
-                <div class="stat-card" style="flex-direction: column; text-align: center; border: none; background: transparent;">
-                    <h3 style="font-size: 3rem; color: var(--primary-color);">500+</h3>
-                    <p>Partner Companies</p>
+
+                <div class="stat-card" style="flex-direction: column; text-align: center; border: 1px solid #222; background: #141414; padding: 2rem; border-radius: 16px;">
+                    <div class="stat-number">500+</div>
+                    <p class="stat-label">Partner Companies</p>
                 </div>
-                <div class="stat-card" style="flex-direction: column; text-align: center; border: none; background: transparent;">
-                    <h3 style="font-size: 3rem; color: var(--primary-color);">2M</h3>
-                    <p>Applications Sent</p>
+
+                <div class="stat-card" style="flex-direction: column; text-align: center; border: 1px solid #222; background: #141414; padding: 2rem; border-radius: 16px;">
+                    <div class="stat-number">2M</div>
+                    <p class="stat-label">Applications Sent</p>
                 </div>
+
             </div>
         </div>
     </section>
