@@ -61,7 +61,7 @@ def get_jobs():
     try:
         encoded_name = urllib.parse.quote(SHEET_NAME)
         url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_name}"
-        print(f"📥 Fetching sheet data...")
+        # print(f"📥 Fetching sheet data...")
         response = requests.get(url)
         response.raise_for_status()
 
@@ -107,7 +107,7 @@ def get_jobs():
                 "description": col[10].strip(),
                 "logo": (company[:2]).upper()
             })
-        print(f"📤 Sent {len(jobs)} jobs.")
+        # print(f"📤 Sent {len(jobs)} jobs.")
         return jsonify(jobs)
     except Exception as e:
         print(f"❌ Error: {e}")
@@ -187,7 +187,7 @@ def contact_us():
         if 'conn' in locals() and conn: conn.close()
 
 
-# --- APPLICATION ROUTE ---
+# --- APPLICATION ROUTE (MUST BE UNINDENTED) ---
 @app.route('/api/apply', methods=['POST'])
 def apply_for_job():
     try:
