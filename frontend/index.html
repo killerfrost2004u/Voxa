@@ -4,20 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CareerCore | Find Your Dream Job</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
     <nav class="navbar">
         <div class="container">
-            <a href="#" class="logo">Career<span>Core</span></a>
+            <a href="index.html" class="logo">Career<span>Core</span></a>
             <ul class="nav-links">
-                <li><a href="#" class="active">Find Jobs</a></li>
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="jobs.html">Find Jobs</a></li>
                 <li><a href="#">Companies</a></li>
                 <li><a href="#">Salaries</a></li>
-                <li><a href="#">About Us</a></li>
             </ul>
             <div class="auth-buttons">
                 <a href="#" class="btn-text">Log In</a>
@@ -43,15 +43,14 @@
                     <i class="fas fa-map-marker-alt"></i>
                     <input type="text" id="location-search" placeholder="City or Country">
                 </div>
-                <button class="btn-primary" onclick="filterJobs()">Search</button>
+                <button class="btn-primary" onclick="filterHomeJobs()">Search</button>
             </div>
             
             <div class="popular-tags">
                 <span>Popular:</span>
-                <a href="#">UI/UX Design</a>
-                <a href="#">Frontend</a>
-                <a href="#">Data Science</a>
-                <a href="#">Project Manager</a>
+                <a href="jobs.html">UI/UX Design</a>
+                <a href="jobs.html">Frontend</a>
+                <a href="jobs.html">Data Science</a>
             </div>
         </div>
     </header>
@@ -71,7 +70,7 @@
                 </div>
             
             <div class="load-more">
-                <button class="btn-secondary">View All Jobs</button>
+                <a href="jobs.html" class="btn-secondary">View All Jobs</a>
             </div>
         </div>
     </section>
@@ -94,13 +93,8 @@
                 <div class="form-group">
                     <label>Upload Resume/CV</label>
                     <div class="file-upload">
-                        <input type="file" id="resume" hidden>
-                        <label for="resume"><i class="fas fa-cloud-upload-alt"></i> Click to upload PDF</label>
+                        <label><i class="fas fa-cloud-upload-alt"></i> Click to upload PDF</label>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label>Cover Letter</label>
-                    <textarea rows="4" placeholder="Why are you a good fit?"></textarea>
                 </div>
                 <button type="submit" class="btn-primary full-width">Submit Application</button>
             </form>
@@ -111,25 +105,22 @@
         <div class="container">
             <div class="footer-col">
                 <a href="#" class="logo">Career<span>Core</span></a>
-                <p>Connecting talent with opportunity. The best place to find your next career move.</p>
+                <p>Connecting talent with opportunity.</p>
             </div>
             <div class="footer-col">
                 <h4>For Candidates</h4>
-                <a href="#">Browse Jobs</a>
-                <a href="#">Browse Categories</a>
+                <a href="jobs.html">Browse Jobs</a>
                 <a href="#">Candidate Dashboard</a>
             </div>
             <div class="footer-col">
                 <h4>For Employers</h4>
                 <a href="#">Post a Job</a>
                 <a href="#">Pricing</a>
-                <a href="#">Recruiting Solutions</a>
             </div>
             <div class="footer-col">
                 <h4>Support</h4>
                 <a href="#">Help Center</a>
                 <a href="#">Privacy Policy</a>
-                <a href="#">Terms of Service</a>
             </div>
         </div>
         <div class="footer-bottom">
