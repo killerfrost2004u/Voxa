@@ -34,7 +34,8 @@
                     <tr>
                         <th width="50">ID</th>
                         <th width="180">Candidate</th>
-                        <th width="180">Voice Intro</th> <th width="220">Contact Info</th>
+                        <th width="200">Voice Intro</th>
+                        <th width="220">Contact Info</th>
                         <th width="150">Status</th>
                         <th width="200">National Data</th>
                         <th>Experience</th>
@@ -47,6 +48,8 @@
             </table>
         </div>
     </div>
+
+    <audio id="global-audio-player"></audio>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -71,6 +74,7 @@
 
         async function loadApplications(adminEmail) {
             const tbody = document.getElementById('admin-table-body');
+            
             try {
                 const response = await fetch('http://127.0.0.1:5000/api/admin/applications', {
                     headers: { 'X-Admin-Email': adminEmail }
@@ -86,10 +90,20 @@
                 tbody.innerHTML = '';
                 
                 apps.forEach(app => {
-                    // Check if VoiceRecordPath exists, otherwise show placeholder
-                    const audioPlayer = app.VoiceRecordPath 
-                        ? `<audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}" style="width: 200px; height: 35px;"></audio>`
-                        : '<span style="color:#666; font-size:0.8rem;">No Recording</span>';
+                    // Custom Audio Player HTML
+                    const audioPlayerHtml = app.VoiceRecordPath 
+                        ? `<div class="voice-player" onclick="playVoice(this, 'http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}')">
+                               <div class="play-toggle"><i class="fas fa-play"></i></div>
+                               <div class="voice-wave">
+                                   <div class="wave-bar"></div>
+                                   <div class="wave-bar"></div>
+                                   <div class="wave-bar"></div>
+                                   <div class="wave-bar"></div>
+                                   <div class="wave-bar"></div>
+                               </div>
+                               <span class="voice-label">Play</span>
+                           </div>`
+                        : '<span style="color:#666; font-size:0.8rem; font-style:italic;">No Recording</span>';
 
                     const row = `
                         <tr>
@@ -99,7 +113,7 @@
                                 <div style="font-size:0.8rem; color:#888;">${app.JobTitle}</div>
                             </td>
                             <td>
-                                ${audioPlayer}
+                                ${audioPlayerHtml}
                             </td>
                             <td>
                                 <div class="contact-row"><i class="fas fa-envelope"></i> ${app.Email}</div>
@@ -109,12 +123,15 @@
                                 <div class="detail-group">
                                     <span class="badge badge-grad">${app.GraduationStatus || 'N/A'}</span>
                                     <br>
-                                    <span class="badge">${app.EnglishLevel || 'N/A'}</span>
+                                    <span class="badge" style="margin-top:4px;">${app.EnglishLevel || 'N/A'}</span>
                                 </div>
                             </td>
                             <td>
                                 <div class="detail-group">
-                                    <span class="detail-label">ID:</span> ${app.NationalID || 'N/A'}
+                                    <span class="detail-label">ID:</span> <span style="font-family:monospace; letter-spacing:1px;">${app.NationalID || 'N/A'}</span>
+                                </div>
+                                <div class="detail-group">
+                                    <span class="detail-label">Addr:</span> <span style="color:#aaa;">${app.Address || 'N/A'}</span>
                                 </div>
                             </td>
                             <td>
@@ -134,6 +151,62 @@
                 console.error(error);
                 tbody.innerHTML = '<tr><td colspan="8" style="color:red; text-align:center;">Failed to load data.</td></tr>';
             }
+        }
+
+        // Global Audio Controller
+        let currentPlayingBtn = null;
+        const globalAudio = document.getElementById('global-audio-player');
+
+        function playVoice(element, url) {
+            const btn = element.querySelector('.play-toggle');
+            const icon = btn.querySelector('i');
+            const label = element.querySelector('.voice-label');
+
+            // If clicking the same active button, toggle pause
+            if (currentPlayingBtn === element) {
+                if (globalAudio.paused) {
+                    globalAudio.play();
+                    element.classList.add('playing');
+                    icon.classList.remove('fa-play');
+                    icon.classList.add('fa-pause');
+                    label.textContent = "Stop";
+                } else {
+                    globalAudio.pause();
+                    element.classList.remove('playing');
+                    icon.classList.remove('fa-pause');
+                    icon.classList.add('fa-play');
+                    label.textContent = "Play";
+                }
+                return;
+            }
+
+            // Reset previous button if exists
+            if (currentPlayingBtn) {
+                currentPlayingBtn.classList.remove('playing');
+                currentPlayingBtn.querySelector('.play-toggle i').classList.remove('fa-pause');
+                currentPlayingBtn.querySelector('.play-toggle i').classList.add('fa-play');
+                currentPlayingBtn.querySelector('.voice-label').textContent = "Play";
+            }
+
+            // Start new audio
+            currentPlayingBtn = element;
+            globalAudio.src = url;
+            globalAudio.play();
+
+            // Update UI for new button
+            element.classList.add('playing');
+            icon.classList.remove('fa-play');
+            icon.classList.add('fa-pause');
+            label.textContent = "Stop";
+
+            // Reset UI when audio ends
+            globalAudio.onended = function() {
+                element.classList.remove('playing');
+                icon.classList.remove('fa-pause');
+                icon.classList.add('fa-play');
+                label.textContent = "Play";
+                currentPlayingBtn = null;
+            };
         }
     </script>
 </body>
