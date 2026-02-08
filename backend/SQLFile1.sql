@@ -12,3 +12,40 @@ CREATE TABLE ContactMessages (
     SubmittedAt DATETIME DEFAULT GETDATE()
 );
 GO
+
+-- Create Job Applications Table
+CREATE TABLE JobApplications (
+    ApplicationID INT IDENTITY(1,1) PRIMARY KEY,
+    JobTitle NVARCHAR(150) NOT NULL,
+    Company NVARCHAR(150) NOT NULL,
+    FullName NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(100) NOT NULL,
+    Phone NVARCHAR(50) NOT NULL,
+    WhatsApp NVARCHAR(50),
+    EnglishLevel NVARCHAR(10),
+    Experience NVARCHAR(MAX),
+    SubmittedAt DATETIME DEFAULT GETDATE()
+);
+GO
+
+USE DarkWolvesDB;
+GO
+SELECT TABLE_NAME 
+FROM INFORMATION_SCHEMA.TABLES 
+WHERE TABLE_TYPE = 'BASE TABLE';
+GO
+
+USE DarkWolvesDB;
+GO
+
+PRINT '>>> FETCHING ALL REGISTERED USERS <<<';
+SELECT * FROM Users;
+GO
+
+PRINT '>>> FETCHING ALL CONTACT MESSAGES <<<';
+SELECT * FROM ContactMessages;
+GO
+
+PRINT '>>> FETCHING ALL JOB APPLICATIONS <<<';
+SELECT * FROM JobApplications;
+GO

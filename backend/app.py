@@ -81,6 +81,7 @@ def get_jobs():
             raw_hours = col[4].strip()
             clean_hours = " ".join(raw_hours.split())
 
+            # Detect Job Type & Shift
             search_text = (title + " " + clean_hours + " " + col[10]).lower()
             types = []
             if "part time" in search_text or "part-time" in search_text:
@@ -188,7 +189,10 @@ def contact_us():
 def apply_for_job():
     try:
         data = request.json
-        required_fields = ['title', 'company', 'name', 'email', 'phone', 'english', 'experience']
+
+        # Validation: Check for new required fields
+        required_fields = ['title', 'company', 'name', 'email', 'phone', 'english', 'experience', 'gender',
+                           'gradStatus', 'nationalId', 'nationality', 'address']
         if not all(k in data for k in required_fields):
             return jsonify({"error": "Missing fields"}), 400
 
@@ -199,8 +203,8 @@ def apply_for_job():
         cursor = conn.cursor()
         query = """
             INSERT INTO JobApplications 
-            (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, Gender, GraduationStatus, MilitaryStatus, NationalID, Nationality, Address)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
         cursor.execute(query, (
             data['title'],
@@ -210,7 +214,13 @@ def apply_for_job():
             data['phone'],
             data.get('whatsapp', ''),
             data['english'],
-            data['experience']
+            data['experience'],
+            data['gender'],
+            data['gradStatus'],
+            data.get('militaryStatus', 'Not Applicable'),  # Default if not provided
+            data['nationalId'],
+            data['nationality'],
+            data['address']
         ))
         conn.commit()
 
@@ -224,7 +234,6 @@ def apply_for_job():
         if 'conn' in locals() and conn: conn.close()
 
 
-# --- NEW DASHBOARD ROUTE ---
 @app.route('/api/dashboard/<email>', methods=['GET'])
 def get_user_dashboard(email):
     try:
@@ -247,13 +256,45 @@ def get_user_dashboard(email):
                 "title": row.JobTitle,
                 "company": row.Company,
                 "date": row.SubmittedAt.strftime('%Y-%m-%d'),
-                "status": "Applied"  # Default status for now
+                "status": "Applied"
             })
 
         return jsonify({"applications": applications})
 
     except Exception as e:
         print(f"❌ Dashboard Error: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'conn' in locals() and conn: conn.close()
+
+
+# --- ADMIN ROUTE (New) ---
+@app.route('/api/admin/applications', methods=['GET'])
+def get_all_applications():
+    try:
+        conn = get_db_connection()
+        if not conn: return jsonify({"error": "DB Connection Failed"}), 500
+
+        cursor = conn.cursor()
+        # Fetch all applications, newest first
+        cursor.execute("SELECT * FROM JobApplications ORDER BY SubmittedAt DESC")
+
+        applications = []
+        # Get column names from the cursor description
+        columns = [column[0] for column in cursor.description]
+
+        for row in cursor.fetchall():
+            # Create a dictionary for each row using column names
+            app_dict = dict(zip(columns, row))
+            # Convert datetime objects to string for JSON serialization
+            if 'SubmittedAt' in app_dict and app_dict['SubmittedAt']:
+                app_dict['SubmittedAt'] = app_dict['SubmittedAt'].strftime('%Y-%m-%d %H:%M:%S')
+            applications.append(app_dict)
+
+        return jsonify(applications)
+
+    except Exception as e:
+        print(f"❌ Admin Error: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         if 'conn' in locals() and conn: conn.close()

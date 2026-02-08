@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Custom Select Style for this page */
         select {
             width: 100%;
             padding: 0.8rem;
@@ -25,6 +24,7 @@
             background-size: 0.8rem auto;
         }
         select:focus { border-color: var(--primary-color); }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -40,16 +40,13 @@
                 <li><a href="salaries.html">Salaries</a></li>
                 <li><a href="contact.html">Contact Us</a></li>
             </ul>
-            <div class="auth-buttons">
-                </div>
-            <div class="menu-toggle">
-                <i class="fas fa-bars"></i>
-            </div>
+            <div class="auth-buttons"></div>
+            <div class="menu-toggle"><i class="fas fa-bars"></i></div>
         </div>
     </nav>
 
     <div class="auth-container" style="min-height: calc(100vh - 200px); align-items: flex-start; padding-top: 4rem;">
-        <div class="auth-box" style="max-width: 700px;">
+        <div class="auth-box" style="max-width: 800px;">
             <div class="auth-header" style="text-align: left; margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
                 <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Job Application</h2>
                 <p style="color: var(--primary-color); font-weight: 600; font-size: 1.1rem;" id="apply-job-title">Loading...</p>
@@ -58,6 +55,7 @@
 
             <form id="application-form">
                 
+                <h3 style="color:white; font-size:1.1rem; margin-bottom:1rem; border-bottom:1px solid #333; padding-bottom:0.5rem;">Personal Details</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
                         <label>Full Name <span style="color:var(--primary-color)">*</span></label>
@@ -71,6 +69,22 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
+                        <label>National ID <span style="color:var(--primary-color)">*</span></label>
+                        <input type="text" id="app-national-id" required placeholder="14-digit ID" maxlength="14" pattern="\d{14}" title="Please enter a valid 14-digit National ID">
+                    </div>
+                    <div class="form-group">
+                        <label>Nationality <span style="color:var(--primary-color)">*</span></label>
+                        <input type="text" id="app-nationality" required placeholder="Egyptian">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Address (Egypt) <span style="color:var(--primary-color)">*</span></label>
+                    <input type="text" id="app-address" required placeholder="Street, City, Governorate">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
                         <label><i class="fas fa-phone-alt"></i> Phone (Calls) <span style="color:var(--primary-color)">*</span></label>
                         <input type="tel" id="app-phone" required placeholder="01xxxxxxxxx">
                     </div>
@@ -78,6 +92,39 @@
                         <label><i class="fab fa-whatsapp"></i> WhatsApp Number <span style="color:var(--primary-color)">*</span></label>
                         <input type="tel" id="app-whatsapp" required placeholder="01xxxxxxxxx">
                     </div>
+                </div>
+
+                <h3 style="color:white; font-size:1.1rem; margin:1.5rem 0 1rem 0; border-bottom:1px solid #333; padding-bottom:0.5rem;">Education & Status</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Gender <span style="color:var(--primary-color)">*</span></label>
+                        <select id="app-gender" required onchange="checkMilitary()">
+                            <option value="" disabled selected>Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Graduation Status <span style="color:var(--primary-color)">*</span></label>
+                        <select id="app-grad-status" required onchange="checkMilitary()">
+                            <option value="" disabled selected>Select Status</option>
+                            <option value="Graduated">Graduated</option>
+                            <option value="Undergraduate">Undergraduate</option>
+                            <option value="Dropout">Dropout</option>
+                            <option value="Gap Year">Gap Year</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group hidden" id="military-group">
+                    <label>Military Status <span style="color:var(--primary-color)">*</span></label>
+                    <select id="app-military">
+                        <option value="" disabled selected>Select Status</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Exempted">Exempted</option>
+                        <option value="Postponed">Postponed</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -116,7 +163,22 @@
 
     <script src="js/script.js"></script>
     <script>
-        // Initialize Page Data (Get Job Title/Company from URL)
+        function checkMilitary() {
+            const gender = document.getElementById('app-gender').value;
+            const gradStatus = document.getElementById('app-grad-status').value;
+            const militaryGroup = document.getElementById('military-group');
+            const militarySelect = document.getElementById('app-military');
+
+            if (gender === 'Male' && gradStatus === 'Graduated') {
+                militaryGroup.classList.remove('hidden');
+                militarySelect.required = true; // Make it required only if showing
+            } else {
+                militaryGroup.classList.add('hidden');
+                militarySelect.required = false; // Not required if hidden
+                militarySelect.value = ""; // Clear value
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             const title = params.get('title');
@@ -125,7 +187,6 @@
             if(title) document.getElementById('apply-job-title').textContent = title;
             if(company) document.getElementById('apply-company').textContent = company;
 
-            // Pre-fill user data if logged in
             const userStr = localStorage.getItem('user');
             if(userStr) {
                 const user = JSON.parse(userStr);
@@ -134,7 +195,6 @@
             }
         });
 
-        // Handle Form Submission
         document.getElementById('application-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -143,10 +203,18 @@
             btn.textContent = "Submitting...";
             btn.disabled = true;
 
-            // Get Job Details from URL (or fallback to text content)
             const params = new URLSearchParams(window.location.search);
             const jobTitle = params.get('title') || document.getElementById('apply-job-title').textContent;
             const jobCompany = params.get('company') || document.getElementById('apply-company').textContent;
+
+            // Handle Conditional Logic for Military Status Data
+            let milStatus = document.getElementById('app-military').value;
+            const gender = document.getElementById('app-gender').value;
+            const gradStatus = document.getElementById('app-grad-status').value;
+            
+            if (gender !== 'Male' || gradStatus !== 'Graduated') {
+                milStatus = "Not Applicable";
+            }
 
             const applicationData = {
                 title: jobTitle,
@@ -155,6 +223,15 @@
                 email: document.getElementById('app-email').value,
                 phone: document.getElementById('app-phone').value,
                 whatsapp: document.getElementById('app-whatsapp').value,
+                
+                nationalId: document.getElementById('app-national-id').value,
+                nationality: document.getElementById('app-nationality').value,
+                address: document.getElementById('app-address').value,
+                
+                gender: gender,
+                gradStatus: gradStatus,
+                militaryStatus: milStatus,
+                
                 english: document.getElementById('app-english').value,
                 experience: document.getElementById('app-experience').value
             };
@@ -170,8 +247,6 @@
 
                 if (response.ok) {
                     alert("Application Submitted Successfully! Good luck.");
-                    // Optional: Save to local storage briefly so dashboard still looks populated until we fix backend fetching
-                    saveToLocalBackup(applicationData);
                     window.location.href = 'dashboard.html';
                 } else {
                     alert("Error: " + (result.error || "Failed to submit application"));
@@ -184,20 +259,6 @@
                 btn.disabled = false;
             }
         });
-
-        // Helper to keep Dashboard working temporarily
-        function saveToLocalBackup(data) {
-            const apps = JSON.parse(localStorage.getItem('my_applications')) || [];
-            if (!apps.some(app => app.title === data.title && app.company === data.company)) {
-                apps.unshift({
-                    title: data.title,
-                    company: data.company,
-                    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                    status: 'Applied'
-                });
-                localStorage.setItem('my_applications', JSON.stringify(apps));
-            }
-        }
     </script>
 </body>
 </html>

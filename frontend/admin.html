@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal | Dark Wolves</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .admin-container { padding: 2rem; max-width: 98%; margin: 0 auto; }
+        
+        .admin-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 2rem; 
+            border-bottom: 1px solid #333; 
+            padding-bottom: 1rem; 
+        }
+
+        .data-table-container {
+            overflow-x: auto;
+            background: #141414;
+            border-radius: 8px;
+            border: 1px solid #333;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .data-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            min-width: 1200px; 
+            font-size: 0.9rem;
+        }
+
+        .data-table th { 
+            background: #1f1f1f; 
+            padding: 1rem; 
+            text-align: left; 
+            color: #aaa; 
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #333;
+            white-space: nowrap;
+        }
+
+        .data-table td { 
+            padding: 1rem; 
+            border-bottom: 1px solid #2a2a2a; 
+            color: #e0e0e0; 
+            vertical-align: top;
+        }
+
+        .data-table tr:hover { background: #1a1a1a; }
+
+        .badge { 
+            padding: 3px 8px; 
+            border-radius: 4px; 
+            font-size: 0.75rem; 
+            background: #333; 
+            color: white;
+            display: inline-block;
+            margin-bottom: 2px;
+        }
+        
+        .badge-grad { background: #2a1a0a; color: var(--primary-color); border: 1px solid var(--primary-color); }
+        .badge-mil { background: #064e3b; color: #34d399; }
+
+        .refresh-btn { 
+            background: var(--primary-color); 
+            border: none; 
+            color: white; 
+            padding: 0.6rem 1.2rem; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .refresh-btn:hover { background: #e65c00; }
+
+        .contact-row { display: flex; align-items: center; gap: 8px; color: #888; font-size: 0.85rem; margin-bottom: 2px; }
+        .contact-row i { width: 14px; text-align: center; color: var(--primary-color); }
+        
+        .detail-group { margin-bottom: 8px; }
+        .detail-label { color: #666; font-size: 0.75rem; display: block; text-transform: uppercase; }
+        .detail-value { color: white; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">Dark<span>Wolves</span></a>
+            <div style="color: white; font-weight: bold; letter-spacing: 1px;">ADMIN PORTAL</div>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <div>
+                <h1 style="color:white; font-size: 1.8rem;">Candidate Applications</h1>
+                <p style="color:#888;">Real-time database view</p>
+            </div>
+            <button class="refresh-btn" onclick="loadApplications()">
+                <i class="fas fa-sync-alt"></i> Refresh Data
+            </button>
+        </div>
+
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Candidate Profile</th>
+                        <th>Target Job</th>
+                        <th>Contact Info</th>
+                        <th>Status & Demographics</th>
+                        <th>National Data</th>
+                        <th>Experience</th>
+                        <th>Applied On</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-table-body">
+                    <tr><td colspan="8" style="text-align:center; padding: 3rem; color: #666;">Loading data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', loadApplications);
+
+        async function loadApplications() {
+            const tbody = document.getElementById('admin-table-body');
+            const btn = document.querySelector('.refresh-btn i');
+            
+            // Animation
+            btn.style.transition = 'transform 0.5s';
+            btn.style.transform = 'rotate(180deg)';
+            setTimeout(() => btn.style.transform = 'rotate(0deg)', 500);
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/admin/applications');
+                const apps = await response.json();
+
+                if (apps.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:3rem; color:#888;">No applications received yet.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                apps.forEach(app => {
+                    const row = `
+                        <tr>
+                            <td><span style="color:#666">#${app.ApplicationID}</span></td>
+                            
+                            <td>
+                                <div style="font-weight:700; font-size:1rem; color:white;">${app.FullName}</div>
+                                <div style="font-size:0.8rem; color:#888;">${app.Gender}</div>
+                            </td>
+
+                            <td>
+                                <div style="color:var(--primary-color); font-weight:600;">${app.JobTitle}</div>
+                                <div style="font-size:0.85rem; color:#888;">${app.Company}</div>
+                            </td>
+
+                            <td>
+                                <div class="contact-row"><i class="fas fa-envelope"></i> ${app.Email}</div>
+                                <div class="contact-row"><i class="fas fa-phone"></i> ${app.Phone}</div>
+                                ${app.WhatsApp ? `<div class="contact-row"><i class="fab fa-whatsapp"></i> ${app.WhatsApp}</div>` : ''}
+                            </td>
+
+                            <td>
+                                <div class="detail-group">
+                                    <span class="detail-label">Graduation</span>
+                                    <span class="badge badge-grad">${app.GraduationStatus}</span>
+                                </div>
+                                ${app.MilitaryStatus !== 'Not Applicable' ? `
+                                <div class="detail-group">
+                                    <span class="detail-label">Military</span>
+                                    <span class="badge badge-mil">${app.MilitaryStatus}</span>
+                                </div>` : ''}
+                                <div class="detail-group">
+                                    <span class="detail-label">English</span>
+                                    <span class="detail-value">${app.EnglishLevel || 'N/A'}</span>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="detail-group">
+                                    <span class="detail-label">Nationality</span>
+                                    <div class="detail-value">${app.Nationality}</div>
+                                </div>
+                                <div class="detail-group">
+                                    <span class="detail-label">National ID</span>
+                                    <div class="detail-value" style="font-family:monospace; letter-spacing:1px;">${app.NationalID}</div>
+                                </div>
+                                <div class="detail-group">
+                                    <span class="detail-label">Address</span>
+                                    <div class="detail-value" style="font-size:0.85rem;">${app.Address}</div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div style="max-height: 100px; max-width: 250px; overflow-y: auto; font-size: 0.85rem; color: #ccc; background:#111; padding:5px; border-radius:4px;">
+                                    ${app.Experience || 'No details.'}
+                                </div>
+                            </td>
+
+                            <td style="color:#888; font-size: 0.8rem; white-space:nowrap;">
+                                ${app.SubmittedAt}
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+
+            } catch (error) {
+                console.error(error);
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#ff4444; padding: 2rem;">Failed to load data. Ensure backend is running.</td></tr>';
+            }
+        }
+    </script>
+</body>
+</html>
