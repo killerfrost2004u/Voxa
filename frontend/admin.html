@@ -23,7 +23,7 @@
                 <h1>Candidate Applications</h1>
                 <p>Listen to voice introductions and review candidates.</p>
             </div>
-            <button class="refresh-btn" onclick="checkAuthAndLoad()">
+            <button class="refresh-btn" id="refreshBtn" onclick="checkAuthAndLoad()">
                 <i class="fas fa-sync-alt"></i> Refresh Data
             </button>
         </div>
@@ -57,19 +57,29 @@
         });
 
         async function checkAuthAndLoad() {
+            // Animation logic
+            const btnIcon = document.querySelector('#refreshBtn i');
+            if(btnIcon) {
+                btnIcon.style.transition = 'transform 0.5s ease';
+                btnIcon.style.transform = 'rotate(180deg)';
+                setTimeout(() => { btnIcon.style.transform = 'rotate(0deg)'; }, 500);
+            }
+
             const userStr = localStorage.getItem('user');
             if (!userStr) {
                 alert("Access Denied: Please login first.");
                 window.location.href = 'login.html';
                 return;
             }
+
             const user = JSON.parse(userStr);
             if (!user.isAdmin) {
                 alert("Access Denied: Admin privileges required.");
                 window.location.href = 'index.html';
                 return;
             }
-            loadApplications(user.email);
+
+            await loadApplications(user.email);
         }
 
         async function loadApplications(adminEmail) {
@@ -81,40 +91,63 @@
                 });
 
                 if (response.status === 403 || response.status === 401) {
-                    alert("Unauthorized.");
+                    alert("Unauthorized session. Please login again.");
                     window.location.href = 'login.html';
                     return;
                 }
 
                 const apps = await response.json();
+                
+                if (apps.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:3rem; color:#888;">No applications found.</td></tr>';
+                    return;
+                }
+
                 tbody.innerHTML = '';
                 
                 apps.forEach(app => {
-                    // Custom Audio Player HTML
-                    const audioPlayerHtml = app.VoiceRecordPath 
-                        ? `<div class="voice-player" onclick="playVoice(this, 'http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}')">
-                               <div class="play-toggle"><i class="fas fa-play"></i></div>
-                               <div class="voice-wave">
-                                   <div class="wave-bar"></div>
-                                   <div class="wave-bar"></div>
-                                   <div class="wave-bar"></div>
-                                   <div class="wave-bar"></div>
-                                   <div class="wave-bar"></div>
-                               </div>
-                               <span class="voice-label">Play</span>
-                           </div>`
+                    const uniqueId = app.ApplicationID;
+                    const audioUrl = app.VoiceRecordPath 
+                        ? `http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}` 
+                        : null;
+
+                    // Player HTML Structure
+                    const playerHtml = audioUrl 
+                        ? `
+                        <div class="voice-player-advanced" id="player-${uniqueId}">
+                            <audio id="audio-${uniqueId}" src="${audioUrl}" preload="metadata" 
+                                ontimeupdate="updateProgress('${uniqueId}')" 
+                                onloadedmetadata="initDuration('${uniqueId}')"
+                                onended="resetPlayer('${uniqueId}')"></audio>
+                            
+                            <button class="btn-control play-btn" onclick="toggleAudio('${uniqueId}')" id="btn-play-${uniqueId}">
+                                <i class="fas fa-play"></i>
+                            </button>
+                            
+                            <div class="player-center">
+                                <input type="range" class="seek-slider" id="seek-${uniqueId}" value="0" max="100" oninput="seekAudio('${uniqueId}')">
+                                <div class="time-display">
+                                    <span id="curr-${uniqueId}">0:00</span>
+                                    <span id="dur-${uniqueId}">0:00</span>
+                                </div>
+                            </div>
+                            
+                            <button class="btn-control speed-btn" onclick="changeSpeed('${uniqueId}')" id="spd-${uniqueId}" title="Playback Speed">1x</button>
+                            
+                            <a href="${audioUrl}" download class="btn-control download-btn" title="Download Audio">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>`
                         : '<span style="color:#666; font-size:0.8rem; font-style:italic;">No Recording</span>';
 
                     const row = `
                         <tr>
-                            <td><span style="color:#666">#${app.ApplicationID}</span></td>
+                            <td><span style="color:#666">#${uniqueId}</span></td>
                             <td>
                                 <div style="font-weight:700; color:white;">${app.FullName}</div>
                                 <div style="font-size:0.8rem; color:#888;">${app.JobTitle}</div>
                             </td>
-                            <td>
-                                ${audioPlayerHtml}
-                            </td>
+                            <td>${playerHtml}</td>
                             <td>
                                 <div class="contact-row"><i class="fas fa-envelope"></i> ${app.Email}</div>
                                 <div class="contact-row"><i class="fas fa-phone"></i> ${app.Phone}</div>
@@ -131,7 +164,7 @@
                                     <span class="detail-label">ID:</span> <span style="font-family:monospace; letter-spacing:1px;">${app.NationalID || 'N/A'}</span>
                                 </div>
                                 <div class="detail-group">
-                                    <span class="detail-label">Addr:</span> <span style="color:#aaa;">${app.Address || 'N/A'}</span>
+                                    <span class="detail-label">Addr:</span> <span style="color:#aaa; font-size:0.8rem;">${app.Address || 'N/A'}</span>
                                 </div>
                             </td>
                             <td>
@@ -149,64 +182,87 @@
 
             } catch (error) {
                 console.error(error);
-                tbody.innerHTML = '<tr><td colspan="8" style="color:red; text-align:center;">Failed to load data.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="color:#ef4444; text-align:center; padding:2rem;">Failed to load data. Ensure backend is running.</td></tr>';
             }
         }
 
-        // Global Audio Controller
-        let currentPlayingBtn = null;
-        const globalAudio = document.getElementById('global-audio-player');
+        // --- Audio Player Logic ---
+        let currentlyPlayingId = null;
 
-        function playVoice(element, url) {
-            const btn = element.querySelector('.play-toggle');
+        function toggleAudio(id) {
+            const audio = document.getElementById(`audio-${id}`);
+            const btn = document.getElementById(`btn-play-${id}`);
             const icon = btn.querySelector('i');
-            const label = element.querySelector('.voice-label');
 
-            // If clicking the same active button, toggle pause
-            if (currentPlayingBtn === element) {
-                if (globalAudio.paused) {
-                    globalAudio.play();
-                    element.classList.add('playing');
-                    icon.classList.remove('fa-play');
-                    icon.classList.add('fa-pause');
-                    label.textContent = "Stop";
-                } else {
-                    globalAudio.pause();
-                    element.classList.remove('playing');
-                    icon.classList.remove('fa-pause');
-                    icon.classList.add('fa-play');
-                    label.textContent = "Play";
-                }
-                return;
+            // Pause currently playing if different
+            if (currentlyPlayingId && currentlyPlayingId !== id) {
+                const prevAudio = document.getElementById(`audio-${currentlyPlayingId}`);
+                const prevBtn = document.getElementById(`btn-play-${currentlyPlayingId}`);
+                if(prevAudio) prevAudio.pause();
+                if(prevBtn) prevBtn.querySelector('i').className = 'fas fa-play';
             }
 
-            // Reset previous button if exists
-            if (currentPlayingBtn) {
-                currentPlayingBtn.classList.remove('playing');
-                currentPlayingBtn.querySelector('.play-toggle i').classList.remove('fa-pause');
-                currentPlayingBtn.querySelector('.play-toggle i').classList.add('fa-play');
-                currentPlayingBtn.querySelector('.voice-label').textContent = "Play";
+            if (audio.paused) {
+                audio.play();
+                icon.className = 'fas fa-pause';
+                currentlyPlayingId = id;
+            } else {
+                audio.pause();
+                icon.className = 'fas fa-play';
+                currentlyPlayingId = null;
             }
+        }
 
-            // Start new audio
-            currentPlayingBtn = element;
-            globalAudio.src = url;
-            globalAudio.play();
+        function updateProgress(id) {
+            const audio = document.getElementById(`audio-${id}`);
+            const slider = document.getElementById(`seek-${id}`);
+            const currTimeSpan = document.getElementById(`curr-${id}`);
 
-            // Update UI for new button
-            element.classList.add('playing');
-            icon.classList.remove('fa-play');
-            icon.classList.add('fa-pause');
-            label.textContent = "Stop";
+            if (!isNaN(audio.duration)) {
+                slider.value = (audio.currentTime / audio.duration) * 100;
+                currTimeSpan.textContent = formatTime(audio.currentTime);
+            }
+        }
 
-            // Reset UI when audio ends
-            globalAudio.onended = function() {
-                element.classList.remove('playing');
-                icon.classList.remove('fa-pause');
-                icon.classList.add('fa-play');
-                label.textContent = "Play";
-                currentPlayingBtn = null;
-            };
+        function seekAudio(id) {
+            const audio = document.getElementById(`audio-${id}`);
+            const slider = document.getElementById(`seek-${id}`);
+            const seekTo = audio.duration * (slider.value / 100);
+            audio.currentTime = seekTo;
+        }
+
+        function changeSpeed(id) {
+            const audio = document.getElementById(`audio-${id}`);
+            const btn = document.getElementById(`spd-${id}`);
+            
+            let currentSpeed = audio.playbackRate;
+            let newSpeed;
+
+            if (currentSpeed === 1) newSpeed = 1.5;
+            else if (currentSpeed === 1.5) newSpeed = 2;
+            else if (currentSpeed === 2) newSpeed = 0.5; // slow mo
+            else newSpeed = 1;
+
+            audio.playbackRate = newSpeed;
+            btn.textContent = newSpeed + 'x';
+        }
+
+        function initDuration(id) {
+            const audio = document.getElementById(`audio-${id}`);
+            const durSpan = document.getElementById(`dur-${id}`);
+            durSpan.textContent = formatTime(audio.duration);
+        }
+
+        function resetPlayer(id) {
+            document.getElementById(`btn-play-${id}`).querySelector('i').className = 'fas fa-play';
+            document.getElementById(`seek-${id}`).value = 0;
+            currentlyPlayingId = null;
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
         }
     </script>
 </body>

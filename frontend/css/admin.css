@@ -197,123 +197,106 @@ body {
 .logo span {
   color: #ff6600;
 }
-
-/* --- Custom Voice Player Styling --- */
-.voice-player {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: #111;
-  padding: 8px 16px;
-  border-radius: 30px;
-  border: 1px solid #333;
-  width: fit-content;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+/* --- Advanced Audio Player Styling --- */
+.voice-player-advanced {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #111;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    width: 280px; /* Fixed width for consistency */
+    transition: 0.3s;
 }
 
-.voice-player:hover {
-  border-color: #555;
-  background: #161616;
-  transform: translateY(-1px);
+.voice-player-advanced:hover {
+    border-color: #555;
+    background: #161616;
 }
 
-.play-toggle {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--primary-color); /* Orange */
-  border: none;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  transition: 0.2s;
-  flex-shrink: 0;
-  box-shadow: 0 0 10px rgba(255, 102, 0, 0.3);
+/* Control Buttons */
+.btn-control {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    transition: 0.2s;
 }
 
-.voice-player:hover .play-toggle {
-  transform: scale(1.1);
-  box-shadow: 0 0 15px rgba(255, 102, 0, 0.5);
+.btn-control:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
 }
 
-/* Waveform Visualizer */
-.voice-wave {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  height: 20px;
+.play-btn {
+    color: var(--primary-color);
+    background: rgba(255, 102, 0, 0.1);
 }
 
-.wave-bar {
-  width: 3px;
-  background: #444;
-  border-radius: 2px;
-  transition: background 0.3s;
+.play-btn:hover {
+    background: var(--primary-color);
+    color: white;
 }
 
-/* Static heights to look like a wave */
-.wave-bar:nth-child(1) {
-  height: 8px;
-}
-.wave-bar:nth-child(2) {
-  height: 14px;
-}
-.wave-bar:nth-child(3) {
-  height: 18px;
-}
-.wave-bar:nth-child(4) {
-  height: 12px;
-}
-.wave-bar:nth-child(5) {
-  height: 9px;
+.speed-btn {
+    font-size: 0.7rem;
+    font-weight: 700;
+    width: 32px; /* Wider for text */
+    border: 1px solid #333;
 }
 
-/* Playing State - Animation */
-.voice-player.playing .wave-bar {
-  background: var(--primary-color);
-  animation: wave-animation 0.8s infinite ease-in-out;
+.download-btn {
+    color: #888;
 }
 
-.voice-player.playing .play-toggle {
-  background: white;
-  color: var(--primary-color);
+/* Slider Container */
+.player-center {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
 }
 
-.voice-player.playing .wave-bar:nth-child(1) {
-  animation-delay: 0s;
-}
-.voice-player.playing .wave-bar:nth-child(2) {
-  animation-delay: 0.1s;
-}
-.voice-player.playing .wave-bar:nth-child(3) {
-  animation-delay: 0.2s;
-}
-.voice-player.playing .wave-bar:nth-child(4) {
-  animation-delay: 0.3s;
-}
-.voice-player.playing .wave-bar:nth-child(5) {
-  animation-delay: 0.4s;
+/* Seek Slider (Range Input Customization) */
+.seek-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: #333;
+    outline: none;
+    cursor: pointer;
 }
 
-@keyframes wave-animation {
-  0%,
-  100% {
-    height: 6px;
-  }
-  50% {
-    height: 20px;
-  }
+.seek-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    transition: 0.2s;
 }
 
-.voice-label {
-  font-size: 0.75rem;
-  color: #888;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  min-width: 35px;
+.seek-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.3);
+}
+
+/* Time Display */
+.time-display {
+    font-size: 0.65rem;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+    font-family: monospace;
 }
