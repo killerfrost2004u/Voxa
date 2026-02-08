@@ -1,51 +1,16 @@
-CREATE DATABASE DarkWolvesDB;
-GO
 USE DarkWolvesDB;
 GO
 
-CREATE TABLE ContactMessages (
-    MessageID INT IDENTITY(1,1) PRIMARY KEY,
-    FullName NVARCHAR(100) NOT NULL,
-    Email NVARCHAR(100) NOT NULL,
-    Subject NVARCHAR(255) NOT NULL,
-    Message NVARCHAR(MAX) NOT NULL,
-    SubmittedAt DATETIME DEFAULT GETDATE()
+-- Replace these emails with the people you want to be admins
+UPDATE Users
+SET IsAdmin = 1
+WHERE Email IN (
+    'hima.yasser2004@gmail.com', 
+    'manager@darkwolves.com',
+    'another.admin@gmail.com'
 );
 GO
 
--- Create Job Applications Table
-CREATE TABLE JobApplications (
-    ApplicationID INT IDENTITY(1,1) PRIMARY KEY,
-    JobTitle NVARCHAR(150) NOT NULL,
-    Company NVARCHAR(150) NOT NULL,
-    FullName NVARCHAR(100) NOT NULL,
-    Email NVARCHAR(100) NOT NULL,
-    Phone NVARCHAR(50) NOT NULL,
-    WhatsApp NVARCHAR(50),
-    EnglishLevel NVARCHAR(10),
-    Experience NVARCHAR(MAX),
-    SubmittedAt DATETIME DEFAULT GETDATE()
-);
-GO
-
-USE DarkWolvesDB;
-GO
-SELECT TABLE_NAME 
-FROM INFORMATION_SCHEMA.TABLES 
-WHERE TABLE_TYPE = 'BASE TABLE';
-GO
-
-USE DarkWolvesDB;
-GO
-
-PRINT '>>> FETCHING ALL REGISTERED USERS <<<';
-SELECT * FROM Users;
-GO
-
-PRINT '>>> FETCHING ALL CONTACT MESSAGES <<<';
-SELECT * FROM ContactMessages;
-GO
-
-PRINT '>>> FETCHING ALL JOB APPLICATIONS <<<';
-SELECT * FROM JobApplications;
+-- Add VoiceRecordPath column to JobApplications table
+ALTER TABLE JobApplications ADD VoiceRecordPath NVARCHAR(255);
 GO
