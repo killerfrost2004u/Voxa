@@ -21,7 +21,7 @@
         <div class="admin-header">
             <div>
                 <h1>Candidate Applications</h1>
-                <p>Real-time view of all incoming talent.</p>
+                <p>Listen to voice introductions and review candidates.</p>
             </div>
             <button class="refresh-btn" onclick="checkAuthAndLoad()">
                 <i class="fas fa-sync-alt"></i> Refresh Data
@@ -34,11 +34,10 @@
                     <tr>
                         <th width="50">ID</th>
                         <th width="180">Candidate</th>
-                        <th width="180">Target Job</th>
-                        <th width="220">Contact Info</th>
+                        <th width="180">Voice Intro</th> <th width="220">Contact Info</th>
                         <th width="150">Status</th>
                         <th width="200">National Data</th>
-                        <th>Experience / English</th>
+                        <th>Experience</th>
                         <th width="120">Date</th>
                     </tr>
                 </thead>
@@ -61,99 +60,69 @@
                 window.location.href = 'login.html';
                 return;
             }
-
             const user = JSON.parse(userStr);
-
             if (!user.isAdmin) {
-                alert("Access Denied: You do not have admin privileges.");
+                alert("Access Denied: Admin privileges required.");
                 window.location.href = 'index.html';
                 return;
             }
-
             loadApplications(user.email);
         }
 
         async function loadApplications(adminEmail) {
             const tbody = document.getElementById('admin-table-body');
-            const btn = document.querySelector('.refresh-btn i');
-            
-            if(btn) {
-                btn.style.transition = 'transform 0.5s';
-                btn.style.transform = 'rotate(180deg)';
-                setTimeout(() => btn.style.transform = 'rotate(0deg)', 500);
-            }
-
             try {
                 const response = await fetch('http://127.0.0.1:5000/api/admin/applications', {
                     headers: { 'X-Admin-Email': adminEmail }
                 });
 
                 if (response.status === 403 || response.status === 401) {
-                    alert("Session expired or unauthorized.");
+                    alert("Unauthorized.");
                     window.location.href = 'login.html';
                     return;
                 }
 
                 const apps = await response.json();
-
-                if (apps.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:3rem; color:#888;">No applications received yet.</td></tr>';
-                    return;
-                }
-
                 tbody.innerHTML = '';
+                
                 apps.forEach(app => {
+                    // Check if VoiceRecordPath exists, otherwise show placeholder
+                    const audioPlayer = app.VoiceRecordPath 
+                        ? `<audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}" style="width: 200px; height: 35px;"></audio>`
+                        : '<span style="color:#666; font-size:0.8rem;">No Recording</span>';
+
                     const row = `
                         <tr>
                             <td><span style="color:#666">#${app.ApplicationID}</span></td>
                             <td>
-                                <div style="font-weight:700; font-size:0.95rem; color:white; margin-bottom:4px;">${app.FullName}</div>
-                                <span class="badge badge-gender">${app.Gender || '-'}</span>
+                                <div style="font-weight:700; color:white;">${app.FullName}</div>
+                                <div style="font-size:0.8rem; color:#888;">${app.JobTitle}</div>
                             </td>
                             <td>
-                                <div style="color:#ff6600; font-weight:600; margin-bottom:2px;">${app.JobTitle}</div>
-                                <div style="font-size:0.8rem; color:#888;">${app.Company}</div>
+                                ${audioPlayer}
                             </td>
                             <td>
                                 <div class="contact-row"><i class="fas fa-envelope"></i> ${app.Email}</div>
                                 <div class="contact-row"><i class="fas fa-phone"></i> ${app.Phone}</div>
-                                ${app.WhatsApp ? `<div class="contact-row"><i class="fab fa-whatsapp"></i> ${app.WhatsApp}</div>` : ''}
                             </td>
                             <td>
                                 <div class="detail-group">
-                                    <span class="detail-label">Graduation</span>
                                     <span class="badge badge-grad">${app.GraduationStatus || 'N/A'}</span>
-                                </div>
-                                ${app.MilitaryStatus && app.MilitaryStatus !== 'Not Applicable' ? `
-                                <div class="detail-group">
-                                    <span class="detail-label">Military</span>
-                                    <span class="badge badge-mil">${app.MilitaryStatus}</span>
-                                </div>` : ''}
-                            </td>
-                            <td>
-                                <div class="detail-group">
-                                    <span class="detail-label">Nationality</span>
-                                    <div class="detail-value">${app.Nationality || 'N/A'}</div>
-                                </div>
-                                <div class="detail-group">
-                                    <span class="detail-label">National ID</span>
-                                    <div class="detail-value" style="font-family:monospace; letter-spacing:1px; color:#ddd;">${app.NationalID || 'N/A'}</div>
-                                </div>
-                                <div class="detail-group">
-                                    <span class="detail-label">Address</span>
-                                    <div class="detail-value" style="font-size:0.8rem; color:#ccc;">${app.Address || 'N/A'}</div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="detail-group">
-                                    <span class="detail-label">English Level</span>
+                                    <br>
                                     <span class="badge">${app.EnglishLevel || 'N/A'}</span>
                                 </div>
+                            </td>
+                            <td>
+                                <div class="detail-group">
+                                    <span class="detail-label">ID:</span> ${app.NationalID || 'N/A'}
+                                </div>
+                            </td>
+                            <td>
                                 <div class="experience-box">
                                     ${app.Experience || 'No details provided.'}
                                 </div>
                             </td>
-                            <td style="color:#666; font-size: 0.8rem; white-space:nowrap;">
+                            <td style="color:#666; font-size: 0.8rem;">
                                 ${app.SubmittedAt}
                             </td>
                         </tr>
@@ -163,7 +132,7 @@
 
             } catch (error) {
                 console.error(error);
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#ff4444; padding: 2rem;">Failed to load data. Ensure backend is running.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="color:red; text-align:center;">Failed to load data.</td></tr>';
             }
         }
     </script>

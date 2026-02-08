@@ -1,4 +1,6 @@
-from flask import Flask, jsonify, request
+import os
+import re  # <--- Added this missing import
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import pyodbc
 import bcrypt
@@ -7,7 +9,8 @@ import csv
 import io
 import urllib.parse
 import itertools
-import re
+from werkzeug.utils import secure_filename
+import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -16,6 +19,16 @@ CORS(app)
 SERVER_NAME = r'localhost\SQLEXPRESS'
 SHEET_ID = "1oYDMBIXMCrIdfDbf-EFhuPal0NYo5jphkkX3AWYonjU"
 SHEET_NAME = "Wolves Master sheet 2"
+
+# File Upload Config
+UPLOAD_FOLDER = 'uploads'
+# Added audio extensions
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'wav', 'mp3', 'ogg', 'webm'}
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # --- DATABASE CONNECTION ---
 conn_str = (
@@ -35,11 +48,15 @@ def get_db_connection():
         return None
 
 
-# --- HELPER: CLEAN TEXT TO LIST ---
+def allowed_file(filename):
+    return '.' in filename and \
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+# --- HELPER: CLEAN TEXT ---
 def clean_text_list(text):
     if not text: return []
-    text = text.replace('\r', '\n').replace('•', '\n')
-    text = text.replace(' - ', '\n')
+    text = text.replace('\r', '\n').replace('•', '\n').replace(' - ', '\n')
     lines = text.split('\n')
     cleaned_items = []
     for line in lines:
@@ -61,7 +78,6 @@ def get_jobs():
     try:
         encoded_name = urllib.parse.quote(SHEET_NAME)
         url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_name}"
-        # print(f"📥 Fetching sheet data...")
         response = requests.get(url)
         response.raise_for_status()
 
@@ -81,7 +97,6 @@ def get_jobs():
             raw_hours = col[4].strip()
             clean_hours = " ".join(raw_hours.split())
 
-            # Detect Job Type & Shift
             search_text = (title + " " + clean_hours + " " + col[10]).lower()
             types = []
             if "part time" in search_text or "part-time" in search_text:
@@ -140,7 +155,6 @@ def login():
         conn = get_db_connection()
         if not conn: return jsonify({"error": "DB Connection Failed"}), 500
         cursor = conn.cursor()
-        # Fetch UserID, Name, Email, Hash, AND IsAdmin status
         cursor.execute("SELECT UserID, FullName, Email, PasswordHash, IsAdmin FROM Users WHERE Email = ?",
                        (data['email'],))
         user = cursor.fetchone()
@@ -151,7 +165,7 @@ def login():
                 "user": {
                     "name": user.FullName,
                     "email": user.Email,
-                    "isAdmin": bool(user.IsAdmin)  # Send this to frontend
+                    "isAdmin": bool(user.IsAdmin)
                 }
             }), 200
 
@@ -166,72 +180,71 @@ def login():
 def contact_us():
     try:
         data = request.json
-        if not all(k in data for k in ('name', 'email', 'subject', 'message')):
-            return jsonify({"error": "Missing fields"}), 400
-
         conn = get_db_connection()
-        if not conn:
-            return jsonify({"error": "DB Connection Failed"}), 500
-
+        if not conn: return jsonify({"error": "DB Connection Failed"}), 500
         cursor = conn.cursor()
-        query = "INSERT INTO ContactMessages (FullName, Email, Subject, Message) VALUES (?, ?, ?, ?)"
-        cursor.execute(query, (data['name'], data['email'], data['subject'], data['message']))
+        cursor.execute("INSERT INTO ContactMessages (FullName, Email, Subject, Message) VALUES (?, ?, ?, ?)",
+                       (data['name'], data['email'], data['subject'], data['message']))
         conn.commit()
-
-        print(f"📩 New Message from {data['email']}: {data['subject']}")
-        return jsonify({"message": "Message received successfully"}), 201
-
+        return jsonify({"message": "Message received"}), 201
     except Exception as e:
-        print(f"❌ Error: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         if 'conn' in locals() and conn: conn.close()
 
 
+# --- FILE SERVE ROUTE ---
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
+# --- APPLY ROUTE (With Voice Record) ---
 @app.route('/api/apply', methods=['POST'])
 def apply_for_job():
     try:
-        data = request.json
+        data = request.form
+        file = request.files.get('voiceRecord')
 
-        # Validation for all required fields
-        required_fields = ['title', 'company', 'name', 'email', 'phone', 'english', 'experience', 'gender',
-                           'gradStatus', 'nationalId', 'nationality', 'address']
-        if not all(k in data for k in required_fields):
-            return jsonify({"error": "Missing fields"}), 400
+        # Validation
+        if not file or file.filename == '':
+            return jsonify({"error": "Voice recording is required"}), 400
+
+        if not allowed_file(file.filename):
+            return jsonify({"error": "Invalid file type."}), 400
+
+        # Save File
+        filename = secure_filename(f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
         conn = get_db_connection()
-        if not conn:
-            return jsonify({"error": "DB Connection Failed"}), 500
+        if not conn: return jsonify({"error": "DB Connection Failed"}), 500
 
         cursor = conn.cursor()
+
+        military_status = data.get('militaryStatus', 'Not Applicable')
+        whatsapp = data.get('whatsapp', '')
+
+        # Insert VoiceRecordPath instead of ResumePath
         query = """
             INSERT INTO JobApplications 
-            (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, Gender, GraduationStatus, MilitaryStatus, NationalID, Nationality, Address)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, 
+             Gender, GraduationStatus, MilitaryStatus, NationalID, Nationality, Address, VoiceRecordPath)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
+
         cursor.execute(query, (
-            data['title'],
-            data['company'],
-            data['name'],
-            data['email'],
-            data['phone'],
-            data.get('whatsapp', ''),
-            data['english'],
-            data['experience'],
-            data['gender'],
-            data['gradStatus'],
-            data.get('militaryStatus', 'Not Applicable'),
-            data['nationalId'],
-            data['nationality'],
-            data['address']
+            data['title'], data['company'], data['name'], data['email'], data['phone'],
+            whatsapp, data['english'], data['experience'], data['gender'], data['gradStatus'],
+            military_status, data['nationalId'], data['nationality'], data['address'], filename
         ))
         conn.commit()
 
-        print(f"🚀 New Application: {data['name']} applied for {data['title']}")
+        print(f"🚀 New Application with Voice Note: {data['name']}")
         return jsonify({"message": "Application submitted successfully"}), 201
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ Apply Error: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         if 'conn' in locals() and conn: conn.close()
@@ -242,62 +255,40 @@ def get_user_dashboard(email):
     try:
         conn = get_db_connection()
         if not conn: return jsonify({"error": "DB Connection Failed"}), 500
-
         cursor = conn.cursor()
-
-        # Fetch Applications for specific user
-        cursor.execute("""
-            SELECT JobTitle, Company, SubmittedAt
-            FROM JobApplications 
-            WHERE Email = ? 
-            ORDER BY SubmittedAt DESC
-        """, (email,))
-
+        cursor.execute(
+            "SELECT JobTitle, Company, SubmittedAt FROM JobApplications WHERE Email = ? ORDER BY SubmittedAt DESC",
+            (email,))
         applications = []
         for row in cursor.fetchall():
             applications.append({
-                "title": row.JobTitle,
-                "company": row.Company,
-                "date": row.SubmittedAt.strftime('%Y-%m-%d'),
-                "status": "Applied"
+                "title": row.JobTitle, "company": row.Company,
+                "date": row.SubmittedAt.strftime('%Y-%m-%d'), "status": "Applied"
             })
-
         return jsonify({"applications": applications})
-
     except Exception as e:
-        print(f"❌ Dashboard Error: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         if 'conn' in locals() and conn: conn.close()
 
 
-# --- SECURE ADMIN ROUTE ---
 @app.route('/api/admin/applications', methods=['GET'])
 def get_all_applications():
     try:
-        # 1. Security Check: Get email from headers
         admin_email = request.headers.get('X-Admin-Email')
-        if not admin_email:
-            return jsonify({"error": "Unauthorized"}), 401
+        if not admin_email: return jsonify({"error": "Unauthorized"}), 401
 
         conn = get_db_connection()
         if not conn: return jsonify({"error": "DB Connection Failed"}), 500
 
         cursor = conn.cursor()
-
-        # 2. Verify Admin Status in DB
         cursor.execute("SELECT IsAdmin FROM Users WHERE Email = ?", (admin_email,))
         user = cursor.fetchone()
+        if not user or not user.IsAdmin: return jsonify({"error": "Access Denied"}), 403
 
-        if not user or not user.IsAdmin:
-            return jsonify({"error": "Access Denied. Admins only."}), 403
-
-        # 3. Fetch Data if authorized
         cursor.execute("SELECT * FROM JobApplications ORDER BY SubmittedAt DESC")
-
-        applications = []
         columns = [column[0] for column in cursor.description]
-
+        applications = []
         for row in cursor.fetchall():
             app_dict = dict(zip(columns, row))
             if 'SubmittedAt' in app_dict and app_dict['SubmittedAt']:
@@ -305,9 +296,7 @@ def get_all_applications():
             applications.append(app_dict)
 
         return jsonify(applications)
-
     except Exception as e:
-        print(f"❌ Admin Error: {e}")
         return jsonify({"error": str(e)}), 500
     finally:
         if 'conn' in locals() and conn: conn.close()

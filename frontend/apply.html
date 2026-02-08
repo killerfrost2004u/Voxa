@@ -25,6 +25,87 @@
         }
         select:focus { border-color: var(--primary-color); }
         .hidden { display: none; }
+
+        /* Voice Recorder & Upload Styles */
+        .recorder-box {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 1rem;
+            transition: 0.3s;
+        }
+        .recorder-box:hover { border-color: #444; }
+
+        .rec-btn {
+            width: 70px; height: 70px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 1.8rem;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-start { 
+            background: linear-gradient(135deg, #ef4444, #dc2626); 
+            color: white; 
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); 
+        }
+        .btn-start:hover { transform: scale(1.1); }
+        
+        .btn-stop { 
+            background: #333; 
+            color: white; 
+            border: 3px solid #ef4444; 
+            animation: pulse 1.5s infinite; 
+        }
+        
+        .timer { font-size: 2rem; font-family: 'Inter', monospace; color: #fff; margin-bottom: 0.5rem; font-weight: 700; letter-spacing: 2px; }
+        .min-req { font-size: 0.85rem; color: #888; margin-bottom: 1.5rem; font-weight: 500; }
+        .audio-preview { width: 100%; margin-top: 1.5rem; display: none; border-radius: 30px; }
+        
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+        /* Tabs for Voice Method */
+        .voice-tabs { 
+            display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; 
+            background: #1a1a1a; padding: 5px; border-radius: 30px; width: fit-content; margin: 0 auto 1rem; border: 1px solid #333;
+        }
+        .voice-tab {
+            padding: 0.6rem 1.5rem; border-radius: 25px; cursor: pointer; font-size: 0.9rem; font-weight: 600;
+            color: #888; transition: 0.3s;
+        }
+        .voice-tab:hover { color: white; }
+        .voice-tab.active { background: var(--primary-color); color: white; box-shadow: 0 2px 10px rgba(255, 102, 0, 0.2); }
+        
+        /* Cool File Upload Area */
+        .file-upload-area {
+            border: 2px dashed #444; 
+            background: #161616;
+            padding: 3rem 2rem; 
+            border-radius: 12px; 
+            margin-top: 1rem;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+        }
+        .file-upload-area:hover { border-color: var(--primary-color); background: #1a1a1a; }
+        
+        .upload-icon {
+            font-size: 3rem; color: #444; transition: 0.3s;
+        }
+        .file-upload-area:hover .upload-icon { color: var(--primary-color); transform: translateY(-5px); }
+        
+        .upload-text { color: #ccc; font-weight: 500; font-size: 1.1rem; }
+        .upload-subtext { color: #666; font-size: 0.85rem; }
+
+        /* Input overlay */
+        #voice-upload-input {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -70,7 +151,7 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
                         <label>National ID <span style="color:var(--primary-color)">*</span></label>
-                        <input type="text" id="app-national-id" required placeholder="14-digit ID" maxlength="14" pattern="\d{14}" title="Please enter a valid 14-digit National ID">
+                        <input type="text" id="app-national-id" required placeholder="14-digit ID" maxlength="14">
                     </div>
                     <div class="form-group">
                         <label>Nationality <span style="color:var(--primary-color)">*</span></label>
@@ -131,18 +212,51 @@
                     <label>English Level <span style="color:var(--primary-color)">*</span></label>
                     <select id="app-english" required>
                         <option value="" disabled selected>Select your level</option>
-                        <option value="A1">A1 - Beginner</option>
-                        <option value="A2">A2 - Elementary</option>
-                        <option value="B1">B1 - Intermediate</option>
-                        <option value="B2">B2 - Upper Intermediate</option>
-                        <option value="C1">C1 - Advanced</option>
-                        <option value="C2">C2 - Proficient / Native</option>
+                        <option value="A1">A1</option>
+                        <option value="A2">A2</option>
+                        <option value="B1">B1</option>
+                        <option value="B2">B2</option>
+                        <option value="C1">C1</option>
+                        <option value="C2">C2</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Relevant Experience <span style="color:var(--primary-color)">*</span></label>
-                    <textarea id="app-experience" rows="5" required placeholder="Briefly describe your experience relevant to this role..."></textarea>
+                    <label>Voice Introduction (Min 1m 30s) <span style="color:var(--primary-color)">*</span></label>
+                    <p style="font-size:0.85rem; color:#aaa; margin-bottom:0.5rem; text-align: center;">Please introduce yourself and your experience in English.</p>
+                    
+                    <div class="voice-tabs">
+                        <div class="voice-tab active" id="tab-record" onclick="switchVoiceMethod('record')">Record Now</div>
+                        <div class="voice-tab" id="tab-upload" onclick="switchVoiceMethod('upload')">Upload File</div>
+                    </div>
+
+                    <div class="recorder-box" id="ui-record">
+                        <div class="timer" id="record-timer">00:00</div>
+                        <div class="min-req">Target: 01:30</div>
+                        
+                        <button type="button" class="rec-btn btn-start" id="btn-record" onclick="toggleRecording()">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        
+                        <audio id="audio-playback" controls class="audio-preview"></audio>
+                        <div id="recording-status" style="margin-top:10px; font-weight:600; color:#888;">Tap mic to start</div>
+                    </div>
+
+                    <div class="recorder-box hidden" id="ui-upload" style="border:none; padding:0; background:transparent;">
+                        <div class="file-upload-area">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <span class="upload-text">Drag & Drop audio file here</span>
+                            <span class="upload-subtext">or click to browse (MP3, WAV, OGG)</span>
+                            <span class="min-req" style="margin:0;">Min Duration: 1 min 30 sec</span>
+                            <input type="file" id="voice-upload-input" accept="audio/*" onchange="validateFileUpload(this)">
+                        </div>
+                        <div id="upload-status" style="margin-top:15px; font-weight:600; color:#888;">No file selected</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Relevant Experience (Brief Text) <span style="color:var(--primary-color)">*</span></label>
+                    <textarea id="app-experience" rows="3" required placeholder="Briefly list companies or roles..."></textarea>
                 </div>
 
                 <div style="display: flex; gap: 1rem; margin-top: 2rem;">
@@ -153,110 +267,239 @@
         </div>
     </div>
 
-    <footer>
-        <div class="container">
-            <div class="footer-bottom">
-                <p>&copy; 2024 Dark Wolves. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-
     <script src="js/script.js"></script>
     <script>
+        // --- Voice Switcher Logic ---
+        let currentMethod = 'record'; // 'record' or 'upload'
+        let uploadedFile = null;
+
+        function switchVoiceMethod(method) {
+            currentMethod = method;
+            document.querySelectorAll('.voice-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${method}`).classList.add('active');
+
+            if(method === 'record') {
+                document.getElementById('ui-record').classList.remove('hidden');
+                document.getElementById('ui-upload').classList.add('hidden');
+            } else {
+                document.getElementById('ui-record').classList.add('hidden');
+                document.getElementById('ui-upload').classList.remove('hidden');
+            }
+        }
+
+        // --- File Upload Validation Logic ---
+        function validateFileUpload(input) {
+            const file = input.files[0];
+            const status = document.getElementById('upload-status');
+            const icon = document.querySelector('.upload-icon');
+            uploadedFile = null; // Reset
+
+            if(!file) {
+                status.textContent = "No file selected";
+                status.style.color = "#888";
+                return;
+            }
+
+            // Check Metadata for Duration
+            const audio = new Audio();
+            audio.src = URL.createObjectURL(file);
+            
+            status.textContent = "Checking file...";
+            status.style.color = "#ccc";
+
+            audio.onloadedmetadata = function() {
+                window.URL.revokeObjectURL(audio.src);
+                const duration = audio.duration;
+                
+                if(duration < 90) { // 90 seconds
+                    status.textContent = `File too short (${Math.floor(duration)}s). Minimum 1:30 required.`;
+                    status.style.color = "#ef4444";
+                    icon.style.color = "#ef4444";
+                    input.value = ""; // Clear input
+                } else {
+                    status.textContent = `Valid File: ${file.name} (${Math.floor(duration)}s)`;
+                    status.style.color = "#22c55e";
+                    icon.style.color = "#22c55e";
+                    icon.className = "fas fa-check-circle upload-icon"; // Change icon to checkmark
+                    uploadedFile = file;
+                }
+            };
+
+            audio.onerror = function() {
+                status.textContent = "Invalid audio file format.";
+                status.style.color = "#ef4444";
+                input.value = "";
+            };
+        }
+
+        // --- Voice Recorder Logic ---
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let timerInterval;
+        let audioBlob = null;
+        let durationSeconds = 0;
+
+        async function toggleRecording() {
+            const btn = document.getElementById('btn-record');
+            const status = document.getElementById('recording-status');
+            const audioPlayer = document.getElementById('audio-playback');
+
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+                    
+                    mediaRecorder.onstop = () => {
+                        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        audioPlayer.src = audioUrl;
+                        audioPlayer.style.display = 'block';
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    btn.classList.remove('btn-start');
+                    btn.classList.add('btn-stop');
+                    btn.innerHTML = '<i class="fas fa-stop"></i>';
+                    status.textContent = "Recording... Speak clearly.";
+                    status.style.color = "#ef4444";
+                    audioPlayer.style.display = 'none';
+
+                    durationSeconds = 0;
+                    document.getElementById('record-timer').textContent = "00:00";
+                    timerInterval = setInterval(() => {
+                        durationSeconds++;
+                        const mins = Math.floor(durationSeconds / 60).toString().padStart(2, '0');
+                        const secs = (durationSeconds % 60).toString().padStart(2, '0');
+                        document.getElementById('record-timer').textContent = `${mins}:${secs}`;
+                        
+                        if(durationSeconds >= 90) {
+                            document.getElementById('record-timer').style.color = "#22c55e";
+                        }
+                    }, 1000);
+
+                } catch (err) {
+                    alert("Microphone access denied. Try using the Upload option.");
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                clearInterval(timerInterval);
+                
+                btn.classList.remove('btn-stop');
+                btn.classList.add('btn-start');
+                btn.innerHTML = '<i class="fas fa-microphone"></i>';
+                
+                if (durationSeconds < 90) {
+                    status.textContent = `Too short! Recorded: ${durationSeconds}s. Minimum is 90s.`;
+                    status.style.color = "orange";
+                    audioBlob = null;
+                } else {
+                    status.textContent = "Recording Saved! Ready to submit.";
+                    status.style.color = "#22c55e";
+                }
+            }
+        }
+
+        // --- Form Submission Logic ---
         function checkMilitary() {
             const gender = document.getElementById('app-gender').value;
             const gradStatus = document.getElementById('app-grad-status').value;
             const militaryGroup = document.getElementById('military-group');
-            const militarySelect = document.getElementById('app-military');
-
             if (gender === 'Male' && gradStatus === 'Graduated') {
                 militaryGroup.classList.remove('hidden');
-                militarySelect.required = true; // Make it required only if showing
             } else {
                 militaryGroup.classList.add('hidden');
-                militarySelect.required = false; // Not required if hidden
-                militarySelect.value = ""; // Clear value
             }
         }
 
+        document.getElementById('application-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Check based on active tab
+            let finalVoiceFile = null;
+
+            if (currentMethod === 'record') {
+                if (!audioBlob) {
+                    alert("Please record a voice introduction first."); return;
+                }
+                if (durationSeconds < 90) {
+                    alert("Recording is too short (Min 90s)."); return;
+                }
+                finalVoiceFile = new File([audioBlob], "recording.webm", { type: "audio/webm" });
+            } else {
+                if (!uploadedFile) {
+                    alert("Please upload a voice file."); return;
+                }
+                // Upload duration is already checked in onchange
+                finalVoiceFile = uploadedFile;
+            }
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.textContent = "Uploading...";
+            btn.disabled = true;
+
+            const params = new URLSearchParams(window.location.search);
+            
+            let milStatus = document.getElementById('app-military').value;
+            const gender = document.getElementById('app-gender').value;
+            const gradStatus = document.getElementById('app-grad-status').value;
+            if (gender !== 'Male' || gradStatus !== 'Graduated') milStatus = "Not Applicable";
+
+            const formData = new FormData();
+            formData.append('title', params.get('title') || 'General');
+            formData.append('company', params.get('company') || 'Dark Wolves');
+            formData.append('name', document.getElementById('app-name').value);
+            formData.append('email', document.getElementById('app-email').value);
+            formData.append('phone', document.getElementById('app-phone').value);
+            formData.append('whatsapp', document.getElementById('app-whatsapp').value);
+            formData.append('nationalId', document.getElementById('app-national-id').value);
+            formData.append('nationality', document.getElementById('app-nationality').value);
+            formData.append('address', document.getElementById('app-address').value);
+            formData.append('gender', gender);
+            formData.append('gradStatus', gradStatus);
+            formData.append('militaryStatus', milStatus);
+            formData.append('english', document.getElementById('app-english').value);
+            formData.append('experience', document.getElementById('app-experience').value);
+            
+            // Append Voice File (Either recorded blob or uploaded file)
+            formData.append('voiceRecord', finalVoiceFile);
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/apply', {
+                    method: 'POST',
+                    body: formData 
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert("Application Submitted Successfully!");
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert("Error: " + (result.error || "Failed"));
+                }
+            } catch (error) {
+                alert("Server Error.");
+            } finally {
+                btn.textContent = "Submit Application";
+                btn.disabled = false;
+            }
+        });
+        
+        // Init
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
-            const title = params.get('title');
-            const company = params.get('company');
-
-            if(title) document.getElementById('apply-job-title').textContent = title;
-            if(company) document.getElementById('apply-company').textContent = company;
-
+            if(params.get('title')) document.getElementById('apply-job-title').textContent = params.get('title');
+            if(params.get('company')) document.getElementById('apply-company').textContent = params.get('company');
             const userStr = localStorage.getItem('user');
             if(userStr) {
                 const user = JSON.parse(userStr);
                 document.getElementById('app-name').value = user.name || '';
                 document.getElementById('app-email').value = user.email || '';
-            }
-        });
-
-        document.getElementById('application-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const btn = e.target.querySelector('button[type="submit"]');
-            const originalText = btn.textContent;
-            btn.textContent = "Submitting...";
-            btn.disabled = true;
-
-            const params = new URLSearchParams(window.location.search);
-            const jobTitle = params.get('title') || document.getElementById('apply-job-title').textContent;
-            const jobCompany = params.get('company') || document.getElementById('apply-company').textContent;
-
-            // Handle Conditional Logic for Military Status Data
-            let milStatus = document.getElementById('app-military').value;
-            const gender = document.getElementById('app-gender').value;
-            const gradStatus = document.getElementById('app-grad-status').value;
-            
-            if (gender !== 'Male' || gradStatus !== 'Graduated') {
-                milStatus = "Not Applicable";
-            }
-
-            const applicationData = {
-                title: jobTitle,
-                company: jobCompany,
-                name: document.getElementById('app-name').value,
-                email: document.getElementById('app-email').value,
-                phone: document.getElementById('app-phone').value,
-                whatsapp: document.getElementById('app-whatsapp').value,
-                
-                nationalId: document.getElementById('app-national-id').value,
-                nationality: document.getElementById('app-nationality').value,
-                address: document.getElementById('app-address').value,
-                
-                gender: gender,
-                gradStatus: gradStatus,
-                militaryStatus: milStatus,
-                
-                english: document.getElementById('app-english').value,
-                experience: document.getElementById('app-experience').value
-            };
-
-            try {
-                const response = await fetch('http://127.0.0.1:5000/api/apply', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(applicationData)
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    alert("Application Submitted Successfully! Good luck.");
-                    window.location.href = 'dashboard.html';
-                } else {
-                    alert("Error: " + (result.error || "Failed to submit application"));
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                alert("Failed to connect to the server.");
-            } finally {
-                btn.textContent = originalText;
-                btn.disabled = false;
             }
         });
     </script>
