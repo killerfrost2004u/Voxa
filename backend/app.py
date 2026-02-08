@@ -140,7 +140,9 @@ def login():
         conn = get_db_connection()
         if not conn: return jsonify({"error": "DB Connection Failed"}), 500
         cursor = conn.cursor()
-        cursor.execute("SELECT UserID, FullName, Email, PasswordHash FROM Users WHERE Email = ?", (data['email'],))
+        # Fetch UserID, Name, Email, Hash, AND IsAdmin status
+        cursor.execute("SELECT UserID, FullName, Email, PasswordHash, IsAdmin FROM Users WHERE Email = ?",
+                       (data['email'],))
         user = cursor.fetchone()
 
         if user and bcrypt.checkpw(data['password'].encode('utf-8'), user.PasswordHash.encode('utf-8')):
@@ -148,7 +150,8 @@ def login():
                 "message": "Success",
                 "user": {
                     "name": user.FullName,
-                    "email": user.Email
+                    "email": user.Email,
+                    "isAdmin": bool(user.IsAdmin)  # Send this to frontend
                 }
             }), 200
 
@@ -190,7 +193,7 @@ def apply_for_job():
     try:
         data = request.json
 
-        # Validation: Check for new required fields
+        # Validation for all required fields
         required_fields = ['title', 'company', 'name', 'email', 'phone', 'english', 'experience', 'gender',
                            'gradStatus', 'nationalId', 'nationality', 'address']
         if not all(k in data for k in required_fields):
@@ -217,7 +220,7 @@ def apply_for_job():
             data['experience'],
             data['gender'],
             data['gradStatus'],
-            data.get('militaryStatus', 'Not Applicable'),  # Default if not provided
+            data.get('militaryStatus', 'Not Applicable'),
             data['nationalId'],
             data['nationality'],
             data['address']
@@ -242,7 +245,7 @@ def get_user_dashboard(email):
 
         cursor = conn.cursor()
 
-        # Fetch Applications
+        # Fetch Applications for specific user
         cursor.execute("""
             SELECT JobTitle, Company, SubmittedAt
             FROM JobApplications 
@@ -268,25 +271,35 @@ def get_user_dashboard(email):
         if 'conn' in locals() and conn: conn.close()
 
 
-# --- ADMIN ROUTE (New) ---
+# --- SECURE ADMIN ROUTE ---
 @app.route('/api/admin/applications', methods=['GET'])
 def get_all_applications():
     try:
+        # 1. Security Check: Get email from headers
+        admin_email = request.headers.get('X-Admin-Email')
+        if not admin_email:
+            return jsonify({"error": "Unauthorized"}), 401
+
         conn = get_db_connection()
         if not conn: return jsonify({"error": "DB Connection Failed"}), 500
 
         cursor = conn.cursor()
-        # Fetch all applications, newest first
+
+        # 2. Verify Admin Status in DB
+        cursor.execute("SELECT IsAdmin FROM Users WHERE Email = ?", (admin_email,))
+        user = cursor.fetchone()
+
+        if not user or not user.IsAdmin:
+            return jsonify({"error": "Access Denied. Admins only."}), 403
+
+        # 3. Fetch Data if authorized
         cursor.execute("SELECT * FROM JobApplications ORDER BY SubmittedAt DESC")
 
         applications = []
-        # Get column names from the cursor description
         columns = [column[0] for column in cursor.description]
 
         for row in cursor.fetchall():
-            # Create a dictionary for each row using column names
             app_dict = dict(zip(columns, row))
-            # Convert datetime objects to string for JSON serialization
             if 'SubmittedAt' in app_dict and app_dict['SubmittedAt']:
                 app_dict['SubmittedAt'] = app_dict['SubmittedAt'].strftime('%Y-%m-%d %H:%M:%S')
             applications.append(app_dict)
