@@ -17,6 +17,7 @@ import itertools
 import datetime
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
+from flask_mail import Mail, Message  # Added for email support
 from werkzeug.utils import secure_filename
 
 # --- INITIALIZE DARK WOLVES AI ENGINE ---
@@ -43,6 +44,15 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# --- EMAIL CONFIGURATION ---
+# Replace 'your-app-password-here' with your 16-character Google App Password
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'darkwolvesagency@gmail.com'
+app.config['MAIL_PASSWORD'] = 'ksww svkd hqpd ugqp'
+mail = Mail(app)
 
 
 def get_db_connection():
@@ -223,6 +233,37 @@ def login():
     if user and bcrypt.checkpw(data['password'].encode('utf-8'), user.PasswordHash.encode('utf-8')):
         return jsonify({"user": {"name": user.FullName, "email": user.Email, "isAdmin": bool(user.IsAdmin)}})
     return jsonify({"error": "Invalid"}), 401
+
+
+# --- CONTACT US ROUTE ---
+@app.route('/api/contact', methods=['POST'])
+def contact_us():
+    try:
+        data = request.json
+
+        # 1. Save to Database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO ContactMessages (FullName, Email, Subject, Message, SubmittedAt) 
+            VALUES (?, ?, ?, ?, GETDATE())
+        """, (data['name'], data['email'], data['subject'], data['message']))
+        conn.commit()
+        conn.close()
+
+        # 2. Send the Email
+        msg = Message(
+            subject=f"New Contact Form: {data['subject']}",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=['darkwolvesagency@gmail.com']
+        )
+        msg.body = f"From: {data['name']} ({data['email']})\n\nSubject: {data['subject']}\n\nMessage:\n{data['message']}"
+        mail.send(msg)
+
+        return jsonify({"message": "Message sent successfully!"}), 201
+    except Exception as e:
+        print(f"❌ Contact Error: {e}")
+        return jsonify({"error": "Failed to send message"}), 500
 
 
 @app.route('/uploads/<filename>')
