@@ -4,110 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Portal | Dark Wolves</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { background-color: #0a0a0a; color: white; }
-        .admin-container { padding: 2rem; max-width: 98%; margin: 0 auto; }
-        
-        .admin-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 2rem; 
-            border-bottom: 1px solid #333; 
-            padding-bottom: 1rem; 
-        }
-
-        .data-table-container {
-            overflow-x: auto;
-            background: #141414;
-            border-radius: 8px;
-            border: 1px solid #333;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        }
-
-        .data-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            min-width: 1300px; 
-            font-size: 0.85rem;
-        }
-
-        .data-table th { 
-            background: #1f1f1f; 
-            padding: 1rem; 
-            text-align: left; 
-            color: #aaa; 
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid #333;
-            white-space: nowrap;
-        }
-
-        .data-table td { 
-            padding: 1rem; 
-            border-bottom: 1px solid #2a2a2a; 
-            color: #e0e0e0; 
-            vertical-align: top;
-        }
-
-        .data-table tr:hover { background: #1a1a1a; }
-
-        .badge { 
-            padding: 3px 8px; 
-            border-radius: 4px; 
-            font-size: 0.7rem; 
-            background: #333; 
-            color: white;
-            display: inline-block;
-            margin-bottom: 2px;
-            font-weight: 600;
-        }
-        
-        .badge-grad { background: #2a1a0a; color: var(--primary-color); border: 1px solid var(--primary-color); }
-        .badge-mil { background: #064e3b; color: #34d399; border: 1px solid #059669; }
-        .badge-gender { background: #1e3a8a; color: #93c5fd; }
-
-        .refresh-btn { 
-            background: var(--primary-color); 
-            border: none; 
-            color: white; 
-            padding: 0.6rem 1.2rem; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            font-weight: 600;
-            transition: 0.3s;
-        }
-        .refresh-btn:hover { background: #e65c00; }
-
-        .contact-row { display: flex; align-items: center; gap: 8px; color: #bbb; margin-bottom: 4px; }
-        .contact-row i { width: 14px; text-align: center; color: var(--primary-color); font-size: 0.8rem; }
-        
-        .detail-group { margin-bottom: 8px; }
-        .detail-label { color: #666; font-size: 0.7rem; display: block; text-transform: uppercase; margin-bottom: 2px; }
-        .detail-value { color: white; font-weight: 500; }
-    </style>
 </head>
 <body>
 
     <nav class="navbar">
         <div class="container">
             <a href="index.html" class="logo">Dark<span>Wolves</span></a>
-            <div style="color: white; font-weight: bold; letter-spacing: 1px;">ADMIN PORTAL</div>
+            <div style="color: white; font-weight: bold; letter-spacing: 1px; font-size: 0.9rem; border: 1px solid #333; padding: 4px 10px; border-radius: 4px;">ADMIN PORTAL</div>
         </div>
     </nav>
 
     <div class="admin-container">
         <div class="admin-header">
             <div>
-                <h1 style="color:white; font-size: 1.8rem;">Candidate Applications</h1>
-                <p style="color:#888;">Live view of all applicants</p>
+                <h1>Candidate Applications</h1>
+                <p>Real-time view of all incoming talent.</p>
             </div>
             <button class="refresh-btn" onclick="checkAuthAndLoad()">
                 <i class="fas fa-sync-alt"></i> Refresh Data
@@ -141,7 +55,6 @@
         });
 
         async function checkAuthAndLoad() {
-            // 1. Check Local Storage
             const userStr = localStorage.getItem('user');
             if (!userStr) {
                 alert("Access Denied: Please login first.");
@@ -151,14 +64,12 @@
 
             const user = JSON.parse(userStr);
 
-            // 2. Client-Side Check (Fast)
             if (!user.isAdmin) {
                 alert("Access Denied: You do not have admin privileges.");
                 window.location.href = 'index.html';
                 return;
             }
 
-            // 3. Load Data with Security Header
             loadApplications(user.email);
         }
 
@@ -174,9 +85,7 @@
 
             try {
                 const response = await fetch('http://127.0.0.1:5000/api/admin/applications', {
-                    headers: {
-                        'X-Admin-Email': adminEmail // Send email for server verification
-                    }
+                    headers: { 'X-Admin-Email': adminEmail }
                 });
 
                 if (response.status === 403 || response.status === 401) {
@@ -197,23 +106,19 @@
                     const row = `
                         <tr>
                             <td><span style="color:#666">#${app.ApplicationID}</span></td>
-                            
                             <td>
                                 <div style="font-weight:700; font-size:0.95rem; color:white; margin-bottom:4px;">${app.FullName}</div>
                                 <span class="badge badge-gender">${app.Gender || '-'}</span>
                             </td>
-
                             <td>
-                                <div style="color:var(--primary-color); font-weight:600; margin-bottom:2px;">${app.JobTitle}</div>
+                                <div style="color:#ff6600; font-weight:600; margin-bottom:2px;">${app.JobTitle}</div>
                                 <div style="font-size:0.8rem; color:#888;">${app.Company}</div>
                             </td>
-
                             <td>
                                 <div class="contact-row"><i class="fas fa-envelope"></i> ${app.Email}</div>
                                 <div class="contact-row"><i class="fas fa-phone"></i> ${app.Phone}</div>
                                 ${app.WhatsApp ? `<div class="contact-row"><i class="fab fa-whatsapp"></i> ${app.WhatsApp}</div>` : ''}
                             </td>
-
                             <td>
                                 <div class="detail-group">
                                     <span class="detail-label">Graduation</span>
@@ -225,7 +130,6 @@
                                     <span class="badge badge-mil">${app.MilitaryStatus}</span>
                                 </div>` : ''}
                             </td>
-
                             <td>
                                 <div class="detail-group">
                                     <span class="detail-label">Nationality</span>
@@ -240,285 +144,15 @@
                                     <div class="detail-value" style="font-size:0.8rem; color:#ccc;">${app.Address || 'N/A'}</div>
                                 </div>
                             </td>
-
                             <td>
                                 <div class="detail-group">
                                     <span class="detail-label">English Level</span>
                                     <span class="badge">${app.EnglishLevel || 'N/A'}</span>
                                 </div>
-                                <div style="max-height: 80px; max-width: 300px; overflow-y: auto; font-size: 0.85rem; color: #999; background:#111; padding:6px; border-radius:4px; border:1px solid #222;">
+                                <div class="experience-box">
                                     ${app.Experience || 'No details provided.'}
                                 </div>
                             </td>
-
-                            <td style="color:#666; font-size: 0.8rem; white-space:nowrap;">
-                                ${app.SubmittedAt}
-                            </td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
-
-            } catch (error) {
-                console.error(error);
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#ff4444; padding: 2rem;">Failed to load data. Ensure backend is running.</td></tr>';
-            }
-        }
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Portal | Dark Wolves</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { background-color: #0a0a0a; color: white; }
-        .admin-container { padding: 2rem; max-width: 98%; margin: 0 auto; }
-        
-        .admin-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 2rem; 
-            border-bottom: 1px solid #333; 
-            padding-bottom: 1rem; 
-        }
-
-        .data-table-container {
-            overflow-x: auto;
-            background: #141414;
-            border-radius: 8px;
-            border: 1px solid #333;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        }
-
-        .data-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            min-width: 1300px; 
-            font-size: 0.85rem;
-        }
-
-        .data-table th { 
-            background: #1f1f1f; 
-            padding: 1rem; 
-            text-align: left; 
-            color: #aaa; 
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid #333;
-            white-space: nowrap;
-        }
-
-        .data-table td { 
-            padding: 1rem; 
-            border-bottom: 1px solid #2a2a2a; 
-            color: #e0e0e0; 
-            vertical-align: top;
-        }
-
-        .data-table tr:hover { background: #1a1a1a; }
-
-        .badge { 
-            padding: 3px 8px; 
-            border-radius: 4px; 
-            font-size: 0.7rem; 
-            background: #333; 
-            color: white;
-            display: inline-block;
-            margin-bottom: 2px;
-            font-weight: 600;
-        }
-        
-        .badge-grad { background: #2a1a0a; color: var(--primary-color); border: 1px solid var(--primary-color); }
-        .badge-mil { background: #064e3b; color: #34d399; border: 1px solid #059669; }
-        .badge-gender { background: #1e3a8a; color: #93c5fd; }
-
-        .refresh-btn { 
-            background: var(--primary-color); 
-            border: none; 
-            color: white; 
-            padding: 0.6rem 1.2rem; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            font-weight: 600;
-            transition: 0.3s;
-        }
-        .refresh-btn:hover { background: #e65c00; }
-
-        .contact-row { display: flex; align-items: center; gap: 8px; color: #bbb; margin-bottom: 4px; }
-        .contact-row i { width: 14px; text-align: center; color: var(--primary-color); font-size: 0.8rem; }
-        
-        .detail-group { margin-bottom: 8px; }
-        .detail-label { color: #666; font-size: 0.7rem; display: block; text-transform: uppercase; margin-bottom: 2px; }
-        .detail-value { color: white; font-weight: 500; }
-    </style>
-</head>
-<body>
-
-    <nav class="navbar">
-        <div class="container">
-            <a href="index.html" class="logo">Dark<span>Wolves</span></a>
-            <div style="color: white; font-weight: bold; letter-spacing: 1px;">ADMIN PORTAL</div>
-        </div>
-    </nav>
-
-    <div class="admin-container">
-        <div class="admin-header">
-            <div>
-                <h1 style="color:white; font-size: 1.8rem;">Candidate Applications</h1>
-                <p style="color:#888;">Live view of all applicants</p>
-            </div>
-            <button class="refresh-btn" onclick="checkAuthAndLoad()">
-                <i class="fas fa-sync-alt"></i> Refresh Data
-            </button>
-        </div>
-
-        <div class="data-table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th width="50">ID</th>
-                        <th width="180">Candidate</th>
-                        <th width="180">Target Job</th>
-                        <th width="220">Contact Info</th>
-                        <th width="150">Status</th>
-                        <th width="200">National Data</th>
-                        <th>Experience / English</th>
-                        <th width="120">Date</th>
-                    </tr>
-                </thead>
-                <tbody id="admin-table-body">
-                    <tr><td colspan="8" style="text-align:center; padding: 3rem; color: #666;">Loading data...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAuthAndLoad();
-        });
-
-        async function checkAuthAndLoad() {
-            // 1. Check Local Storage
-            const userStr = localStorage.getItem('user');
-            if (!userStr) {
-                alert("Access Denied: Please login first.");
-                window.location.href = 'login.html';
-                return;
-            }
-
-            const user = JSON.parse(userStr);
-
-            // 2. Client-Side Check (Fast)
-            if (!user.isAdmin) {
-                alert("Access Denied: You do not have admin privileges.");
-                window.location.href = 'index.html';
-                return;
-            }
-
-            // 3. Load Data with Security Header
-            loadApplications(user.email);
-        }
-
-        async function loadApplications(adminEmail) {
-            const tbody = document.getElementById('admin-table-body');
-            const btn = document.querySelector('.refresh-btn i');
-            
-            if(btn) {
-                btn.style.transition = 'transform 0.5s';
-                btn.style.transform = 'rotate(180deg)';
-                setTimeout(() => btn.style.transform = 'rotate(0deg)', 500);
-            }
-
-            try {
-                const response = await fetch('http://127.0.0.1:5000/api/admin/applications', {
-                    headers: {
-                        'X-Admin-Email': adminEmail // Send email for server verification
-                    }
-                });
-
-                if (response.status === 403 || response.status === 401) {
-                    alert("Session expired or unauthorized.");
-                    window.location.href = 'login.html';
-                    return;
-                }
-
-                const apps = await response.json();
-
-                if (apps.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:3rem; color:#888;">No applications received yet.</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = '';
-                apps.forEach(app => {
-                    const row = `
-                        <tr>
-                            <td><span style="color:#666">#${app.ApplicationID}</span></td>
-                            
-                            <td>
-                                <div style="font-weight:700; font-size:0.95rem; color:white; margin-bottom:4px;">${app.FullName}</div>
-                                <span class="badge badge-gender">${app.Gender || '-'}</span>
-                            </td>
-
-                            <td>
-                                <div style="color:var(--primary-color); font-weight:600; margin-bottom:2px;">${app.JobTitle}</div>
-                                <div style="font-size:0.8rem; color:#888;">${app.Company}</div>
-                            </td>
-
-                            <td>
-                                <div class="contact-row"><i class="fas fa-envelope"></i> ${app.Email}</div>
-                                <div class="contact-row"><i class="fas fa-phone"></i> ${app.Phone}</div>
-                                ${app.WhatsApp ? `<div class="contact-row"><i class="fab fa-whatsapp"></i> ${app.WhatsApp}</div>` : ''}
-                            </td>
-
-                            <td>
-                                <div class="detail-group">
-                                    <span class="detail-label">Graduation</span>
-                                    <span class="badge badge-grad">${app.GraduationStatus || 'N/A'}</span>
-                                </div>
-                                ${app.MilitaryStatus && app.MilitaryStatus !== 'Not Applicable' ? `
-                                <div class="detail-group">
-                                    <span class="detail-label">Military</span>
-                                    <span class="badge badge-mil">${app.MilitaryStatus}</span>
-                                </div>` : ''}
-                            </td>
-
-                            <td>
-                                <div class="detail-group">
-                                    <span class="detail-label">Nationality</span>
-                                    <div class="detail-value">${app.Nationality || 'N/A'}</div>
-                                </div>
-                                <div class="detail-group">
-                                    <span class="detail-label">National ID</span>
-                                    <div class="detail-value" style="font-family:monospace; letter-spacing:1px; color:#ddd;">${app.NationalID || 'N/A'}</div>
-                                </div>
-                                <div class="detail-group">
-                                    <span class="detail-label">Address</span>
-                                    <div class="detail-value" style="font-size:0.8rem; color:#ccc;">${app.Address || 'N/A'}</div>
-                                </div>
-                            </td>
-
-                            <td>
-                                <div class="detail-group">
-                                    <span class="detail-label">English Level</span>
-                                    <span class="badge">${app.EnglishLevel || 'N/A'}</span>
-                                </div>
-                                <div style="max-height: 80px; max-width: 300px; overflow-y: auto; font-size: 0.85rem; color: #999; background:#111; padding:6px; border-radius:4px; border:1px solid #222;">
-                                    ${app.Experience || 'No details provided.'}
-                                </div>
-                            </td>
-
                             <td style="color:#666; font-size: 0.8rem; white-space:nowrap;">
                                 ${app.SubmittedAt}
                             </td>
