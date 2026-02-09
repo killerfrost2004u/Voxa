@@ -24,7 +24,6 @@ from werkzeug.utils import secure_filename
 print("⏳ Loading Dark Wolves AI Engine...")
 try:
     nlp = spacy.load("en_core_web_sm")
-    # Check for NVIDIA GPU
     device = "cuda" if torch.cuda.is_available() else "cpu"
     stt_model = whisper.load_model("base", device=device)
     print(f"✅ AI Engine Ready. Running on: {device.upper()}")
@@ -45,7 +44,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# --- EMAIL CONFIGURATION (Using SSL Port 465) ---
+# --- EMAIL CONFIGURATION ---
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_TLS'] = False
@@ -54,13 +53,10 @@ app.config['MAIL_USERNAME'] = 'hima.yasser2004@gmail.com'
 app.config['MAIL_PASSWORD'] = 'lqqzwvayhtaaumzt'
 mail = Mail(app)
 
-
 def get_db_connection():
     conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={SERVER_NAME};DATABASE=DarkWolvesDB;Trusted_Connection=yes;TrustServerCertificate=yes;"
     return pyodbc.connect(conn_str)
 
-
-# --- THE SCIENTIST: LINGUISTIC ANALYSIS ---
 def analyze_speech(file_path, transcript):
     audio_duration = librosa.get_duration(path=file_path)
     word_count = len(transcript.split())
@@ -70,24 +66,36 @@ def analyze_speech(file_path, transcript):
     return {"wpm": round(wpm, 1), "unique_words": unique_words, "duration": round(audio_duration, 1)}
 
 
-# --- THE BRAIN: LOCAL AI WORKER ---
 def ai_worker(app_id, file_path):
-    print(f"🤖 Processing AI Analysis for App #{app_id}...")
+    print(f"🤖 [1/4] Starting AI Analysis for App #{app_id}...")
     try:
+        # Step 1: Transcription
+        print(f"🎙️ [2/4] Transcribing audio: {file_path}")
         result = stt_model.transcribe(file_path)
         transcript = result['text']
+        print(f"📝 Transcription Complete: {transcript[:50]}...")
+
+        # Step 2: Extract Metrics
         metrics = analyze_speech(file_path, transcript)
 
+        # Step 3: LLM Judgment
+        print(f"🧠 [3/4] Requesting Llama 3.2 analysis...")
         prompt = f"""
-        Analyze this interview transcript:
-        Transcript: "{transcript}"
-        Metrics: Speed: {metrics['wpm']} WPM, Unique Words: {metrics['unique_words']}, Duration: {metrics['duration']}s.
-        RESPONSE MUST BE ONLY JSON: {{"level": "B2", "score": 82, "summary": "Short summary."}}
+        Analyze this transcript: "{transcript}"
+        Metrics: Speed: {metrics['wpm']} WPM.
+        RESPONSE MUST BE ONLY JSON: {{"level": "B2", "score": 82, "summary": "Example."}}
         """
+
+        # We add a check here to make sure Ollama is actually running
         response = ollama.chat(model='llama3.2', messages=[{'role': 'user', 'content': prompt}])
+
+        # Parse JSON safely
         match = re.search(r'\{.*\}', response['message']['content'], re.DOTALL)
         if match:
             ai_data = json.loads(match.group())
+            print(f"✅ [4/4] AI Judgment Received: {ai_data['level']}")
+
+            # Step 4: Update Database
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("""
@@ -98,22 +106,19 @@ def ai_worker(app_id, file_path):
                   app_id))
             conn.commit()
             conn.close()
-            print(f"✅ AI Analysis complete for App {app_id}")
+            print(f"🏁 Database updated for App {app_id}")
+        else:
+            print("❌ AI Error: Could not parse JSON from Ollama")
+
     except Exception as e:
-        print(f"❌ AI Worker Error: {e}")
+        print(f"❌ AI Worker Error for App {app_id}: {e}")
 
-
-# --- EMAIL HELPER (Background Task) ---
 def send_async_email(app, msg):
     with app.app_context():
         try:
             mail.send(msg)
-            print("📧 Email sent successfully in background!")
         except Exception as e:
-            print(f"❌ Background Email Error: {e}")
-
-
-# --- ROUTES ---
+            print(f"❌ Email Error: {e}")
 
 @app.route('/api/jobs', methods=['GET'])
 def get_jobs():
@@ -127,20 +132,15 @@ def get_jobs():
         jobs = []
         for i, col in enumerate(transposed_data):
             if i == 0 or len(col) < 10: continue
-            company = col[1].strip()
-            title = col[2].strip()
-            if not company or not title: continue
             jobs.append({
-                "id": i, "title": title, "company": company,
+                "id": i, "title": col[2].strip(), "company": col[1].strip(),
                 "location": col[8].strip() or "Remote", "salary": col[6].strip() or "Competitive",
-                "type": "Full Time", "training": col[9].strip(),
                 "requirements": col[3].strip() + "\n" + col[7].strip(),
-                "description": col[10].strip(), "logo": (company[:2]).upper()
+                "description": col[10].strip(), "logo": (col[1].strip()[:2]).upper()
             })
         return jsonify(jobs)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/api/apply', methods=['POST'])
 def apply():
@@ -172,41 +172,30 @@ def apply():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 @app.route('/api/contact', methods=['POST'])
 def contact_us():
     try:
         data = request.json
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO ContactMessages (FullName, Email, Subject, Message, SubmittedAt) 
-            VALUES (?, ?, ?, ?, GETDATE())
-        """, (data['name'], data['email'], data['subject'], data['message']))
+        cursor.execute("INSERT INTO ContactMessages (FullName, Email, Subject, Message, SubmittedAt) VALUES (?, ?, ?, ?, GETDATE())",
+                       (data['name'], data['email'], data['subject'], data['message']))
         conn.commit()
         conn.close()
 
-        msg = Message(
-            subject=f"New Contact: {data['subject']}",
-            sender=app.config['MAIL_USERNAME'],
-            recipients=['darkwolvesagency@gmail.com']  # Final destination
-        )
+        msg = Message(subject=f"New Contact: {data['subject']}", sender=app.config['MAIL_USERNAME'], recipients=['darkwolvesagency@gmail.com'])
         msg.body = f"From: {data['name']} ({data['email']})\n\nMessage:\n{data['message']}"
-
-        # Start background email thread
         threading.Thread(target=send_async_email, args=(app, msg)).start()
-
         return jsonify({"message": "Message received!"}), 201
     except Exception as e:
-        print(f"❌ Database Error: {e}")
-        return jsonify({"error": "Failed to save message"}), 500
-
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/admin/applications', methods=['GET'])
 def get_apps():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        # Fetching AI columns explicitly
         cursor.execute("SELECT * FROM JobApplications ORDER BY SubmittedAt DESC")
         columns = [column[0] for column in cursor.description]
         apps = [dict(zip(columns, row)) for row in cursor.fetchall()]
@@ -216,7 +205,6 @@ def get_apps():
         return jsonify(apps)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -229,11 +217,9 @@ def login():
         return jsonify({"user": {"name": user.FullName, "email": user.Email, "isAdmin": bool(user.IsAdmin)}})
     return jsonify({"error": "Invalid"}), 401
 
-
 @app.route('/uploads/<filename>')
 def serve_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

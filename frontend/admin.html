@@ -9,11 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
     <nav class="navbar">
         <div class="container">
             <a href="index.html" class="logo">Dark<span>Wolves</span></a>
-            <div style="color: white; font-weight: bold; letter-spacing: 1px; font-size: 0.9rem; border: 1px solid #333; padding: 4px 10px; border-radius: 4px;">ADMIN PORTAL</div>
+            <div class="admin-tag">ADMIN PORTAL</div>
         </div>
     </nav>
 
@@ -21,11 +20,9 @@
         <div class="admin-header">
             <div>
                 <h1>Candidate Applications</h1>
-                <p>Listen to voice introductions and review candidates.</p>
+                <p>Review AI-powered candidate metrics and voice intros.</p>
             </div>
-            <button class="refresh-btn" id="refreshBtn" onclick="checkAuthAndLoad()">
-                <i class="fas fa-sync-alt"></i> Refresh Data
-            </button>
+            <button class="refresh-btn" onclick="checkAuthAndLoad()"><i class="fas fa-sync-alt"></i> Refresh</button>
         </div>
 
         <div class="data-table-container">
@@ -34,236 +31,87 @@
                     <tr>
                         <th width="50">ID</th>
                         <th width="180">Candidate</th>
-                        <th width="200">Voice Intro</th>
-                        <th width="220">Contact Info</th>
-                        <th width="150">Status</th>
-                        <th width="200">National Data</th>
+                        <th width="220">Voice Intro</th>
+                        <th width="150">AI Grade</th>
+                        <th width="200">Contact</th>
                         <th>Experience</th>
                         <th width="120">Date</th>
                     </tr>
                 </thead>
-                <tbody id="admin-table-body">
-                    <tr><td colspan="8" style="text-align:center; padding: 3rem; color: #666;">Loading data...</td></tr>
-                </tbody>
+                <tbody id="admin-table-body"></tbody>
             </table>
         </div>
     </div>
 
-    <audio id="global-audio-player"></audio>
+    <div id="ai-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2><i class="fas fa-robot"></i> AI Intelligence Report</h2>
+                <button onclick="closeModal()" class="close-btn">&times;</button>
+            </div>
+            <div id="modal-content" class="modal-body"></div>
+        </div>
+    </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAuthAndLoad();
-        });
+        let appData = [];
+        document.addEventListener('DOMContentLoaded', checkAuthAndLoad);
 
         async function checkAuthAndLoad() {
-            // Animation logic
-            const btnIcon = document.querySelector('#refreshBtn i');
-            if(btnIcon) {
-                btnIcon.style.transition = 'transform 0.5s ease';
-                btnIcon.style.transform = 'rotate(180deg)';
-                setTimeout(() => { btnIcon.style.transform = 'rotate(0deg)'; }, 500);
-            }
-
-            const userStr = localStorage.getItem('user');
-            if (!userStr) {
-                alert("Access Denied: Please login first.");
-                window.location.href = 'login.html';
-                return;
-            }
-
-            const user = JSON.parse(userStr);
-            if (!user.isAdmin) {
-                alert("Access Denied: Admin privileges required.");
-                window.location.href = 'index.html';
-                return;
-            }
-
-            await loadApplications(user.email);
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user?.isAdmin) { window.location.href = 'login.html'; return; }
+            await loadApplications();
         }
 
-        async function loadApplications(adminEmail) {
+        async function loadApplications() {
             const tbody = document.getElementById('admin-table-body');
+            const res = await fetch('http://127.0.0.1:5000/api/admin/applications');
+            appData = await res.json();
             
-            try {
-                const response = await fetch('http://127.0.0.1:5000/api/admin/applications', {
-                    headers: { 'X-Admin-Email': adminEmail }
-                });
-
-                if (response.status === 403 || response.status === 401) {
-                    alert("Unauthorized session. Please login again.");
-                    window.location.href = 'login.html';
-                    return;
-                }
-
-                const apps = await response.json();
-                
-                if (apps.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:3rem; color:#888;">No applications found.</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = '';
-                
-                apps.forEach(app => {
-                    const uniqueId = app.ApplicationID;
-                    const audioUrl = app.VoiceRecordPath 
-                        ? `http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}` 
-                        : null;
-
-                    // Player HTML Structure
-                    const playerHtml = audioUrl 
-                        ? `
-                        <div class="voice-player-advanced" id="player-${uniqueId}">
-                            <audio id="audio-${uniqueId}" src="${audioUrl}" preload="metadata" 
-                                ontimeupdate="updateProgress('${uniqueId}')" 
-                                onloadedmetadata="initDuration('${uniqueId}')"
-                                onended="resetPlayer('${uniqueId}')"></audio>
-                            
-                            <button class="btn-control play-btn" onclick="toggleAudio('${uniqueId}')" id="btn-play-${uniqueId}">
-                                <i class="fas fa-play"></i>
-                            </button>
-                            
-                            <div class="player-center">
-                                <input type="range" class="seek-slider" id="seek-${uniqueId}" value="0" max="100" oninput="seekAudio('${uniqueId}')">
-                                <div class="time-display">
-                                    <span id="curr-${uniqueId}">0:00</span>
-                                    <span id="dur-${uniqueId}">0:00</span>
-                                </div>
-                            </div>
-                            
-                            <button class="btn-control speed-btn" onclick="changeSpeed('${uniqueId}')" id="spd-${uniqueId}" title="Playback Speed">1x</button>
-                            
-                            <a href="${audioUrl}" download class="btn-control download-btn" title="Download Audio">
-                                <i class="fas fa-download"></i>
-                            </a>
-                        </div>`
-                        : '<span style="color:#666; font-size:0.8rem; font-style:italic;">No Recording</span>';
-
-                    const row = `
-                        <tr>
-                            <td><span style="color:#666">#${uniqueId}</span></td>
-                            <td>
-                                <div style="font-weight:700; color:white;">${app.FullName}</div>
-                                <div style="font-size:0.8rem; color:#888;">${app.JobTitle}</div>
-                            </td>
-                            <td>${playerHtml}</td>
-                            <td>
-                                <div class="contact-row"><i class="fas fa-envelope"></i> ${app.Email}</div>
-                                <div class="contact-row"><i class="fas fa-phone"></i> ${app.Phone}</div>
-                            </td>
-                            <td>
-                                <div class="detail-group">
-                                    <span class="badge badge-grad">${app.GraduationStatus || 'N/A'}</span>
-                                    <br>
-                                    <span class="badge" style="margin-top:4px;">${app.EnglishLevel || 'N/A'}</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="detail-group">
-                                    <span class="detail-label">ID:</span> <span style="font-family:monospace; letter-spacing:1px;">${app.NationalID || 'N/A'}</span>
-                                </div>
-                                <div class="detail-group">
-                                    <span class="detail-label">Addr:</span> <span style="color:#aaa; font-size:0.8rem;">${app.Address || 'N/A'}</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="experience-box">
-                                    ${app.Experience || 'No details provided.'}
-                                </div>
-                            </td>
-                            <td style="color:#666; font-size: 0.8rem;">
-                                ${app.SubmittedAt}
-                            </td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
-
-            } catch (error) {
-                console.error(error);
-                tbody.innerHTML = '<tr><td colspan="8" style="color:#ef4444; text-align:center; padding:2rem;">Failed to load data. Ensure backend is running.</td></tr>';
-            }
+            tbody.innerHTML = appData.map(app => `
+                <tr>
+                    <td>#${app.ApplicationID}</td>
+                    <td><b>${app.FullName}</b><br><small>${app.JobTitle}</small></td>
+                    <td>
+                        <audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}" style="height:30px; width:180px;"></audio>
+                    </td>
+                    <td>
+                        <div class="ai-grade-cell">
+                            <span class="badge badge-ai">${app.AI_Rating || 'Analyzing...'}</span>
+                            <button onclick="openModal(${app.ApplicationID})" class="report-link">View Analysis</button>
+                        </div>
+                    </td>
+                    <td>${app.Email}<br>${app.Phone}</td>
+                    <td><div class="exp-cell">${app.Experience}</div></td>
+                    <td>${app.SubmittedAt}</td>
+                </tr>
+            `).join('');
         }
 
-        // --- Audio Player Logic ---
-        let currentlyPlayingId = null;
-
-        function toggleAudio(id) {
-            const audio = document.getElementById(`audio-${id}`);
-            const btn = document.getElementById(`btn-play-${id}`);
-            const icon = btn.querySelector('i');
-
-            // Pause currently playing if different
-            if (currentlyPlayingId && currentlyPlayingId !== id) {
-                const prevAudio = document.getElementById(`audio-${currentlyPlayingId}`);
-                const prevBtn = document.getElementById(`btn-play-${currentlyPlayingId}`);
-                if(prevAudio) prevAudio.pause();
-                if(prevBtn) prevBtn.querySelector('i').className = 'fas fa-play';
-            }
-
-            if (audio.paused) {
-                audio.play();
-                icon.className = 'fas fa-pause';
-                currentlyPlayingId = id;
-            } else {
-                audio.pause();
-                icon.className = 'fas fa-play';
-                currentlyPlayingId = null;
-            }
+        function openModal(id) {
+            const app = appData.find(a => a.ApplicationID === id);
+            document.getElementById('modal-content').innerHTML = `
+                <div class="report-section">
+                    <h3>Transcription</h3>
+                    <p class="transcript-p">"${app.Transcription || 'Processing...'}"</p>
+                </div>
+                <div class="report-grid">
+                    <div class="stat-item"><h4>Score</h4><p>${app.AI_Rating || 'N/A'}</p></div>
+                    <div class="stat-item"><h4>Speech Rate</h4><p>${app.SpeechRate || 0} WPM</p></div>
+                </div>
+                <div class="report-section">
+                    <h3>AI Personality Summary</h3>
+                    <p>${app.AI_Summary || 'Analysis in progress...'}</p>
+                </div>
+            `;
+            document.getElementById('ai-modal').style.display = 'flex';
         }
 
-        function updateProgress(id) {
-            const audio = document.getElementById(`audio-${id}`);
-            const slider = document.getElementById(`seek-${id}`);
-            const currTimeSpan = document.getElementById(`curr-${id}`);
+        function closeModal() { document.getElementById('ai-modal').style.display = 'none'; }
 
-            if (!isNaN(audio.duration)) {
-                slider.value = (audio.currentTime / audio.duration) * 100;
-                currTimeSpan.textContent = formatTime(audio.currentTime);
-            }
-        }
-
-        function seekAudio(id) {
-            const audio = document.getElementById(`audio-${id}`);
-            const slider = document.getElementById(`seek-${id}`);
-            const seekTo = audio.duration * (slider.value / 100);
-            audio.currentTime = seekTo;
-        }
-
-        function changeSpeed(id) {
-            const audio = document.getElementById(`audio-${id}`);
-            const btn = document.getElementById(`spd-${id}`);
-            
-            let currentSpeed = audio.playbackRate;
-            let newSpeed;
-
-            if (currentSpeed === 1) newSpeed = 1.5;
-            else if (currentSpeed === 1.5) newSpeed = 2;
-            else if (currentSpeed === 2) newSpeed = 0.5; // slow mo
-            else newSpeed = 1;
-
-            audio.playbackRate = newSpeed;
-            btn.textContent = newSpeed + 'x';
-        }
-
-        function initDuration(id) {
-            const audio = document.getElementById(`audio-${id}`);
-            const durSpan = document.getElementById(`dur-${id}`);
-            durSpan.textContent = formatTime(audio.duration);
-        }
-
-        function resetPlayer(id) {
-            document.getElementById(`btn-play-${id}`).querySelector('i').className = 'fas fa-play';
-            document.getElementById(`seek-${id}`).value = 0;
-            currentlyPlayingId = null;
-        }
-
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-        }
+        const playerHtml = app.VoiceRecordPath && app.VoiceRecordPath !== 'null' 
+        ? `<audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}"></audio>` 
+        : '<span style="color:#666">No Recording</span>';
     </script>
 </body>
 </html>

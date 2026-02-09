@@ -43,3 +43,9 @@ CREATE TABLE ContactMessages (
     Message NVARCHAR(MAX),
     SubmittedAt DATETIME
 );
+
+ALTER TABLE JobApplications ADD 
+    Transcription NVARCHAR(MAX),
+    AI_Rating NVARCHAR(100),
+    AI_Summary NVARCHAR(MAX),
+    SpeechRate FLOAT;
