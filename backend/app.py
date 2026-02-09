@@ -24,9 +24,9 @@ from werkzeug.utils import secure_filename
 print("⏳ Loading Dark Wolves AI Engine...")
 try:
     nlp = spacy.load("en_core_web_sm")
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    stt_model = whisper.load_model("base", device=device)
-    print(f"✅ AI Engine Ready. Running on: {device.upper()}")
+    # OFF-LOAD WHISPER TO CPU: Saves 1GB VRAM for the Llama model on your MX450
+    stt_model = whisper.load_model("base", device="cpu")
+    print(f"✅ AI Engine Ready. Whisper: CPU | LLM: GPU/CUDA")
 except Exception as e:
     print(f"❌ Initialization Error: {e}")
 
@@ -57,6 +57,7 @@ def get_db_connection():
     conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={SERVER_NAME};DATABASE=DarkWolvesDB;Trusted_Connection=yes;TrustServerCertificate=yes;"
     return pyodbc.connect(conn_str)
 
+# --- AI WORKER LOGIC ---
 def analyze_speech(file_path, transcript):
     audio_duration = librosa.get_duration(path=file_path)
     word_count = len(transcript.split())
@@ -65,31 +66,26 @@ def analyze_speech(file_path, transcript):
     unique_words = len(set([t.text.lower() for t in doc if t.is_alpha]))
     return {"wpm": round(wpm, 1), "unique_words": unique_words, "duration": round(audio_duration, 1)}
 
-
 def ai_worker(app_id, file_path):
     print(f"🤖 [1/4] Starting AI Analysis for App #{app_id}...")
     try:
         # Step 1: Transcription
-        print(f"🎙️ [2/4] Transcribing audio: {file_path}")
+        print(f"🎙️ [2/4] Transcribing audio on CPU...")
         result = stt_model.transcribe(file_path)
         transcript = result['text']
-        print(f"📝 Transcription Complete: {transcript[:50]}...")
 
         # Step 2: Extract Metrics
         metrics = analyze_speech(file_path, transcript)
 
         # Step 3: LLM Judgment
-        print(f"🧠 [3/4] Requesting Llama 3.2 analysis...")
+        print(f"🧠 [3/4] Requesting Llama 3.2 analysis (GPU)...")
         prompt = f"""
         Analyze this transcript: "{transcript}"
         Metrics: Speed: {metrics['wpm']} WPM.
-        RESPONSE MUST BE ONLY JSON: {{"level": "B2", "score": 82, "summary": "Example."}}
+        RESPONSE MUST BE ONLY JSON: {{"level": "B2", "score": 82, "summary": "Detailed personality check."}}
         """
-
-        # We add a check here to make sure Ollama is actually running
         response = ollama.chat(model='llama3.2', messages=[{'role': 'user', 'content': prompt}])
 
-        # Parse JSON safely
         match = re.search(r'\{.*\}', response['message']['content'], re.DOTALL)
         if match:
             ai_data = json.loads(match.group())
@@ -102,23 +98,14 @@ def ai_worker(app_id, file_path):
                 UPDATE JobApplications 
                 SET Transcription = ?, AI_Rating = ?, AI_Summary = ?, SpeechRate = ?
                 WHERE ApplicationID = ?
-            """, (transcript, f"{ai_data['level']} ({ai_data['score']}/100)", ai_data['summary'], metrics['wpm'],
-                  app_id))
+            """, (transcript, f"{ai_data['level']} ({ai_data['score']}/100)", ai_data['summary'], metrics['wpm'], app_id))
             conn.commit()
             conn.close()
-            print(f"🏁 Database updated for App {app_id}")
-        else:
-            print("❌ AI Error: Could not parse JSON from Ollama")
-
+            print(f"🏁 Database updated successfully for App {app_id}")
     except Exception as e:
         print(f"❌ AI Worker Error for App {app_id}: {e}")
 
-def send_async_email(app, msg):
-    with app.app_context():
-        try:
-            mail.send(msg)
-        except Exception as e:
-            print(f"❌ Email Error: {e}")
+# --- ROUTES ---
 
 @app.route('/api/jobs', methods=['GET'])
 def get_jobs():
@@ -159,6 +146,7 @@ def apply():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE());
             SELECT SCOPE_IDENTITY();
         """
+        # Ensure your database has these columns (MilitaryStatus, NationalID, Nationality, Address)
         cursor.execute(query, (data.get('title'), data.get('company'), data.get('name'), data.get('email'),
                                data.get('phone'), data.get('whatsapp'), data.get('english'), data.get('experience'),
                                data.get('gender'), data.get('gradStatus'), data.get('militaryStatus', 'N/A'),
@@ -170,23 +158,21 @@ def apply():
         threading.Thread(target=ai_worker, args=(new_id, path)).start()
         return jsonify({"message": "Application received!"}), 201
     except Exception as e:
+        print(f"❌ CRITICAL APPLY ERROR: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/contact', methods=['POST'])
-def contact_us():
+@app.route('/api/dashboard/<email>', methods=['GET'])
+def get_user_dashboard(email):
     try:
-        data = request.json
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO ContactMessages (FullName, Email, Subject, Message, SubmittedAt) VALUES (?, ?, ?, ?, GETDATE())",
-                       (data['name'], data['email'], data['subject'], data['message']))
-        conn.commit()
+        cursor.execute("SELECT * FROM JobApplications WHERE Email = ? ORDER BY SubmittedAt DESC", (email,))
+        columns = [column[0] for column in cursor.description]
+        apps = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        for a in apps:
+            if a['SubmittedAt']: a['SubmittedAt'] = a['SubmittedAt'].strftime('%Y-%m-%d %H:%M')
         conn.close()
-
-        msg = Message(subject=f"New Contact: {data['subject']}", sender=app.config['MAIL_USERNAME'], recipients=['darkwolvesagency@gmail.com'])
-        msg.body = f"From: {data['name']} ({data['email']})\n\nMessage:\n{data['message']}"
-        threading.Thread(target=send_async_email, args=(app, msg)).start()
-        return jsonify({"message": "Message received!"}), 201
+        return jsonify(apps)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -195,7 +181,6 @@ def get_apps():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        # Fetching AI columns explicitly
         cursor.execute("SELECT * FROM JobApplications ORDER BY SubmittedAt DESC")
         columns = [column[0] for column in cursor.description]
         apps = [dict(zip(columns, row)) for row in cursor.fetchall()]
@@ -206,16 +191,26 @@ def get_apps():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/login', methods=['POST'])
-def login():
-    data = request.json
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT FullName, Email, PasswordHash, IsAdmin FROM Users WHERE Email = ?", (data['email'],))
-    user = cursor.fetchone()
-    if user and bcrypt.checkpw(data['password'].encode('utf-8'), user.PasswordHash.encode('utf-8')):
-        return jsonify({"user": {"name": user.FullName, "email": user.Email, "isAdmin": bool(user.IsAdmin)}})
-    return jsonify({"error": "Invalid"}), 401
+# TRIGGER FOR EXISTING UPLOADS
+@app.route('/api/admin/reanalyze', methods=['GET'])
+def reanalyze_all():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT ApplicationID, VoiceRecordPath FROM JobApplications WHERE Transcription IS NULL")
+        pending = cursor.fetchall()
+        conn.close()
+
+        count = 0
+        for row in pending:
+            app_id, filename = row
+            path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            if os.path.exists(path):
+                threading.Thread(target=ai_worker, args=(app_id, path)).start()
+                count += 1
+        return jsonify({"message": f"Triggered analysis for {count} pending records."})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/uploads/<filename>')
 def serve_file(filename):

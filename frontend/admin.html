@@ -109,9 +109,9 @@
 
         function closeModal() { document.getElementById('ai-modal').style.display = 'none'; }
 
-        const playerHtml = app.VoiceRecordPath && app.VoiceRecordPath !== 'null' 
-        ? `<audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}"></audio>` 
-        : '<span style="color:#666">No Recording</span>';
+        const playerHtml = (app.VoiceRecordPath && app.VoiceRecordPath !== 'null') 
+            ? `<audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}" style="height:30px; width:180px;"></audio>` 
+            : '<span style="color:#666">No Recording</span>';
     </script>
 </body>
 </html>
