@@ -450,6 +450,7 @@
             const gradStatus = document.getElementById('app-grad-status').value;
             if (gender !== 'Male' || gradStatus !== 'Graduated') milStatus = "Not Applicable";
 
+            // --- Updated Form Submission Logic in apply.html ---
             const formData = new FormData();
             formData.append('title', params.get('title') || 'General');
             formData.append('company', params.get('company') || 'Dark Wolves');
@@ -457,14 +458,18 @@
             formData.append('email', document.getElementById('app-email').value);
             formData.append('phone', document.getElementById('app-phone').value);
             formData.append('whatsapp', document.getElementById('app-whatsapp').value);
+                    
+            // 🔥 FIX: Match the ID "app-national-id" and "app-nationality" correctly
             formData.append('nationalId', document.getElementById('app-national-id').value);
             formData.append('nationality', document.getElementById('app-nationality').value);
             formData.append('address', document.getElementById('app-address').value);
+                    
             formData.append('gender', gender);
             formData.append('gradStatus', gradStatus);
             formData.append('militaryStatus', milStatus);
             formData.append('english', document.getElementById('app-english').value);
             formData.append('experience', document.getElementById('app-experience').value);
+            formData.append('voiceRecord', finalVoiceFile);
             
             // Append Voice File (Either recorded blob or uploaded file)
             formData.append('voiceRecord', finalVoiceFile);

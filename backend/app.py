@@ -24,7 +24,6 @@ from werkzeug.utils import secure_filename
 print("⏳ Loading Dark Wolves AI Engine...")
 try:
     nlp = spacy.load("en_core_web_sm")
-    # OFF-LOAD WHISPER TO CPU: Saves 1GB VRAM for the Llama model on your MX450
     stt_model = whisper.load_model("base", device="cpu")
     print(f"✅ AI Engine Ready. Whisper: CPU | LLM: GPU/CUDA")
 except Exception as e:
@@ -57,7 +56,6 @@ def get_db_connection():
     conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={SERVER_NAME};DATABASE=DarkWolvesDB;Trusted_Connection=yes;TrustServerCertificate=yes;"
     return pyodbc.connect(conn_str)
 
-# --- AI WORKER LOGIC ---
 def analyze_speech(file_path, transcript):
     audio_duration = librosa.get_duration(path=file_path)
     word_count = len(transcript.split())
@@ -69,29 +67,16 @@ def analyze_speech(file_path, transcript):
 def ai_worker(app_id, file_path):
     print(f"🤖 [1/4] Starting AI Analysis for App #{app_id}...")
     try:
-        # Step 1: Transcription
-        print(f"🎙️ [2/4] Transcribing audio on CPU...")
-        result = stt_model.transcribe(file_path)
+        result = stt_model.transcribe(file_path, fp16=False)
         transcript = result['text']
-
-        # Step 2: Extract Metrics
         metrics = analyze_speech(file_path, transcript)
 
-        # Step 3: LLM Judgment
-        print(f"🧠 [3/4] Requesting Llama 3.2 analysis (GPU)...")
-        prompt = f"""
-        Analyze this transcript: "{transcript}"
-        Metrics: Speed: {metrics['wpm']} WPM.
-        RESPONSE MUST BE ONLY JSON: {{"level": "B2", "score": 82, "summary": "Detailed personality check."}}
-        """
+        prompt = f"Analyze this transcript: \"{transcript}\". Return ONLY JSON: {{\"level\": \"B2\", \"score\": 82, \"summary\": \"Candidate shows good fluency.\"}}"
         response = ollama.chat(model='llama3.2', messages=[{'role': 'user', 'content': prompt}])
 
         match = re.search(r'\{.*\}', response['message']['content'], re.DOTALL)
         if match:
             ai_data = json.loads(match.group())
-            print(f"✅ [4/4] AI Judgment Received: {ai_data['level']}")
-
-            # Step 4: Update Database
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("""
@@ -101,9 +86,9 @@ def ai_worker(app_id, file_path):
             """, (transcript, f"{ai_data['level']} ({ai_data['score']}/100)", ai_data['summary'], metrics['wpm'], app_id))
             conn.commit()
             conn.close()
-            print(f"🏁 Database updated successfully for App {app_id}")
+            print(f"🏁 Database updated for App {app_id}")
     except Exception as e:
-        print(f"❌ AI Worker Error for App {app_id}: {e}")
+        print(f"❌ AI Worker Error: {e}")
 
 # --- ROUTES ---
 
@@ -129,49 +114,8 @@ def get_jobs():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/apply', methods=['POST'])
-def apply():
-    try:
-        data = request.form
-        file = request.files.get('voiceRecord')
-        filename = secure_filename(f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
-        path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(path)
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # ADDED "SET NOCOUNT ON;" to fix the pyodbc "No results" error
-        query = """
-            SET NOCOUNT ON;
-            INSERT INTO JobApplications (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, 
-            Gender, GraduationStatus, MilitaryStatus, NationalID, Nationality, Address, VoiceRecordPath, SubmittedAt)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE());
-            SELECT SCOPE_IDENTITY();
-        """
-        cursor.execute(query, (data.get('title'), data.get('company'), data.get('name'), data.get('email'),
-                               data.get('phone'), data.get('whatsapp'), data.get('english'), data.get('experience'),
-                               data.get('gender'), data.get('gradStatus'), data.get('militaryStatus', 'N/A'),
-                               data.get('nationalId'), data.get('nationality'), data.get('address'), filename))
-
-        row = cursor.fetchone()
-        if row:
-            new_id = int(row[0])
-            conn.commit()
-            conn.close()
-
-            # Start AI process in background
-            threading.Thread(target=ai_worker, args=(new_id, path)).start()
-            return jsonify({"message": "Application received!"}), 201
-        else:
-            raise Exception("Failed to retrieve new application ID.")
-
-    except Exception as e:
-        print(f"❌ CRITICAL APPLY ERROR: {e}")
-        return jsonify({"error": str(e)}), 500
-
 @app.route('/api/dashboard/<email>', methods=['GET'])
-def get_user_dashboard(email):
+def get_dashboard(email):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -183,6 +127,49 @@ def get_user_dashboard(email):
         conn.close()
         return jsonify(apps)
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/apply', methods=['POST'])
+def apply():
+    try:
+        data = request.form
+        file = request.files.get('voiceRecord')
+        if not file:
+            return jsonify({"error": "Voice record is required"}), 400
+
+        filename = secure_filename(f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
+        path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(path)
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+            SET NOCOUNT ON;
+            INSERT INTO JobApplications (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, 
+            Gender, GraduationStatus, MilitaryStatus, NationalID, Nationality, Address, VoiceRecordPath, SubmittedAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE());
+            SELECT SCOPE_IDENTITY();
+        """
+        # Added .get() with defaults to prevent 400 Bad Request errors
+        cursor.execute(query, (
+            data.get('title', 'N/A'), data.get('company', 'N/A'), data.get('name', 'N/A'),
+            data.get('email', 'N/A'), data.get('phone', 'N/A'), data.get('whatsapp', 'N/A'),
+            data.get('english', 'N/A'), data.get('experience', 'N/A'), data.get('gender', 'N/A'),
+            data.get('gradStatus', 'N/A'), data.get('militaryStatus', 'N/A'), data.get('nationalId', 'N/A'),
+            data.get('nationality', 'N/A'), data.get('address', 'N/A'), filename
+        ))
+
+        row = cursor.fetchone()
+        if row:
+            new_id = int(row[0])
+            conn.commit()
+            conn.close()
+            threading.Thread(target=ai_worker, args=(new_id, path)).start()
+            return jsonify({"message": "Application received!"}), 201
+        else:
+            raise Exception("No ID returned from database.")
+    except Exception as e:
+        print(f"❌ CRITICAL APPLY ERROR: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/admin/applications', methods=['GET'])
@@ -200,7 +187,6 @@ def get_apps():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# TRIGGER FOR EXISTING UPLOADS
 @app.route('/api/admin/reanalyze', methods=['GET'])
 def reanalyze_all():
     try:
@@ -217,7 +203,7 @@ def reanalyze_all():
             if os.path.exists(path):
                 threading.Thread(target=ai_worker, args=(app_id, path)).start()
                 count += 1
-        return jsonify({"message": f"Triggered analysis for {count} pending records."})
+        return jsonify({"message": f"Started analysis for {count} records."})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -226,4 +212,4 @@ def serve_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, use_reloader=False)

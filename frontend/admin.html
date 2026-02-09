@@ -65,31 +65,42 @@
 
         async function loadApplications() {
             const tbody = document.getElementById('admin-table-body');
-            const res = await fetch('http://127.0.0.1:5000/api/admin/applications');
-            appData = await res.json();
-            
-            tbody.innerHTML = appData.map(app => `
-                <tr>
-                    <td>#${app.ApplicationID}</td>
-                    <td><b>${app.FullName}</b><br><small>${app.JobTitle}</small></td>
-                    <td>
-                        <audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}" style="height:30px; width:180px;"></audio>
-                    </td>
-                    <td>
-                        <div class="ai-grade-cell">
-                            <span class="badge badge-ai">${app.AI_Rating || 'Analyzing...'}</span>
-                            <button onclick="openModal(${app.ApplicationID})" class="report-link">View Analysis</button>
-                        </div>
-                    </td>
-                    <td>${app.Email}<br>${app.Phone}</td>
-                    <td><div class="exp-cell">${app.Experience}</div></td>
-                    <td>${app.SubmittedAt}</td>
-                </tr>
-            `).join('');
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/admin/applications');
+                appData = await res.json();
+                
+                tbody.innerHTML = appData.map(app => {
+                    // Logic to handle missing audio files and prevent 404s
+                    const hasAudio = app.VoiceRecordPath && app.VoiceRecordPath !== 'null' && app.VoiceRecordPath !== 'No_File';
+                    const audioContent = hasAudio 
+                        ? `<audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}" style="height:30px; width:180px;"></audio>` 
+                        : '<span style="color:#666; font-style:italic;">No Audio</span>';
+
+                    return `
+                        <tr>
+                            <td>#${app.ApplicationID}</td>
+                            <td><b>${app.FullName}</b><br><small>${app.JobTitle}</small></td>
+                            <td>${audioContent}</td>
+                            <td>
+                                <div class="ai-grade-cell">
+                                    <span class="badge badge-ai">${app.AI_Rating || 'Analyzing...'}</span>
+                                    <button onclick="openModal(${app.ApplicationID})" class="report-link">View Analysis</button>
+                                </div>
+                            </td>
+                            <td>${app.Email}<br>${app.Phone}</td>
+                            <td><div class="exp-cell">${app.Experience}</div></td>
+                            <td>${app.SubmittedAt}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error("Failed to load apps:", err);
+            }
         }
 
         function openModal(id) {
             const app = appData.find(a => a.ApplicationID === id);
+            if(!app) return;
             document.getElementById('modal-content').innerHTML = `
                 <div class="report-section">
                     <h3>Transcription</h3>
@@ -108,10 +119,6 @@
         }
 
         function closeModal() { document.getElementById('ai-modal').style.display = 'none'; }
-
-        const playerHtml = (app.VoiceRecordPath && app.VoiceRecordPath !== 'null') 
-            ? `<audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}" style="height:30px; width:180px;"></audio>` 
-            : '<span style="color:#666">No Recording</span>';
     </script>
 </body>
 </html>
