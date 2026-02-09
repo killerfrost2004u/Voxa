@@ -34,3 +34,12 @@ CREATE TABLE ContactMessages (
     Message NVARCHAR(MAX),
     SubmittedAt DATETIME
 );
+
+CREATE TABLE ContactMessages (
+    MessageID INT PRIMARY KEY IDENTITY(1,1),
+    FullName NVARCHAR(100),
+    Email NVARCHAR(100),
+    Subject NVARCHAR(200),
+    Message NVARCHAR(MAX),
+    SubmittedAt DATETIME
+);
