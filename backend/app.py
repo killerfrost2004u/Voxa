@@ -48,10 +48,11 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # --- EMAIL CONFIGURATION ---
 # Replace 'your-app-password-here' with your 16-character Google App Password
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'darkwolvesagency@gmail.com'
-app.config['MAIL_PASSWORD'] = 'kswwsvkdhpdugqp'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True # Enabled SSL
+app.config['MAIL_USERNAME'] = 'hima.yasser2004@gmail.com'
+app.config['MAIL_PASSWORD'] = 'lqqzwvayhtaaumzt'
 mail = Mail(app)
 
 
