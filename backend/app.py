@@ -140,23 +140,32 @@ def apply():
 
         conn = get_db_connection()
         cursor = conn.cursor()
+
+        # ADDED "SET NOCOUNT ON;" to fix the pyodbc "No results" error
         query = """
+            SET NOCOUNT ON;
             INSERT INTO JobApplications (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, 
             Gender, GraduationStatus, MilitaryStatus, NationalID, Nationality, Address, VoiceRecordPath, SubmittedAt)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE());
             SELECT SCOPE_IDENTITY();
         """
-        # Ensure your database has these columns (MilitaryStatus, NationalID, Nationality, Address)
         cursor.execute(query, (data.get('title'), data.get('company'), data.get('name'), data.get('email'),
                                data.get('phone'), data.get('whatsapp'), data.get('english'), data.get('experience'),
                                data.get('gender'), data.get('gradStatus'), data.get('militaryStatus', 'N/A'),
                                data.get('nationalId'), data.get('nationality'), data.get('address'), filename))
-        new_id = int(cursor.fetchone()[0])
-        conn.commit()
-        conn.close()
 
-        threading.Thread(target=ai_worker, args=(new_id, path)).start()
-        return jsonify({"message": "Application received!"}), 201
+        row = cursor.fetchone()
+        if row:
+            new_id = int(row[0])
+            conn.commit()
+            conn.close()
+
+            # Start AI process in background
+            threading.Thread(target=ai_worker, args=(new_id, path)).start()
+            return jsonify({"message": "Application received!"}), 201
+        else:
+            raise Exception("Failed to retrieve new application ID.")
+
     except Exception as e:
         print(f"❌ CRITICAL APPLY ERROR: {e}")
         return jsonify({"error": str(e)}), 500
