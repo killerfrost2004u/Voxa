@@ -24,6 +24,7 @@ from werkzeug.utils import secure_filename
 print("⏳ Loading Dark Wolves AI Engine...")
 try:
     nlp = spacy.load("en_core_web_sm")
+    # Whisper on CPU to save VRAM for Llama
     stt_model = whisper.load_model("base", device="cpu")
     print(f"✅ AI Engine Ready. Whisper: CPU | LLM: GPU/CUDA")
 except Exception as e:
@@ -52,43 +53,60 @@ app.config['MAIL_USERNAME'] = 'hima.yasser2004@gmail.com'
 app.config['MAIL_PASSWORD'] = 'lqqzwvayhtaaumzt'
 mail = Mail(app)
 
+
 def get_db_connection():
     conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={SERVER_NAME};DATABASE=DarkWolvesDB;Trusted_Connection=yes;TrustServerCertificate=yes;"
     return pyodbc.connect(conn_str)
 
+
 def analyze_speech(file_path, transcript):
-    audio_duration = librosa.get_duration(path=file_path)
-    word_count = len(transcript.split())
-    wpm = (word_count / audio_duration) * 60 if audio_duration > 0 else 0
-    doc = nlp(transcript)
-    unique_words = len(set([t.text.lower() for t in doc if t.is_alpha]))
-    return {"wpm": round(wpm, 1), "unique_words": unique_words, "duration": round(audio_duration, 1)}
+    try:
+        audio_duration = librosa.get_duration(path=file_path)
+        word_count = len(transcript.split())
+        wpm = (word_count / audio_duration) * 60 if audio_duration > 0 else 0
+        doc = nlp(transcript)
+        unique_words = len(set([t.text.lower() for t in doc if t.is_alpha]))
+        return {"wpm": round(wpm, 1), "unique_words": unique_words, "duration": round(audio_duration, 1)}
+    except Exception:
+        return {"wpm": 0, "unique_words": 0, "duration": 0}
+
 
 def ai_worker(app_id, file_path):
     print(f"🤖 [1/4] Starting AI Analysis for App #{app_id}...")
     try:
+        # Step 1: Transcription
+        print(f"🎙️ [2/4] Transcribing audio...")
         result = stt_model.transcribe(file_path, fp16=False)
         transcript = result['text']
+        print(f"📝 Transcription: {transcript[:50]}...")
+
+        # Step 2: Metrics
         metrics = analyze_speech(file_path, transcript)
 
+        # Step 3: LLM Judgment
+        print(f"🧠 [3/4] Requesting Llama 3.2 analysis...")
         prompt = f"Analyze this transcript: \"{transcript}\". Return ONLY JSON: {{\"level\": \"B2\", \"score\": 82, \"summary\": \"Candidate shows good fluency.\"}}"
         response = ollama.chat(model='llama3.2', messages=[{'role': 'user', 'content': prompt}])
 
         match = re.search(r'\{.*\}', response['message']['content'], re.DOTALL)
         if match:
             ai_data = json.loads(match.group())
+            print(f"✅ [4/4] AI Judgment Received: {ai_data['level']}")
+
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("""
                 UPDATE JobApplications 
                 SET Transcription = ?, AI_Rating = ?, AI_Summary = ?, SpeechRate = ?
                 WHERE ApplicationID = ?
-            """, (transcript, f"{ai_data['level']} ({ai_data['score']}/100)", ai_data['summary'], metrics['wpm'], app_id))
+            """, (transcript, f"{ai_data['level']} ({ai_data['score']}/100)", ai_data['summary'], metrics['wpm'],
+                  app_id))
             conn.commit()
             conn.close()
             print(f"🏁 Database updated for App {app_id}")
     except Exception as e:
         print(f"❌ AI Worker Error: {e}")
+
 
 # --- ROUTES ---
 
@@ -114,8 +132,9 @@ def get_jobs():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/api/dashboard/<email>', methods=['GET'])
-def get_dashboard(email):
+def get_user_dashboard(email):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -127,15 +146,18 @@ def get_dashboard(email):
         conn.close()
         return jsonify(apps)
     except Exception as e:
+        print(f"❌ Dashboard Error: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/apply', methods=['POST'])
 def apply():
     try:
+        if 'voiceRecord' not in request.files:
+            return jsonify({"error": "No voice record provided"}), 400
+
+        file = request.files['voiceRecord']
         data = request.form
-        file = request.files.get('voiceRecord')
-        if not file:
-            return jsonify({"error": "Voice record is required"}), 400
 
         filename = secure_filename(f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -143,6 +165,8 @@ def apply():
 
         conn = get_db_connection()
         cursor = conn.cursor()
+
+        # Using .get() with defaults prevents the 400 Bad Request Error
         query = """
             SET NOCOUNT ON;
             INSERT INTO JobApplications (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, 
@@ -150,13 +174,13 @@ def apply():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE());
             SELECT SCOPE_IDENTITY();
         """
-        # Added .get() with defaults to prevent 400 Bad Request errors
         cursor.execute(query, (
             data.get('title', 'N/A'), data.get('company', 'N/A'), data.get('name', 'N/A'),
             data.get('email', 'N/A'), data.get('phone', 'N/A'), data.get('whatsapp', 'N/A'),
             data.get('english', 'N/A'), data.get('experience', 'N/A'), data.get('gender', 'N/A'),
-            data.get('gradStatus', 'N/A'), data.get('militaryStatus', 'N/A'), data.get('nationalId', 'N/A'),
-            data.get('nationality', 'N/A'), data.get('address', 'N/A'), filename
+            data.get('gradStatus', 'N/A'), data.get('militaryStatus', 'N/A'),
+            data.get('nationalId', 'N/A'), data.get('nationality', 'N/A'),
+            data.get('address', 'N/A'), filename
         ))
 
         row = cursor.fetchone()
@@ -168,9 +192,11 @@ def apply():
             return jsonify({"message": "Application received!"}), 201
         else:
             raise Exception("No ID returned from database.")
+
     except Exception as e:
         print(f"❌ CRITICAL APPLY ERROR: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/admin/applications', methods=['GET'])
 def get_apps():
@@ -186,6 +212,7 @@ def get_apps():
         return jsonify(apps)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/admin/reanalyze', methods=['GET'])
 def reanalyze_all():
@@ -207,9 +234,11 @@ def reanalyze_all():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/uploads/<filename>')
 def serve_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000, use_reloader=False)
