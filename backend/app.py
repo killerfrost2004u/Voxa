@@ -67,7 +67,8 @@ def analyze_speech(file_path, transcript):
         doc = nlp(transcript)
         unique_words = len(set([t.text.lower() for t in doc if t.is_alpha]))
         return {"wpm": round(wpm, 1), "unique_words": unique_words, "duration": round(audio_duration, 1)}
-    except Exception:
+    except Exception as e:
+        print(f"⚠️ Metrics Error: {e}")
         return {"wpm": 0, "unique_words": 0, "duration": 0}
 
 
@@ -153,10 +154,15 @@ def get_user_dashboard(email):
 @app.route('/api/apply', methods=['POST'])
 def apply():
     try:
-        if 'voiceRecord' not in request.files:
+        # DEBUG PRINTS to see what is arriving
+        print(f"DEBUG: Request Files: {request.files.keys()}")
+        print(f"DEBUG: Request Form Keys: {request.form.keys()}")
+
+        file = request.files.get('voiceRecord')
+        if not file:
+            print("❌ Error: 'voiceRecord' is missing from request.files")
             return jsonify({"error": "No voice record provided"}), 400
 
-        file = request.files['voiceRecord']
         data = request.form
 
         filename = secure_filename(f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
@@ -166,7 +172,7 @@ def apply():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Using .get() with defaults prevents the 400 Bad Request Error
+        # Using .get() ensures we never crash on missing keys
         query = """
             SET NOCOUNT ON;
             INSERT INTO JobApplications (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, 
