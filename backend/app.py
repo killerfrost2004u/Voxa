@@ -24,7 +24,6 @@ from werkzeug.utils import secure_filename
 print("⏳ Loading Dark Wolves AI Engine...")
 try:
     nlp = spacy.load("en_core_web_sm")
-    # Whisper on CPU to save VRAM for Llama
     stt_model = whisper.load_model("base", device="cpu")
     print(f"✅ AI Engine Ready. Whisper: CPU | LLM: GPU/CUDA")
 except Exception as e:
@@ -67,8 +66,7 @@ def analyze_speech(file_path, transcript):
         doc = nlp(transcript)
         unique_words = len(set([t.text.lower() for t in doc if t.is_alpha]))
         return {"wpm": round(wpm, 1), "unique_words": unique_words, "duration": round(audio_duration, 1)}
-    except Exception as e:
-        print(f"⚠️ Metrics Error: {e}")
+    except Exception:
         return {"wpm": 0, "unique_words": 0, "duration": 0}
 
 
@@ -87,6 +85,8 @@ def ai_worker(app_id, file_path):
         # Step 3: LLM Judgment
         print(f"🧠 [3/4] Requesting Llama 3.2 analysis...")
         prompt = f"Analyze this transcript: \"{transcript}\". Return ONLY JSON: {{\"level\": \"B2\", \"score\": 82, \"summary\": \"Candidate shows good fluency.\"}}"
+
+        # We assume Ollama is running (we will restart it in CPU mode shortly)
         response = ollama.chat(model='llama3.2', messages=[{'role': 'user', 'content': prompt}])
 
         match = re.search(r'\{.*\}', response['message']['content'], re.DOTALL)
@@ -105,11 +105,22 @@ def ai_worker(app_id, file_path):
             conn.commit()
             conn.close()
             print(f"🏁 Database updated for App {app_id}")
+
     except Exception as e:
         print(f"❌ AI Worker Error: {e}")
-
-
-# --- ROUTES ---
+        # FAILURE HANDLING: Update DB so the user isn't stuck waiting
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE JobApplications 
+                SET AI_Rating = 'Failed', AI_Summary = 'Server Error: GPU Out of Memory. Restart Ollama in CPU mode.'
+                WHERE ApplicationID = ?
+            """, (app_id,))
+            conn.commit()
+            conn.close()
+        except:
+            pass
 
 @app.route('/api/jobs', methods=['GET'])
 def get_jobs():
@@ -147,24 +158,23 @@ def get_user_dashboard(email):
         conn.close()
         return jsonify(apps)
     except Exception as e:
-        print(f"❌ Dashboard Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 
 @app.route('/api/apply', methods=['POST'])
 def apply():
+    print(f"📥 Received Application Request")
     try:
-        # DEBUG PRINTS to see what is arriving
-        print(f"DEBUG: Request Files: {request.files.keys()}")
-        print(f"DEBUG: Request Form Keys: {request.form.keys()}")
+        # Debug Prints
+        print(f"DEBUG Files: {request.files.keys()}")
+        print(f"DEBUG Form: {request.form.keys()}")
 
         file = request.files.get('voiceRecord')
         if not file:
-            print("❌ Error: 'voiceRecord' is missing from request.files")
+            print("❌ No voice record found!")
             return jsonify({"error": "No voice record provided"}), 400
 
         data = request.form
-
         filename = secure_filename(f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
@@ -172,7 +182,6 @@ def apply():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Using .get() ensures we never crash on missing keys
         query = """
             SET NOCOUNT ON;
             INSERT INTO JobApplications (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, 

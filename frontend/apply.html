@@ -124,8 +124,16 @@
             status.textContent = "Checking file...";
             audio.onloadedmetadata = function() {
                 window.URL.revokeObjectURL(audio.src);
-                if(audio.duration < 90) { status.textContent = `File too short (${Math.floor(audio.duration)}s). Min 1:30.`; status.style.color = "#ef4444"; input.value = ""; }
-                else { status.textContent = `Valid File: ${file.name}`; status.style.color = "#22c55e"; icon.className = "fas fa-check-circle upload-icon"; uploadedFile = file; }
+                if(audio.duration < 90) { 
+                    status.textContent = `File too short (${Math.floor(audio.duration)}s). Min 1:30.`; 
+                    status.style.color = "#ef4444"; 
+                    input.value = ""; 
+                } else { 
+                    status.textContent = `Valid File: ${file.name}`; 
+                    status.style.color = "#22c55e"; 
+                    icon.className = "fas fa-check-circle upload-icon"; 
+                    uploadedFile = file; 
+                }
             };
         }
 
@@ -195,18 +203,16 @@
             formData.append('email', document.getElementById('app-email').value);
             formData.append('phone', document.getElementById('app-phone').value);
             formData.append('whatsapp', document.getElementById('app-whatsapp').value);
-            
             formData.append('nationalId', document.getElementById('app-national-id').value);
             formData.append('nationality', document.getElementById('app-nationality').value);
             formData.append('address', document.getElementById('app-address').value);
-            
             formData.append('gender', document.getElementById('app-gender').value);
             formData.append('gradStatus', document.getElementById('app-grad-status').value);
             formData.append('militaryStatus', document.getElementById('app-military').value || 'Not Applicable');
             formData.append('english', document.getElementById('app-english').value);
             formData.append('experience', document.getElementById('app-experience').value);
-            
-            // Only appending ONE voice file (No Duplicates)
+
+            // --- FIX: Ensure file is appended exactly ONCE ---
             formData.append('voiceRecord', finalVoiceFile);
 
             try {
@@ -218,8 +224,12 @@
                 } else {
                     alert("Error: " + result.error);
                 }
-            } catch { alert("Server Error."); }
-            finally { btn.textContent = "Submit Application"; btn.disabled = false; }
+            } catch (err) { 
+                console.error(err);
+                alert("Server Error. Check console."); 
+            } finally { 
+                btn.textContent = "Submit Application"; btn.disabled = false; 
+            }
         });
 
         document.addEventListener('DOMContentLoaded', () => {
