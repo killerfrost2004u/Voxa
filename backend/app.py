@@ -21,15 +21,13 @@ from flask_mail import Mail, Message
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import BadRequest
 
-# --- INITIALIZE DARK WOLVES AI ENGINE ---
-print("⏳ Loading Dark Wolves AI Engine...")
+# --- INITIALIZE DARK WOLVES AI ENGINE (LAZY LOAD) ---
+print("⏳ Loading Core NLP...")
 try:
     nlp = spacy.load("en_core_web_sm")
-    # OPTIMIZATION: Use 'tiny' model on CPU to save GPU VRAM for Llama
-    stt_model = whisper.load_model("tiny", device="cpu")
-    print(f"✅ AI Engine Ready. Whisper: CPU (Tiny) | LLM: Llama 3.2 (Standard)")
+    print("✅ Spacy Loaded.")
 except Exception as e:
-    print(f"❌ Initialization Error: {e}")
+    print(f"❌ Spacy Error: {e}")
 
 app = Flask(__name__)
 CORS(app)
@@ -72,13 +70,13 @@ def analyze_speech(file_path, transcript):
         return {"wpm": 0, "unique_words": 0, "duration": 0}
 
 
-# ... [Keep imports and setup code] ...
-
-# ... inside backend/app.py ...
-
 def ai_worker(app_id, file_path):
-    print(f"🤖 [1/4] Starting Strict Analysis for App #{app_id}...")
+    print(f"🤖 [1/4] Starting Analysis for App #{app_id}...")
     try:
+        # Load Whisper Locally (Saves RAM on startup)
+        print("⏳ Loading Whisper (Base)...")
+        stt_model = whisper.load_model("base", device="cpu")
+
         # Step 1: Transcription
         print(f"🎙️ [2/4] Transcribing audio...")
         result = stt_model.transcribe(file_path, fp16=False)
@@ -88,38 +86,34 @@ def ai_worker(app_id, file_path):
         # Step 2: Metrics
         metrics = analyze_speech(file_path, transcript)
 
-        # Step 3: LLM Judgment (STRICT MODE)
-        print(f"🧠 [3/4] Requesting Llama 3.2 (Strict) analysis...")
+        # Step 3: LLM Judgment (STRICT)
+        print(f"🧠 [3/4] Requesting Llama 3.2 (Strict)...")
 
         system_prompt = """
-        You are a highly critical CEFR English Examiner. Your job is to find errors.
+        You are a strict CEFR English Examiner. Grade the candidate.
 
         CRITICAL RULES:
-        1. If the speaker misses articles ("I go to store" instead of "the store"), Max Score = 65 (B1).
-        2. If the speaker uses wrong verb tenses ("I going" instead of "I am going"), Max Score = 55 (B1).
-        3. If the vocabulary is basic (only uses "good", "bad", "big"), Max Score = 60 (B1).
-        4. B2 requires complex connecting words (however, although, therefore). If absent, grade B1.
+        1. Missing articles ("I go to store") = Max B1.
+        2. Wrong verb tense = Max B1.
+        3. Basic vocab only = Max B1.
 
-        SCORING GUIDE:
-        - A2 (30-49): Broken grammar, very simple sentences.
-        - B1 (50-64): Understandable but many small grammar mistakes. Basic vocabulary.
-        - B2 (65-79): Fluent, rare grammar errors, uses idioms/complex sentences.
-        - C1 (80-94): Professional, almost native-like.
+        SCORING:
+        - A2 (30-49): Broken grammar.
+        - B1 (50-64): Understandable, basic errors.
+        - B2 (65-79): Fluent, rare errors.
+        - C1 (80-94): Professional.
 
-        Analyze the transcript strictly. Do not be generous.
-        Return ONLY valid JSON: {"level": "B1", "score": 58, "summary": "Grammar errors found: missing articles."}
+        Return ONLY valid JSON: {"level": "B1", "score": 58, "summary": "Reasoning."}
         """
 
         response = ollama.chat(model='llama3.2', messages=[
             {'role': 'system', 'content': system_prompt},
             {'role': 'user', 'content': f"Transcript: \"{transcript}\""}
-        ])
+        ], options={'temperature': 0.1})
 
         match = re.search(r'\{.*\}', response['message']['content'], re.DOTALL)
         if match:
             ai_data = json.loads(match.group())
-            print(f"✅ [4/4] Analysis Complete: {ai_data['level']} ({ai_data['score']})")
-
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("""
@@ -131,10 +125,11 @@ def ai_worker(app_id, file_path):
             conn.commit()
             conn.close()
             print(f"🏁 Database updated for App {app_id}")
+
     except Exception as e:
         print(f"❌ AI Worker Error: {e}")
 
-# ... [Keep the rest of the routes unchanged] ...
+
 # --- ROUTES ---
 
 @app.route('/api/jobs', methods=['GET'])
@@ -142,7 +137,10 @@ def get_jobs():
     try:
         encoded_name = urllib.parse.quote(SHEET_NAME)
         url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_name}"
-        response = requests.get(url)
+        response = requests.get(url, timeout=5)  # Timeout added
+        if response.status_code != 200:
+            return jsonify([])  # Return empty list instead of crashing
+
         csv_content = response.content.decode('utf-8-sig')
         raw_data = list(csv.reader(io.StringIO(csv_content)))
         transposed_data = list(map(list, itertools.zip_longest(*raw_data, fillvalue="")))
@@ -157,7 +155,8 @@ def get_jobs():
             })
         return jsonify(jobs)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Job Fetch Error: {e}")
+        return jsonify([])  # Return empty on error to keep app alive
 
 
 @app.route('/api/dashboard/<email>', methods=['GET'])
@@ -180,19 +179,14 @@ def get_user_dashboard(email):
 def apply():
     print(f"📥 Received Application Request")
     try:
-        # Explicit check for file
         if 'voiceRecord' not in request.files:
-            print("❌ Error: 'voiceRecord' is missing from request.files")
             return jsonify({"error": "No voice record provided"}), 400
 
         file = request.files['voiceRecord']
-        # Double check filename is not empty
         if file.filename == '':
-            print("❌ Error: No selected file")
             return jsonify({"error": "No selected file"}), 400
 
         data = request.form
-
         filename = secure_filename(f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
@@ -200,7 +194,6 @@ def apply():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Using .get() ensures we never crash on missing keys
         query = """
             SET NOCOUNT ON;
             INSERT INTO JobApplications (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, 
@@ -222,7 +215,6 @@ def apply():
             new_id = int(row[0])
             conn.commit()
             conn.close()
-            # Success! Return immediately. AI is manual now.
             return jsonify({"message": "Application received!"}), 201
         else:
             raise Exception("No ID returned from database.")
@@ -232,7 +224,6 @@ def apply():
         return jsonify({"error": str(e)}), 500
 
 
-# 🔥 MANUAL TRIGGER ROUTE
 @app.route('/api/admin/analyze/<int:app_id>', methods=['POST'])
 def trigger_analysis(app_id):
     try:
@@ -245,7 +236,6 @@ def trigger_analysis(app_id):
         if row and row[0]:
             path = os.path.join(app.config['UPLOAD_FOLDER'], row[0])
             if os.path.exists(path):
-                # Start AI in background ONLY when this specific button is clicked
                 threading.Thread(target=ai_worker, args=(app_id, path)).start()
                 return jsonify({"message": "Analysis started."})
             else:
