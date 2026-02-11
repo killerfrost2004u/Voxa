@@ -183,6 +183,8 @@
 
         document.getElementById('application-form').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            // --- CRITICAL FIX: Robust File Selection ---
             let finalVoiceFile = null;
             if (currentMethod === 'record') {
                 if (!audioBlob) { alert("Please record audio."); return; }
@@ -193,42 +195,54 @@
             }
 
             const btn = e.target.querySelector('button[type="submit"]');
-            btn.textContent = "Uploading..."; btn.disabled = true;
+            btn.textContent = "Uploading..."; 
+            btn.disabled = true;
 
             const params = new URLSearchParams(window.location.search);
             const formData = new FormData();
+            
+            // Safe appending of fields
             formData.append('title', params.get('title') || 'General');
             formData.append('company', params.get('company') || 'Dark Wolves');
             formData.append('name', document.getElementById('app-name').value);
             formData.append('email', document.getElementById('app-email').value);
             formData.append('phone', document.getElementById('app-phone').value);
             formData.append('whatsapp', document.getElementById('app-whatsapp').value);
+            
+            // Correct IDs matching backend expectations
             formData.append('nationalId', document.getElementById('app-national-id').value);
             formData.append('nationality', document.getElementById('app-nationality').value);
             formData.append('address', document.getElementById('app-address').value);
+            
             formData.append('gender', document.getElementById('app-gender').value);
             formData.append('gradStatus', document.getElementById('app-grad-status').value);
-            formData.append('militaryStatus', document.getElementById('app-military').value || 'Not Applicable');
+            const milStatus = document.getElementById('app-military');
+            formData.append('militaryStatus', milStatus ? milStatus.value : 'Not Applicable');
             formData.append('english', document.getElementById('app-english').value);
             formData.append('experience', document.getElementById('app-experience').value);
-
-            // --- FIX: Ensure file is appended exactly ONCE ---
+            
+            // --- CRITICAL FIX: Append file EXACTLY ONCE ---
             formData.append('voiceRecord', finalVoiceFile);
 
             try {
-                const res = await fetch('http://127.0.0.1:5000/api/apply', { method: 'POST', body: formData });
+                const res = await fetch('http://127.0.0.1:5000/api/apply', { 
+                    method: 'POST', 
+                    body: formData 
+                });
                 const result = await res.json();
+                
                 if (res.ok) {
                     alert("Success!");
                     window.location.href = 'dashboard.html';
                 } else {
-                    alert("Error: " + result.error);
+                    alert("Error: " + (result.error || "Unknown Error"));
                 }
             } catch (err) { 
                 console.error(err);
-                alert("Server Error. Check console."); 
+                alert("Server Connection Error. Check console."); 
             } finally { 
-                btn.textContent = "Submit Application"; btn.disabled = false; 
+                btn.textContent = "Submit Application"; 
+                btn.disabled = false; 
             }
         });
 
