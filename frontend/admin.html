@@ -7,6 +7,14 @@
     <link rel="stylesheet" href="css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .btn-analyze {
+            background-color: #2563eb; color: white; border: none; padding: 6px 12px;
+            border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: 0.2s;
+        }
+        .btn-analyze:hover { background-color: #1d4ed8; }
+        .btn-analyze:disabled { background-color: #4b5563; cursor: not-allowed; }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -32,8 +40,7 @@
                         <th width="50">ID</th>
                         <th width="180">Candidate</th>
                         <th width="220">Voice Intro</th>
-                        <th width="150">AI Grade</th>
-                        <th width="200">Contact</th>
+                        <th width="180">AI Grade</th> <th width="200">Contact</th>
                         <th>Experience</th>
                         <th width="120">Date</th>
                     </tr>
@@ -70,23 +77,33 @@
                 appData = await res.json();
                 
                 tbody.innerHTML = appData.map(app => {
-                    // Logic to handle missing audio files and prevent 404s
                     const hasAudio = app.VoiceRecordPath && app.VoiceRecordPath !== 'null' && app.VoiceRecordPath !== 'No_File';
                     const audioContent = hasAudio 
                         ? `<audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}" style="height:30px; width:180px;"></audio>` 
                         : '<span style="color:#666; font-style:italic;">No Audio</span>';
+
+                    // --- Manual Trigger Logic ---
+                    let aiContent;
+                    if (app.AI_Rating && app.AI_Rating !== 'null') {
+                        // Analysis Done: Show Grade + View Button
+                        aiContent = `
+                            <div class="ai-grade-cell">
+                                <span class="badge badge-ai">${app.AI_Rating}</span>
+                                <button onclick="openModal(${app.ApplicationID})" class="report-link">View</button>
+                            </div>`;
+                    } else if (hasAudio) {
+                        // No Analysis yet: Show Start Button
+                        aiContent = `<button id="btn-${app.ApplicationID}" onclick="startAnalysis(${app.ApplicationID})" class="btn-analyze"><i class="fas fa-magic"></i> Start AI</button>`;
+                    } else {
+                        aiContent = '<span style="color:#666;">N/A</span>';
+                    }
 
                     return `
                         <tr>
                             <td>#${app.ApplicationID}</td>
                             <td><b>${app.FullName}</b><br><small>${app.JobTitle}</small></td>
                             <td>${audioContent}</td>
-                            <td>
-                                <div class="ai-grade-cell">
-                                    <span class="badge badge-ai">${app.AI_Rating || 'Analyzing...'}</span>
-                                    <button onclick="openModal(${app.ApplicationID})" class="report-link">View Analysis</button>
-                                </div>
-                            </td>
+                            <td>${aiContent}</td>
                             <td>${app.Email}<br>${app.Phone}</td>
                             <td><div class="exp-cell">${app.Experience}</div></td>
                             <td>${app.SubmittedAt}</td>
@@ -95,6 +112,27 @@
                 }).join('');
             } catch (err) {
                 console.error("Failed to load apps:", err);
+            }
+        }
+
+        async function startAnalysis(id) {
+            const btn = document.getElementById(`btn-${id}`);
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            
+            try {
+                const res = await fetch(`http://127.0.0.1:5000/api/admin/analyze/${id}`, { method: 'POST' });
+                if (res.ok) {
+                    // Poll for updates or just wait
+                    setTimeout(() => checkAuthAndLoad(), 5000); // Auto-refresh after 5s
+                } else {
+                    alert("Analysis Failed to Start");
+                    btn.disabled = false;
+                    btn.innerText = "Retry AI";
+                }
+            } catch (e) {
+                alert("Server Error");
+                btn.disabled = false;
             }
         }
 

@@ -25,8 +25,9 @@ from werkzeug.exceptions import BadRequest
 print("⏳ Loading Dark Wolves AI Engine...")
 try:
     nlp = spacy.load("en_core_web_sm")
-    stt_model = whisper.load_model("base", device="cpu")
-    print(f"✅ AI Engine Ready. Whisper: CPU | LLM: GPU/CUDA")
+    # OPTIMIZATION: Use 'tiny' model on CPU to save GPU VRAM for Llama
+    stt_model = whisper.load_model("tiny", device="cpu")
+    print(f"✅ AI Engine Ready. Whisper: CPU (Tiny) | LLM: GPU")
 except Exception as e:
     print(f"❌ Initialization Error: {e}")
 
@@ -86,6 +87,8 @@ def ai_worker(app_id, file_path):
         # Step 3: LLM Judgment
         print(f"🧠 [3/4] Requesting Llama 3.2 analysis...")
         prompt = f"Analyze this transcript: \"{transcript}\". Return ONLY JSON: {{\"level\": \"B2\", \"score\": 82, \"summary\": \"Candidate shows good fluency.\"}}"
+
+        # Using standard llama3.2 (or use llama3.2:1b if you pulled the smaller one)
         response = ollama.chat(model='llama3.2', messages=[{'role': 'user', 'content': prompt}])
 
         match = re.search(r'\{.*\}', response['message']['content'], re.DOTALL)
@@ -153,25 +156,17 @@ def get_user_dashboard(email):
 def apply():
     print(f"📥 Received Application Request")
     try:
-        # 1. Safety Check: Try to access files without crashing
-        try:
-            files_dict = request.files
-            form_dict = request.form
-        except BadRequest:
-            print("❌ BROWSER ERROR: The browser sent a corrupted request (likely duplicate fields).")
-            return jsonify({"error": "Browser sent corrupted data. Please refresh the page."}), 400
+        files_dict = request.files
+        form_dict = request.form
 
-        # 2. Get the file safely
         file = files_dict.get('voiceRecord')
         if not file:
-            print("❌ ERROR: No voice record found in request.")
             return jsonify({"error": "No voice record provided"}), 400
 
         filename = secure_filename(f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
 
-        # 3. Database Insert
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -196,13 +191,37 @@ def apply():
             new_id = int(row[0])
             conn.commit()
             conn.close()
-            threading.Thread(target=ai_worker, args=(new_id, path)).start()
+            # 🔥 CHANGED: We DO NOT start the AI here anymore.
+            # threading.Thread(target=ai_worker, args=(new_id, path)).start()
             return jsonify({"message": "Application received!"}), 201
         else:
             raise Exception("No ID returned from database.")
 
     except Exception as e:
         print(f"❌ CRITICAL APPLY ERROR: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# 🔥 NEW ROUTE: Manual Trigger for Admin
+@app.route('/api/admin/analyze/<int:app_id>', methods=['POST'])
+def trigger_analysis(app_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT VoiceRecordPath FROM JobApplications WHERE ApplicationID = ?", (app_id,))
+        row = cursor.fetchone()
+        conn.close()
+
+        if row and row[0]:
+            path = os.path.join(app.config['UPLOAD_FOLDER'], row[0])
+            if os.path.exists(path):
+                # Start AI in background ONLY when this specific button is clicked
+                threading.Thread(target=ai_worker, args=(app_id, path)).start()
+                return jsonify({"message": "Analysis started."})
+            else:
+                return jsonify({"error": "File not found."}), 404
+        return jsonify({"error": "Application not found."}), 404
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
@@ -218,27 +237,6 @@ def get_apps():
             if a['SubmittedAt']: a['SubmittedAt'] = a['SubmittedAt'].strftime('%Y-%m-%d %H:%M')
         conn.close()
         return jsonify(apps)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/api/admin/reanalyze', methods=['GET'])
-def reanalyze_all():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT ApplicationID, VoiceRecordPath FROM JobApplications WHERE Transcription IS NULL")
-        pending = cursor.fetchall()
-        conn.close()
-
-        count = 0
-        for row in pending:
-            app_id, filename = row
-            path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            if os.path.exists(path):
-                threading.Thread(target=ai_worker, args=(app_id, path)).start()
-                count += 1
-        return jsonify({"message": f"Started analysis for {count} records."})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
