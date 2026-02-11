@@ -9,11 +9,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         .btn-analyze {
-            background-color: #2563eb; color: white; border: none; padding: 6px 12px;
-            border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: 0.2s;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white; border: none; padding: 8px 16px;
+            border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;
+            box-shadow: 0 2px 5px rgba(37, 99, 235, 0.3); transition: 0.2s;
         }
-        .btn-analyze:hover { background-color: #1d4ed8; }
-        .btn-analyze:disabled { background-color: #4b5563; cursor: not-allowed; }
+        .btn-analyze:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(37, 99, 235, 0.4); }
+        .btn-analyze:disabled { background: #4b5563; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        /* New Re-Validate Button Styles */
+        .btn-revalidate {
+            background: none; border: 1px solid #d1d5db; color: #4b5563; 
+            padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-left: 8px;
+            font-size: 0.8rem; transition: 0.2s;
+        }
+        .btn-revalidate:hover { background: #f3f4f6; color: #2563eb; border-color: #2563eb; }
+        .ai-actions { display: flex; align-items: center; gap: 5px; }
     </style>
 </head>
 <body>
@@ -40,7 +51,8 @@
                         <th width="50">ID</th>
                         <th width="180">Candidate</th>
                         <th width="220">Voice Intro</th>
-                        <th width="180">AI Grade</th> <th width="200">Contact</th>
+                        <th width="200">AI Grade</th>
+                        <th width="200">Contact</th>
                         <th>Experience</th>
                         <th width="120">Date</th>
                     </tr>
@@ -82,17 +94,19 @@
                         ? `<audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}" style="height:30px; width:180px;"></audio>` 
                         : '<span style="color:#666; font-style:italic;">No Audio</span>';
 
-                    // --- Manual Trigger Logic ---
                     let aiContent;
                     if (app.AI_Rating && app.AI_Rating !== 'null') {
-                        // Analysis Done: Show Grade + View Button
+                        // Analysis Done: Show Grade + Re-Validate Button
                         aiContent = `
-                            <div class="ai-grade-cell">
+                            <div class="ai-actions">
                                 <span class="badge badge-ai">${app.AI_Rating}</span>
                                 <button onclick="openModal(${app.ApplicationID})" class="report-link">View</button>
+                                <button id="btn-${app.ApplicationID}" onclick="startAnalysis(${app.ApplicationID})" class="btn-revalidate" title="Re-Run Analysis">
+                                    <i class="fas fa-redo"></i>
+                                </button>
                             </div>`;
                     } else if (hasAudio) {
-                        // No Analysis yet: Show Start Button
+                        // Analysis Pending: Show Start Button
                         aiContent = `<button id="btn-${app.ApplicationID}" onclick="startAnalysis(${app.ApplicationID})" class="btn-analyze"><i class="fas fa-magic"></i> Start AI</button>`;
                     } else {
                         aiContent = '<span style="color:#666;">N/A</span>';
@@ -117,22 +131,33 @@
 
         async function startAnalysis(id) {
             const btn = document.getElementById(`btn-${id}`);
+            const originalText = btn.innerHTML;
+            
+            // Disable button and show loading state
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            if(btn.classList.contains('btn-analyze')) btn.innerHTML += ' Analyzing...';
             
             try {
+                // Call the Manual Trigger Route
                 const res = await fetch(`http://127.0.0.1:5000/api/admin/analyze/${id}`, { method: 'POST' });
                 if (res.ok) {
-                    // Poll for updates or just wait
-                    setTimeout(() => checkAuthAndLoad(), 5000); // Auto-refresh after 5s
+                    // Refresh data after 2 seconds to check if AI started writing to DB
+                    // Note: Real-time update requires WebSocket, but polling works for this
+                    setTimeout(() => {
+                        checkAuthAndLoad();
+                        // Re-enable button after 30s timeout (AI usually takes this long)
+                        setTimeout(() => { btn.disabled = false; btn.innerHTML = originalText; }, 30000);
+                    }, 2000);
                 } else {
-                    alert("Analysis Failed to Start");
+                    alert("Failed to start analysis.");
                     btn.disabled = false;
-                    btn.innerText = "Retry AI";
+                    btn.innerHTML = originalText;
                 }
             } catch (e) {
                 alert("Server Error");
                 btn.disabled = false;
+                btn.innerHTML = originalText;
             }
         }
 
