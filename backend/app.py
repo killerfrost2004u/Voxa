@@ -19,6 +19,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_mail import Mail, Message
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import BadRequest
 
 # --- INITIALIZE DARK WOLVES AI ENGINE ---
 print("⏳ Loading Dark Wolves AI Engine...")
@@ -85,8 +86,6 @@ def ai_worker(app_id, file_path):
         # Step 3: LLM Judgment
         print(f"🧠 [3/4] Requesting Llama 3.2 analysis...")
         prompt = f"Analyze this transcript: \"{transcript}\". Return ONLY JSON: {{\"level\": \"B2\", \"score\": 82, \"summary\": \"Candidate shows good fluency.\"}}"
-
-        # We assume Ollama is running (we will restart it in CPU mode shortly)
         response = ollama.chat(model='llama3.2', messages=[{'role': 'user', 'content': prompt}])
 
         match = re.search(r'\{.*\}', response['message']['content'], re.DOTALL)
@@ -105,22 +104,11 @@ def ai_worker(app_id, file_path):
             conn.commit()
             conn.close()
             print(f"🏁 Database updated for App {app_id}")
-
     except Exception as e:
         print(f"❌ AI Worker Error: {e}")
-        # FAILURE HANDLING: Update DB so the user isn't stuck waiting
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute("""
-                UPDATE JobApplications 
-                SET AI_Rating = 'Failed', AI_Summary = 'Server Error: GPU Out of Memory. Restart Ollama in CPU mode.'
-                WHERE ApplicationID = ?
-            """, (app_id,))
-            conn.commit()
-            conn.close()
-        except:
-            pass
+
+
+# --- ROUTES ---
 
 @app.route('/api/jobs', methods=['GET'])
 def get_jobs():
@@ -165,20 +153,25 @@ def get_user_dashboard(email):
 def apply():
     print(f"📥 Received Application Request")
     try:
-        # Debug Prints
-        print(f"DEBUG Files: {request.files.keys()}")
-        print(f"DEBUG Form: {request.form.keys()}")
+        # 1. Safety Check: Try to access files without crashing
+        try:
+            files_dict = request.files
+            form_dict = request.form
+        except BadRequest:
+            print("❌ BROWSER ERROR: The browser sent a corrupted request (likely duplicate fields).")
+            return jsonify({"error": "Browser sent corrupted data. Please refresh the page."}), 400
 
-        file = request.files.get('voiceRecord')
+        # 2. Get the file safely
+        file = files_dict.get('voiceRecord')
         if not file:
-            print("❌ No voice record found!")
+            print("❌ ERROR: No voice record found in request.")
             return jsonify({"error": "No voice record provided"}), 400
 
-        data = request.form
         filename = secure_filename(f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
 
+        # 3. Database Insert
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -190,12 +183,12 @@ def apply():
             SELECT SCOPE_IDENTITY();
         """
         cursor.execute(query, (
-            data.get('title', 'N/A'), data.get('company', 'N/A'), data.get('name', 'N/A'),
-            data.get('email', 'N/A'), data.get('phone', 'N/A'), data.get('whatsapp', 'N/A'),
-            data.get('english', 'N/A'), data.get('experience', 'N/A'), data.get('gender', 'N/A'),
-            data.get('gradStatus', 'N/A'), data.get('militaryStatus', 'N/A'),
-            data.get('nationalId', 'N/A'), data.get('nationality', 'N/A'),
-            data.get('address', 'N/A'), filename
+            form_dict.get('title', 'N/A'), form_dict.get('company', 'N/A'), form_dict.get('name', 'N/A'),
+            form_dict.get('email', 'N/A'), form_dict.get('phone', 'N/A'), form_dict.get('whatsapp', 'N/A'),
+            form_dict.get('english', 'N/A'), form_dict.get('experience', 'N/A'), form_dict.get('gender', 'N/A'),
+            form_dict.get('gradStatus', 'N/A'), form_dict.get('militaryStatus', 'N/A'),
+            form_dict.get('nationalId', 'N/A'), form_dict.get('nationality', 'N/A'),
+            form_dict.get('address', 'N/A'), filename
         ))
 
         row = cursor.fetchone()
