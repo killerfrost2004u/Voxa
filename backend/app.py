@@ -26,9 +26,9 @@ from werkzeug.exceptions import BadRequest
 print("⏳ Loading Dark Wolves AI Engine...")
 try:
     nlp = spacy.load("en_core_web_sm")
-    # Using 'base' model for better accuracy
+    # Base model for standard accuracy
     stt_model = whisper.load_model("base", device="cpu")
-    print(f"✅ AI Engine Ready. Whisper: Base (Standard) | LLM: Llama 3.2 (Fair Judge)")
+    print(f"✅ AI Engine Ready. Whisper: Base | LLM: Llama 3.2 (Fair Judge)")
 except Exception as e:
     print(f"❌ Initialization Error: {e}")
 
@@ -57,7 +57,7 @@ mail = Mail(app)
 
 
 def get_db_connection():
-    # Added timeout to prevent crashes when CPU is busy
+    # Timeout increased to 30s to prevent SQL disconnects during AI load
     conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={SERVER_NAME};DATABASE=DarkWolvesDB;Trusted_Connection=yes;TrustServerCertificate=yes;Login Timeout=30;"
     return pyodbc.connect(conn_str)
 
@@ -68,15 +68,12 @@ def analyze_speech(file_path, transcript):
         words = transcript.split()
         word_count = len(words)
 
-        # 1. Speech Rate (Words Per Minute)
         wpm = (word_count / audio_duration) * 60 if audio_duration > 0 else 0
 
-        # 2. Filler Word Count (Measures hesitation)
         fillers = ['um', 'uh', 'ah', 'like', 'you know', 'err', 'hmm', 'er']
         filler_count = sum(1 for w in words if w.lower() in fillers)
         filler_ratio = (filler_count / word_count) * 100 if word_count > 0 else 0
 
-        # 3. Unique Vocabulary
         doc = nlp(transcript)
         unique_words = len(set([t.text.lower() for t in doc if t.is_alpha]))
 
@@ -100,10 +97,9 @@ def ai_worker(app_id, file_path):
         transcript = result['text']
         print(f"📝 Transcription: {transcript[:50]}...")
 
-        # Step 2: Metrics (Get Accent/Fluency Clues)
+        # Step 2: Metrics
         metrics = analyze_speech(file_path, transcript)
 
-        # Judge Fluency based on data
         fluency_note = "Normal flow."
         if metrics['wpm'] < 90:
             fluency_note = "Very slow/hesitant speech."
@@ -115,42 +111,42 @@ def ai_worker(app_id, file_path):
         else:
             fluency_note += " Clear speech (few fillers)."
 
-        # Step 3: LLM Judgment (FAIR & DATA-DRIVEN)
+        # Step 3: LLM Judgment
         print(f"🧠 [3/4] Requesting Llama 3.2 (Fair Judge)...")
 
         system_prompt = f"""
-        You are an expert CEFR English Examiner. Grade the candidate fairly based on text AND fluency data.
+        You are an expert CEFR English Examiner. Grade based on text AND fluency data.
 
         CANDIDATE DATA:
-        - Speech Rate: {metrics['wpm']} WPM (Native range: 120-150).
-        - Fluency Assessment: {fluency_note}
-        - Hesitation Markers (Fillers): {metrics['filler_count']}
+        - Speech Rate: {metrics['wpm']} WPM (Native: 120-150).
+        - Fluency: {fluency_note}
+        - Hesitation Markers: {metrics['filler_count']}
 
         SCORING RUBRIC (FAIR):
-        - A2 (30-49): Slow speech (<90 WPM), broken grammar, simple words.
-        - B1 (50-64): Understandable but slow/hesitant. Basic grammar errors.
-        - B2 (65-79): Fluent speed (>110 WPM), clear ideas. Minor grammar slips are OK.
-        - C1 (80-95): Fast, natural flow, complex vocabulary, near-native.
+        - A2 (30-49): Slow (<90 WPM), broken grammar.
+        - B1 (50-64): Understandable but slow. Basic errors.
+        - B2 (65-79): Fluent (>110 WPM), clear ideas. Minor errors OK.
+        - C1 (80-95): Fast, natural, complex vocab.
 
         INSTRUCTIONS:
-        1. If WPM is low (<90), cap score at B1 (Max 60), even if grammar is perfect.
-        2. If they speak fast (>120) and clear, give a fluency bonus (+5 points).
-        3. Do not punish "accent" unless it makes the text unintelligible. Focus on clarity.
+        1. If WPM < 90, cap at B1 (Max 60).
+        2. If WPM > 120 and clear, +5 points bonus.
+        3. Ignore accent unless unintelligible.
 
-        Return ONLY valid JSON: {{"level": "B2", "score": 75, "summary": "Fluent speed, good vocab, minor grammar errors."}}
+        Return ONLY valid JSON: {{"level": "B2", "score": 75, "summary": "Fluent speed, good vocab."}}
         """
 
         response = ollama.chat(model='llama3.2', messages=[
             {'role': 'system', 'content': system_prompt},
             {'role': 'user', 'content': f"Transcript: \"{transcript}\""}
-        ], options={'temperature': 0.2})  # 0.2 = Consistent but fair
+        ], options={'temperature': 0.2})
 
         match = re.search(r'\{.*\}', response['message']['content'], re.DOTALL)
         if match:
             ai_data = json.loads(match.group())
             print(f"✅ [4/4] Analysis Complete: {ai_data['level']} ({ai_data['score']})")
 
-            # Database Retry Logic (Prevent Timeouts)
+            # DB Retry Logic
             for attempt in range(3):
                 try:
                     conn = get_db_connection()
@@ -218,19 +214,29 @@ def get_user_dashboard(email):
 
 @app.route('/api/apply', methods=['POST'])
 def apply():
-    print(f"📥 Received Application Request")
+    print(f"\n📥 [DEBUG] Processing Application...")
     try:
-        if 'voiceRecord' not in request.files: return jsonify({"error": "No voice record provided"}), 400
-        file = request.files['voiceRecord']
-        if file.filename == '': return jsonify({"error": "No selected file"}), 400
+        # 1. FILE CHECK
+        if 'voiceRecord' not in request.files:
+            print("   ❌ Missing 'voiceRecord' in request")
+            return jsonify({"error": "No voice record provided"}), 400
 
+        file = request.files['voiceRecord']
+        if file.filename == '':
+            print("   ❌ Empty filename")
+            return jsonify({"error": "No selected file"}), 400
+
+        # 2. SAVE FILE
         data = request.form
         filename = secure_filename(f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
+        print(f"   ✅ File saved: {filename}")
 
+        # 3. DB INSERT
         conn = get_db_connection()
         cursor = conn.cursor()
+
         query = """
             SET NOCOUNT ON;
             INSERT INTO JobApplications (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, 
@@ -238,24 +244,31 @@ def apply():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE());
             SELECT SCOPE_IDENTITY();
         """
-        cursor.execute(query, (
+
+        # Use .get() for safety
+        params = (
             data.get('title', 'N/A'), data.get('company', 'N/A'), data.get('name', 'N/A'),
             data.get('email', 'N/A'), data.get('phone', 'N/A'), data.get('whatsapp', 'N/A'),
             data.get('english', 'N/A'), data.get('experience', 'N/A'), data.get('gender', 'N/A'),
             data.get('gradStatus', 'N/A'), data.get('militaryStatus', 'N/A'),
             data.get('nationalId', 'N/A'), data.get('nationality', 'N/A'),
             data.get('address', 'N/A'), filename
-        ))
+        )
+
+        cursor.execute(query, params)
         row = cursor.fetchone()
+
         if row:
             new_id = int(row[0])
             conn.commit()
             conn.close()
+            print(f"   ✅ DB Success: ID {new_id}")
             return jsonify({"message": "Application received!"}), 201
         else:
-            raise Exception("No ID returned from database.")
+            raise Exception("DB Insert Failed (No ID returned)")
+
     except Exception as e:
-        print(f"❌ CRITICAL APPLY ERROR: {e}")
+        print(f"   ❌ CRITICAL APPLY ERROR: {e}")
         return jsonify({"error": str(e)}), 500
 
 
