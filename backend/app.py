@@ -2,36 +2,27 @@ import os
 import re
 import threading
 import json
-import whisper
 import spacy
 import librosa
-import numpy as np  # Needed for silence calculation
+import numpy as np
 import pyodbc
 import requests
 import time
 import datetime
 import torch
+import gc  # Garbage Collector
+import csv  # Restored for Jobs
+import io  # Restored for Jobs
+import urllib.parse  # Restored for Jobs
+import itertools  # Restored for Jobs
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_mail import Mail
 from werkzeug.utils import secure_filename
 
-# --- INITIALIZE AI ENGINE ---
-print("⏳ Loading Dark Wolves AI Engine...")
-try:
-    nlp = spacy.load("en_core_web_sm")
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"⚙️ Hardware Acceleration: {device.upper()}")
-
-    # UPGRADE 1: Use 'small.en'. It is stricter than 'base' and captures 'umms' better.
-    stt_model = whisper.load_model("small.en", device=device)
-    print(f"✅ AI Ready. Whisper: Small.en | LLM: Mistral")
-except Exception as e:
-    print(f"❌ Initialization Error: {e}")
-
-app = Flask(__name__)
-CORS(app)
+# NOTE: We do NOT import models globally anymore to save memory
+import whisper
+from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
 
 # --- CONFIGURATION ---
 SERVER_NAME = r'localhost\SQLEXPRESS'
@@ -39,9 +30,10 @@ SHEET_ID = "1oYDMBIXMCrIdfDbf-EFhuPal0NYo5jphkkX3AWYonjU"
 SHEET_NAME = "Wolves Master sheet 2"
 UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER): os.makedirs(UPLOAD_FOLDER)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# --- EMAIL CONFIGURATION ---
+app = Flask(__name__)
+CORS(app)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_TLS'] = False
@@ -50,100 +42,142 @@ app.config['MAIL_USERNAME'] = 'hima.yasser2004@gmail.com'
 app.config['MAIL_PASSWORD'] = 'lqqzwvayhtaaumzt'
 mail = Mail(app)
 
+# Global NLP (Small enough to keep)
+nlp = spacy.load("en_core_web_sm")
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+print(f"✅ System Ready. Hardware: {device.upper()}")
+
 
 def get_db_connection():
     conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={SERVER_NAME};DATABASE=DarkWolvesDB;Trusted_Connection=yes;TrustServerCertificate=yes;Login Timeout=60;"
-    return pyodbc.connect(conn_str)
+    # Retry logic for busy server
+    for attempt in range(3):
+        try:
+            return pyodbc.connect(conn_str, timeout=10)
+        except pyodbc.Error as e:
+            if attempt == 2: raise e
+            time.sleep(1)
+    return None
 
 
-# --- THE "VIRTUAL EAR" (Acoustic Analysis) ---
-def analyze_speech(file_path, transcript):
+# --- MEMORY CLEANER ---
+def clean_memory():
+    if device == "cuda":
+        torch.cuda.empty_cache()
+    gc.collect()
+
+
+# --- STEP 1: NEURAL EAR (Wav2Vec2) ---
+def run_wav2vec_analysis(file_path):
+    print("⏳ Loading Neural Ear (Wav2Vec2)...")
     try:
-        # Load Audio
-        y, sr = librosa.load(file_path)
-        total_duration = librosa.get_duration(y=y, sr=sr)
+        # Load Model
+        processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-960h")
+        model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-960h").to(device)
 
-        # 1. MEASURE SILENCE (The "Fluency" Detector)
-        # Split audio into non-silent chunks
-        non_silent_intervals = librosa.effects.split(y, top_db=20)  # 20dB threshold
-        non_silent_time = sum((end - start) for start, end in non_silent_intervals) / sr
+        # Process Audio
+        speech, rate = librosa.load(file_path, sr=16000)
+        inputs = processor(speech, sampling_rate=16000, return_tensors="pt", padding=True).to(device)
 
-        silence_time = total_duration - non_silent_time
-        silence_ratio = (silence_time / total_duration) * 100 if total_duration > 0 else 0
+        with torch.no_grad():
+            logits = model(inputs.input_values).logits
 
-        # 2. MEASURE TRUE SPEED
-        words = transcript.split()
-        word_count = len(words)
+        probs = torch.nn.functional.softmax(logits, dim=-1)
+        confidence = torch.max(probs, dim=-1).values
+        avg_conf = torch.mean(confidence).item() * 100
 
-        # WPM based on TOTAL time (includes hesitation)
-        wpm = (word_count / total_duration) * 60
+        # Normalize
+        if avg_conf > 95:
+            score = 98
+        elif avg_conf > 88:
+            score = 85
+        elif avg_conf > 78:
+            score = 65
+        else:
+            score = 45
 
-        # Articulation Rate (Speed when actually talking)
-        articulation_rate = (word_count / non_silent_time) * 60 if non_silent_time > 0 else 0
+        # DELETE MODEL TO FREE MEMORY
+        del model
+        del processor
+        del inputs
+        clean_memory()
 
-        # 3. FILLERS
-        fillers = ['um', 'uh', 'ah', 'like', 'you know', 'err', 'hmm']
-        filler_count = sum(1 for w in words if w.lower() in fillers)
-
-        doc = nlp(transcript)
-        unique_words = len(set([t.text.lower() for t in doc if t.is_alpha]))
-
-        return {
-            "wpm": round(wpm, 1),
-            "articulation": round(articulation_rate, 1),
-            "silence_pct": round(silence_ratio, 1),
-            "unique_words": unique_words,
-            "filler_count": filler_count
-        }
+        return score, avg_conf
     except Exception as e:
-        print(f"⚠️ Metrics Error: {e}")
-        return {"wpm": 0, "articulation": 0, "silence_pct": 0, "unique_words": 0, "filler_count": 0}
+        print(f"⚠️ Wav2Vec Error: {e}")
+        return 50, 0
 
+
+# --- STEP 2: SCRIBE (Whisper) ---
+def run_whisper_transcription(file_path):
+    print("⏳ Loading Scribe (Whisper)...")
+    try:
+        model = whisper.load_model("small.en", device=device)
+        result = model.transcribe(file_path, fp16=False)
+        text = result['text']
+
+        # DELETE MODEL
+        del model
+        clean_memory()
+
+        return text
+    except Exception as e:
+        print(f"⚠️ Whisper Error: {e}")
+        return ""
+
+
+# --- STEP 3: METRICS (Librosa) ---
+def get_fluency_metrics(file_path):
+    try:
+        y, sr = librosa.load(file_path)
+        duration = librosa.get_duration(y=y, sr=sr)
+        non_silent = librosa.effects.split(y, top_db=25)
+        speaking_time = sum((end - start) for start, end in non_silent) / sr
+        silence_pct = ((duration - speaking_time) / duration) * 100
+        return {"silence": round(silence_pct, 1), "duration": duration}
+    except:
+        return {"silence": 0, "duration": 1}
+
+
+# --- WORKER ---
 
 def ai_worker(app_id, file_path):
-    print(f"🤖 [1/4] Starting Deep Analysis for App #{app_id}...")
+    print(f"🤖 Processing App #{app_id}...")
     try:
-        # 1. Transcribe (Small.en model)
-        print(f"🎙️ [2/4] Transcribing...")
-        result = stt_model.transcribe(file_path, fp16=False, language='en')
-        transcript = result['text']
+        # 1. Wav2Vec
+        pronunciation_score, raw_conf = run_wav2vec_analysis(file_path)
+        print(f"👂 Pronunciation: {pronunciation_score} (Raw {round(raw_conf, 1)})")
 
-        # 2. Metrics (The "Virtual Ear")
-        metrics = analyze_speech(file_path, transcript)
+        # 2. Whisper
+        transcript = run_whisper_transcription(file_path)
+        print(f"📝 Transcript: {transcript[:40]}...")
 
-        # GENERATE ACOUSTIC PROFILE
-        profile = "Native-like flow."
-        if metrics['silence_pct'] > 30:
-            profile = "Disjointed. Long pauses/hesitation (Low Fluency)."
-        elif metrics['silence_pct'] > 15:
-            profile = "Moderate hesitation."
+        # 3. Acoustics
+        acoustics = get_fluency_metrics(file_path)
+        wpm = (len(transcript.split()) / acoustics['duration']) * 60 if acoustics['duration'] > 0 else 0
+        print(f"📊 DATA: Silence={acoustics['silence']}% | WPM={int(wpm)}")
 
-        if metrics['wpm'] < 100:
-            profile += " Very slow speaking pace."
-
-        print(f"📊 Acoustics: Silence={metrics['silence_pct']}% | WPM={metrics['wpm']} | Profile={profile}")
-
-        # 3. MISTRAL PROMPT (With Acoustic Data)
-        print(f"🧠 [3/4] Requesting Mistral (With Acoustic Data)...")
-
+        # 4. Mistral
+        print(f"🧠 Requesting Mistral...")
         system_prompt = f"""
-        You are a strict IELTS/CEFR Examiner.
-        You must grade based on Transcript Complexity AND Acoustic Fluency.
+        You are a CEFR Examiner. Grade using this Sensor Data.
 
-        === CANDIDATE ACOUSTICS (THE "EAR") ===
-        - Silence Ratio: {metrics['silence_pct']}% (Native is < 15%. High silence = struggling).
-        - Speaking Pace: {metrics['wpm']} WPM (Native is 130-150).
-        - Fluency Profile: {profile}
-
-        === GRADING RULES ===
-        1. **Automatic Downgrade:** If Silence > 25% OR Pace < 90 WPM, the MAXIMUM score is B1 (60), no matter how good the grammar is.
-        2. **C1 Requirement:** Must have Fast Pace (>120 WPM), Low Silence (<15%), AND Complex Vocabulary ("However", "Therefore").
-        3. **B2 Requirement:** Good Pace (>110 WPM), Moderate Silence allowed.
+        === SENSOR DATA ===
+        1. PRONUNCIATION: {pronunciation_score}/100.
+        2. SILENCE: {acoustics['silence']}%.
+        3. SPEED: {int(wpm)} WPM.
 
         === TRANSCRIPT ===
         "{transcript}"
 
-        Return JSON: {{"level": "B1", "score": 55, "summary": "Grammar is okay, but 30% silence indicates struggle to find words."}}
+        === LOGIC ===
+        - IF Pronunciation > 90 AND WPM > 100 -> GRADE C1.
+        - IF Pronunciation > 80 -> GRADE B2.
+        - ELSE -> GRADE B1.
+
+        Return ONLY valid JSON in this format: 
+        {{"level": "B2", "score": 75, "summary": "Reasoning here."}}
         """
 
         response = requests.post(
@@ -156,43 +190,77 @@ def ai_worker(app_id, file_path):
             },
             timeout=900
         )
-        response.raise_for_status()
-        content = response.json()['message']['content']
-        match = re.search(r'\{.*\}', content, re.DOTALL)
 
-        if match:
-            ai_data = json.loads(match.group())
-            rating = f"{ai_data['level']} ({ai_data['score']})"
-            print(f"✅ [4/4] Final Score: {rating}")
+        if response.status_code == 200:
+            content = response.json()['message']['content']
 
-            for i in range(3):
-                try:
-                    conn = get_db_connection()
-                    cursor = conn.cursor()
-                    cursor.execute(
-                        "UPDATE JobApplications SET Transcription=?, AI_Rating=?, AI_Summary=?, SpeechRate=? WHERE ApplicationID=?",
-                        (transcript, rating, ai_data['summary'], metrics['wpm'], app_id))
-                    conn.commit()
-                    conn.close()
-                    print("🏁 Saved.")
-                    break
-                except:
-                    time.sleep(1)
+            # --- JSON REPAIR LOGIC ---
+            # Attempt to find JSON inside the text
+            match = re.search(r'\{.*\}', content, re.DOTALL)
+            if match:
+                json_str = match.group()
+            else:
+                # If Mistral failed to give JSON, force a default based on logic
+                print("⚠️ Mistral failed to output JSON. Using fallback logic.")
+                if pronunciation_score > 85:
+                    json_str = '{"level": "C1", "score": 88, "summary": "High pronunciation score detected."}'
+                elif pronunciation_score > 70:
+                    json_str = '{"level": "B2", "score": 75, "summary": "Good pronunciation but some issues."}'
+                else:
+                    json_str = '{"level": "B1", "score": 60, "summary": "Low pronunciation score."}'
+
+            ai_data = json.loads(json_str)
+            final_grade = f"{ai_data['level']} ({ai_data['score']})"
+            print(f"✅ FINAL GRADE: {final_grade}")
+
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute(
+                "UPDATE JobApplications SET Transcription=?, AI_Rating=?, AI_Summary=?, SpeechRate=? WHERE ApplicationID=?",
+                (transcript, final_grade, ai_data['summary'], wpm, app_id))
+            conn.commit()
+            conn.close()
+        else:
+            print(f"❌ Mistral Error: {response.status_code}")
 
     except Exception as e:
         print(f"❌ Error: {e}")
 
 
 # --- ROUTES ---
+
 @app.route('/api/jobs', methods=['GET'])
-def get_jobs(): return jsonify([])  # Mock for simplicity
+def get_jobs():
+    try:
+        # RESTORED GOOGLE SHEET LOGIC
+        encoded_name = urllib.parse.quote(SHEET_NAME)
+        url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_name}"
+        response = requests.get(url, timeout=5)
+        if response.status_code != 200: return jsonify([])
+
+        csv_content = response.content.decode('utf-8-sig')
+        raw_data = list(csv.reader(io.StringIO(csv_content)))
+        transposed_data = list(map(list, itertools.zip_longest(*raw_data, fillvalue="")))
+
+        jobs = []
+        for i, col in enumerate(transposed_data):
+            if i == 0 or len(col) < 10: continue
+            jobs.append({
+                "id": i, "title": col[2].strip(), "company": col[1].strip(),
+                "location": col[8].strip() or "Remote", "salary": col[6].strip() or "Competitive",
+                "requirements": col[3].strip() + "\n" + col[7].strip(),
+                "description": col[10].strip(), "logo": (col[1].strip()[:2]).upper()
+            })
+        return jsonify(jobs)
+    except Exception as e:
+        print(f"Job Fetch Error: {e}")
+        return jsonify([])
 
 
 @app.route('/api/dashboard/<email>', methods=['GET'])
-def get_dash(email):
+def get_user_dashboard(email):
     try:
-        conn = get_db_connection()
-        c = conn.cursor()
+        c = get_db_connection().cursor()
         c.execute("SELECT * FROM JobApplications WHERE Email=? ORDER BY SubmittedAt DESC", (email,))
         cols = [x[0] for x in c.description]
         return jsonify([dict(zip(cols, r)) for r in c.fetchall()])
@@ -206,17 +274,14 @@ def apply():
         f = request.files['voiceRecord']
         fn = secure_filename(f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{f.filename}")
         f.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
-
-        conn = get_db_connection()
-        c = conn.cursor()
-        # Simplified insert for brevity - ensure your full insert matches this
-        query = "INSERT INTO JobApplications (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, Gender, GraduationStatus, MilitaryStatus, NationalID, Nationality, Address, VoiceRecordPath, SubmittedAt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,GETDATE()); SELECT SCOPE_IDENTITY();"
+        c = get_db_connection().cursor()
         d = request.form
-        c.execute(query,
-                  (d.get('title'), d.get('company'), d.get('name'), d.get('email'), d.get('phone'), d.get('whatsapp'),
-                   d.get('english'), d.get('experience'), d.get('gender'), d.get('gradStatus'), d.get('militaryStatus'),
-                   d.get('nationalId'), d.get('nationality'), d.get('address'), fn))
-        conn.commit()
+        c.execute(
+            "INSERT INTO JobApplications (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, Gender, GraduationStatus, MilitaryStatus, NationalID, Nationality, Address, VoiceRecordPath, SubmittedAt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,GETDATE())",
+            (d.get('title'), d.get('company'), d.get('name'), d.get('email'), d.get('phone'), d.get('whatsapp'),
+             d.get('english'), d.get('experience'), d.get('gender'), d.get('gradStatus'), d.get('militaryStatus'),
+             d.get('nationalId'), d.get('nationality'), d.get('address'), fn))
+        c.connection.commit()
         return jsonify({"message": "OK"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -224,8 +289,7 @@ def apply():
 
 @app.route('/api/admin/analyze/<int:id>', methods=['POST'])
 def analyze(id):
-    conn = get_db_connection()
-    c = conn.cursor()
+    c = get_db_connection().cursor()
     c.execute("SELECT VoiceRecordPath FROM JobApplications WHERE ApplicationID=?", (id,))
     r = c.fetchone()
     if r:
@@ -246,4 +310,4 @@ def apps():
 def file(fn): return send_from_directory(app.config['UPLOAD_FOLDER'], fn)
 
 
-if __name__ == '__main__': app.run(debug=True, port=5000)
+if __name__ == '__main__': app.run(debug=True, port=5000, use_reloader=False)
