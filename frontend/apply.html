@@ -99,8 +99,8 @@
         </div>
     </div>
 
-    <script src="js/script.js?v=2.0"></script>
     <script>
+        // --- EMBEDDED JAVASCRIPT (Cannot be cached incorrectly) ---
         let currentMethod = 'record';
         let uploadedFile = null;
         let mediaRecorder, audioChunks = [], isRecording = false, timerInterval, audioBlob = null, durationSeconds = 0;
@@ -119,22 +119,10 @@
             const icon = document.querySelector('.upload-icon');
             uploadedFile = null;
             if(!file) { status.textContent = "No file selected"; return; }
-            const audio = new Audio();
-            audio.src = URL.createObjectURL(file);
-            status.textContent = "Checking file...";
-            audio.onloadedmetadata = function() {
-                window.URL.revokeObjectURL(audio.src);
-                if(audio.duration < 90) { 
-                    status.textContent = `File too short (${Math.floor(audio.duration)}s). Min 1:30.`; 
-                    status.style.color = "#ef4444"; 
-                    input.value = ""; 
-                } else { 
-                    status.textContent = `Valid File: ${file.name}`; 
-                    status.style.color = "#22c55e"; 
-                    icon.className = "fas fa-check-circle upload-icon"; 
-                    uploadedFile = file; 
-                }
-            };
+            status.textContent = `File Selected: ${file.name}`; 
+            status.style.color = "#22c55e"; 
+            icon.className = "fas fa-check-circle upload-icon"; 
+            uploadedFile = file; 
         }
 
         async function toggleRecording() {
@@ -170,9 +158,8 @@
                 isRecording = false;
                 clearInterval(timerInterval);
                 btn.className = 'rec-btn btn-start'; btn.innerHTML = '<i class="fas fa-microphone"></i>';
-                status.textContent = durationSeconds < 90 ? "Too short! Min 90s." : "Recording Saved!";
-                status.style.color = durationSeconds < 90 ? "orange" : "#22c55e";
-                if(durationSeconds < 90) audioBlob = null;
+                status.textContent = "Recording Saved!";
+                status.style.color = "#22c55e";
             }
         }
 
@@ -183,69 +170,70 @@
 
         document.getElementById('application-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
-            // --- CRITICAL FIX: Robust File Selection ---
-            let finalVoiceFile = null;
-            if (currentMethod === 'record') {
-                if (!audioBlob) { alert("Please record audio."); return; }
-                finalVoiceFile = new File([audioBlob], "recording.webm", { type: "audio/webm" });
-            } else {
-                if (!uploadedFile) { alert("Please upload a file."); return; }
-                finalVoiceFile = uploadedFile;
-            }
-
             const btn = e.target.querySelector('button[type="submit"]');
             btn.textContent = "Uploading..."; 
             btn.disabled = true;
 
-            const params = new URLSearchParams(window.location.search);
-            const formData = new FormData();
-            
-            // Safe appending of fields
-            formData.append('title', params.get('title') || 'General');
-            formData.append('company', params.get('company') || 'Dark Wolves');
-            formData.append('name', document.getElementById('app-name').value);
-            formData.append('email', document.getElementById('app-email').value);
-            formData.append('phone', document.getElementById('app-phone').value);
-            formData.append('whatsapp', document.getElementById('app-whatsapp').value);
-            
-            // Correct IDs matching backend expectations
-            formData.append('nationalId', document.getElementById('app-national-id').value);
-            formData.append('nationality', document.getElementById('app-nationality').value);
-            formData.append('address', document.getElementById('app-address').value);
-            
-            formData.append('gender', document.getElementById('app-gender').value);
-            formData.append('gradStatus', document.getElementById('app-grad-status').value);
-            const milStatus = document.getElementById('app-military');
-            formData.append('militaryStatus', milStatus ? milStatus.value : 'Not Applicable');
-            formData.append('english', document.getElementById('app-english').value);
-            formData.append('experience', document.getElementById('app-experience').value);
-            
-            // --- CRITICAL FIX: Append file EXACTLY ONCE ---
-            formData.append('voiceRecord', finalVoiceFile);
-
             try {
+                const formData = new FormData();
+                
+                // 1. SAFE FILE HANDLING
+                if (currentMethod === 'record') {
+                    if (!audioBlob) throw new Error("Please record audio.");
+                    // Force creating a fresh file object
+                    const voiceFile = new File([audioBlob], "recording.webm", { type: "audio/webm" });
+                    formData.append('voiceRecord', voiceFile);
+                } else {
+                    if (!uploadedFile) throw new Error("Please select a file.");
+                    formData.append('voiceRecord', uploadedFile);
+                }
+
+                // 2. SAFE TEXT FIELDS
+                const fields = ['name', 'email', 'phone', 'whatsapp', 'national-id', 'nationality', 'address', 'english', 'experience'];
+                fields.forEach(id => {
+                    const el = document.getElementById('app-' + id);
+                    if(el) {
+                        // Fix inconsistent naming: frontend 'national-id' -> backend 'nationalId'
+                        const key = id === 'national-id' ? 'nationalId' : id;
+                        formData.append(key, el.value);
+                    }
+                });
+
+                // Dropdowns
+                formData.append('gender', document.getElementById('app-gender').value);
+                formData.append('gradStatus', document.getElementById('app-grad-status').value);
+                const mil = document.getElementById('app-military');
+                formData.append('militaryStatus', mil ? mil.value : 'N/A');
+
+                // Hidden
+                const params = new URLSearchParams(window.location.search);
+                formData.append('title', params.get('title') || 'General');
+                formData.append('company', params.get('company') || 'Dark Wolves');
+
+                // 3. SEND
                 const res = await fetch('http://127.0.0.1:5000/api/apply', { 
                     method: 'POST', 
                     body: formData 
                 });
+
                 const result = await res.json();
                 
                 if (res.ok) {
-                    alert("Success!");
+                    alert("Application Received! Analyzing in background...");
                     window.location.href = 'dashboard.html';
                 } else {
-                    alert("Error: " + (result.error || "Unknown Error"));
+                    throw new Error(result.error || "Server Error");
                 }
+
             } catch (err) { 
                 console.error(err);
-                alert("Server Connection Error. Check console."); 
-            } finally { 
+                alert("Submission Failed: " + err.message); 
                 btn.textContent = "Submit Application"; 
                 btn.disabled = false; 
             }
         });
 
+        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             if(params.get('title')) document.getElementById('apply-job-title').textContent = params.get('title');
