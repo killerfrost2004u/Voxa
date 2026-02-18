@@ -1,28 +1,29 @@
 import os
+
+# Force models to stay on D: Drive
+os.environ["HF_HOME"] = r"D:\AI_Models"
+os.environ["TRANSFORMERS_CACHE"] = r"D:\AI_Models"
+
 import re
 import threading
 import json
-import spacy
 import librosa
-import numpy as np
 import pyodbc
-import requests
 import time
 import datetime
 import torch
-import gc  # Garbage Collector
-import csv  # Restored for Jobs
-import io  # Restored for Jobs
-import urllib.parse  # Restored for Jobs
-import itertools  # Restored for Jobs
+import gc
+import csv
+import io
+import urllib.parse
+import itertools
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_mail import Mail
 from werkzeug.utils import secure_filename
 
-# NOTE: We do NOT import models globally anymore to save memory
-import whisper
-from transformers import Wav2Vec2Processor, Wav2Vec2ForCTC
+# --- QWEN2-AUDIO LALM ---
+from transformers import AutoProcessor, Qwen2AudioForConditionalGeneration, BitsAndBytesConfig
 
 # --- CONFIGURATION ---
 SERVER_NAME = r'localhost\SQLEXPRESS'
@@ -42,197 +43,136 @@ app.config['MAIL_USERNAME'] = 'hima.yasser2004@gmail.com'
 app.config['MAIL_PASSWORD'] = 'lqqzwvayhtaaumzt'
 mail = Mail(app)
 
-# Global NLP (Small enough to keep)
-nlp = spacy.load("en_core_web_sm")
 device = "cuda" if torch.cuda.is_available() else "cpu"
-
 print(f"✅ System Ready. Hardware: {device.upper()}")
 
 
 def get_db_connection():
     conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={SERVER_NAME};DATABASE=DarkWolvesDB;Trusted_Connection=yes;TrustServerCertificate=yes;Login Timeout=60;"
-    # Retry logic for busy server
-    for attempt in range(3):
+    for attempt in range(5):
         try:
-            return pyodbc.connect(conn_str, timeout=10)
+            return pyodbc.connect(conn_str)
         except pyodbc.Error as e:
-            if attempt == 2: raise e
-            time.sleep(1)
+            if attempt == 4: raise e
+            time.sleep(2)
     return None
 
 
-# --- MEMORY CLEANER ---
 def clean_memory():
     if device == "cuda":
         torch.cuda.empty_cache()
     gc.collect()
 
 
-# --- STEP 1: NEURAL EAR (Wav2Vec2) ---
-def run_wav2vec_analysis(file_path):
-    print("⏳ Loading Neural Ear (Wav2Vec2)...")
+# --- THE TRUE NATIVE AUDIO AI ---
+def run_qwen_audio_analysis(file_path):
+    print("⏳ Loading Qwen2-Audio-7B... (Using Virtual Memory & Double Quantization)")
     try:
-        # Load Model
-        processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-base-960h")
-        model = Wav2Vec2ForCTC.from_pretrained("facebook/wav2vec2-base-960h").to(device)
+        processor = AutoProcessor.from_pretrained("Qwen/Qwen2-Audio-7B-Instruct")
 
-        # Process Audio
-        speech, rate = librosa.load(file_path, sr=16000)
-        inputs = processor(speech, sampling_rate=16000, return_tensors="pt", padding=True).to(device)
+        # --- EXTREME COMPRESSION SETTINGS ---
+        # This double-compresses the model to prevent laptop crashes
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_use_double_quant=True,  # <--- Squeezes memory even more
+            bnb_4bit_quant_type="nf4",
+            llm_int8_enable_fp32_cpu_offload=True  # Allows safe spillover to Virtual RAM
+        )
 
+        model = Qwen2AudioForConditionalGeneration.from_pretrained(
+            "Qwen/Qwen2-Audio-7B-Instruct",
+            device_map="auto",
+            quantization_config=quantization_config,
+            low_cpu_mem_usage=True  # Crucial for Windows laptops
+        )
+
+        print("👂 Qwen is listening natively. Transcribing and grading...")
+        speech, sr = librosa.load(file_path, sr=processor.feature_extractor.sampling_rate)
+
+        # We instruct the model to judge the sound waves natively
+        conversation = [
+            {"role": "system",
+             "content": "You are a highly strict CEFR English Examiner. Listen to the audio carefully. Pay close attention to stuttering, pauses, heavy accents, and grammar mistakes."},
+            {"role": "user", "content": [
+                {"type": "audio", "audio_url": "dummy_path"},
+                {"type": "text", "text": """
+                Analyze this audio directly. 
+                1. If they hesitate or stutter often, the max grade is B1.
+                2. If they have a heavy accent, the max grade is B1.
+                3. If they are completely fluent and use complex words, grade B2 or C1.
+
+                Provide a summary of what they said, and return ONLY valid JSON in this exact format:
+                {"level": "B2", "score": 75, "summary": "They had a clear accent but paused twice to think.", "transcript": "a rough guess of what they said"}
+                """}
+            ]},
+        ]
+
+        text = processor.apply_chat_template(conversation, add_generation_prompt=True, tokenize=False)
+        inputs = processor(text=text, audios=[speech], return_tensors="pt", padding=True)
+        inputs = inputs.to(device)
+
+        print("🧠 Qwen is thinking (This will be slow, please wait 2-5 mins)...")
         with torch.no_grad():
-            logits = model(inputs.input_values).logits
+            generated_ids = model.generate(**inputs, max_new_tokens=300)
 
-        probs = torch.nn.functional.softmax(logits, dim=-1)
-        confidence = torch.max(probs, dim=-1).values
-        avg_conf = torch.mean(confidence).item() * 100
+        generated_ids = generated_ids[:, inputs.input_ids.size(1):]
+        response = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
-        # Normalize
-        if avg_conf > 95:
-            score = 98
-        elif avg_conf > 88:
-            score = 85
-        elif avg_conf > 78:
-            score = 65
-        else:
-            score = 45
+        print(f" raw AI Output: {response}")
 
-        # DELETE MODEL TO FREE MEMORY
+        # Completely purge model to save laptop
         del model
         del processor
         del inputs
         clean_memory()
 
-        return score, avg_conf
+        return response
     except Exception as e:
-        print(f"⚠️ Wav2Vec Error: {e}")
-        return 50, 0
-
-
-# --- STEP 2: SCRIBE (Whisper) ---
-def run_whisper_transcription(file_path):
-    print("⏳ Loading Scribe (Whisper)...")
-    try:
-        model = whisper.load_model("small.en", device=device)
-        result = model.transcribe(file_path, fp16=False)
-        text = result['text']
-
-        # DELETE MODEL
-        del model
+        print(f"❌ Qwen Error: {e}")
         clean_memory()
-
-        return text
-    except Exception as e:
-        print(f"⚠️ Whisper Error: {e}")
-        return ""
-
-
-# --- STEP 3: METRICS (Librosa) ---
-def get_fluency_metrics(file_path):
-    try:
-        y, sr = librosa.load(file_path)
-        duration = librosa.get_duration(y=y, sr=sr)
-        non_silent = librosa.effects.split(y, top_db=25)
-        speaking_time = sum((end - start) for start, end in non_silent) / sr
-        silence_pct = ((duration - speaking_time) / duration) * 100
-        return {"silence": round(silence_pct, 1), "duration": duration}
-    except:
-        return {"silence": 0, "duration": 1}
+        return None
 
 
 # --- WORKER ---
-
 def ai_worker(app_id, file_path):
-    print(f"🤖 Processing App #{app_id}...")
+    print(f"🤖 Processing App #{app_id} natively...")
     try:
-        # 1. Wav2Vec
-        pronunciation_score, raw_conf = run_wav2vec_analysis(file_path)
-        print(f"👂 Pronunciation: {pronunciation_score} (Raw {round(raw_conf, 1)})")
+        ai_response = run_qwen_audio_analysis(file_path)
 
-        # 2. Whisper
-        transcript = run_whisper_transcription(file_path)
-        print(f"📝 Transcript: {transcript[:40]}...")
-
-        # 3. Acoustics
-        acoustics = get_fluency_metrics(file_path)
-        wpm = (len(transcript.split()) / acoustics['duration']) * 60 if acoustics['duration'] > 0 else 0
-        print(f"📊 DATA: Silence={acoustics['silence']}% | WPM={int(wpm)}")
-
-        # 4. Mistral
-        print(f"🧠 Requesting Mistral...")
-        system_prompt = f"""
-        You are a CEFR Examiner. Grade using this Sensor Data.
-
-        === SENSOR DATA ===
-        1. PRONUNCIATION: {pronunciation_score}/100.
-        2. SILENCE: {acoustics['silence']}%.
-        3. SPEED: {int(wpm)} WPM.
-
-        === TRANSCRIPT ===
-        "{transcript}"
-
-        === LOGIC ===
-        - IF Pronunciation > 90 AND WPM > 100 -> GRADE C1.
-        - IF Pronunciation > 80 -> GRADE B2.
-        - ELSE -> GRADE B1.
-
-        Return ONLY valid JSON in this format: 
-        {{"level": "B2", "score": 75, "summary": "Reasoning here."}}
-        """
-
-        response = requests.post(
-            "http://localhost:11434/api/chat",
-            json={
-                "model": "mistral",
-                "messages": [{"role": "system", "content": system_prompt}],
-                "stream": False,
-                "options": {"temperature": 0.1}
-            },
-            timeout=900
-        )
-
-        if response.status_code == 200:
-            content = response.json()['message']['content']
-
-            # --- JSON REPAIR LOGIC ---
-            # Attempt to find JSON inside the text
-            match = re.search(r'\{.*\}', content, re.DOTALL)
+        if ai_response:
+            match = re.search(r'\{.*\}', ai_response, re.DOTALL)
             if match:
                 json_str = match.group()
             else:
-                # If Mistral failed to give JSON, force a default based on logic
-                print("⚠️ Mistral failed to output JSON. Using fallback logic.")
-                if pronunciation_score > 85:
-                    json_str = '{"level": "C1", "score": 88, "summary": "High pronunciation score detected."}'
-                elif pronunciation_score > 70:
-                    json_str = '{"level": "B2", "score": 75, "summary": "Good pronunciation but some issues."}'
-                else:
-                    json_str = '{"level": "B1", "score": 60, "summary": "Low pronunciation score."}'
+                print("⚠️ Qwen didn't output JSON cleanly. Recovering...")
+                json_str = '{"level": "B1", "score": 60, "summary": "System processed natively but format failed.", "transcript": "Check raw logs"}'
 
             ai_data = json.loads(json_str)
             final_grade = f"{ai_data['level']} ({ai_data['score']})"
+            transcript = ai_data.get('transcript', 'Transcript not provided by Qwen.')
+
             print(f"✅ FINAL GRADE: {final_grade}")
 
             conn = get_db_connection()
-            c = conn.cursor()
-            c.execute(
-                "UPDATE JobApplications SET Transcription=?, AI_Rating=?, AI_Summary=?, SpeechRate=? WHERE ApplicationID=?",
-                (transcript, final_grade, ai_data['summary'], wpm, app_id))
-            conn.commit()
-            conn.close()
+            if conn:
+                c = conn.cursor()
+                c.execute(
+                    "UPDATE JobApplications SET Transcription=?, AI_Rating=?, AI_Summary=?, SpeechRate=0 WHERE ApplicationID=?",
+                    (transcript, final_grade, ai_data['summary'], app_id))
+                conn.commit()
+                conn.close()
         else:
-            print(f"❌ Mistral Error: {response.status_code}")
+            print("❌ AI returned no response.")
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ Worker Error: {e}")
 
 
 # --- ROUTES ---
-
 @app.route('/api/jobs', methods=['GET'])
 def get_jobs():
     try:
-        # RESTORED GOOGLE SHEET LOGIC
         encoded_name = urllib.parse.quote(SHEET_NAME)
         url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_name}"
         response = requests.get(url, timeout=5)
@@ -252,18 +192,20 @@ def get_jobs():
                 "description": col[10].strip(), "logo": (col[1].strip()[:2]).upper()
             })
         return jsonify(jobs)
-    except Exception as e:
-        print(f"Job Fetch Error: {e}")
+    except:
         return jsonify([])
 
 
 @app.route('/api/dashboard/<email>', methods=['GET'])
 def get_user_dashboard(email):
     try:
-        c = get_db_connection().cursor()
+        conn = get_db_connection()
+        c = conn.cursor()
         c.execute("SELECT * FROM JobApplications WHERE Email=? ORDER BY SubmittedAt DESC", (email,))
         cols = [x[0] for x in c.description]
-        return jsonify([dict(zip(cols, r)) for r in c.fetchall()])
+        data = [dict(zip(cols, r)) for r in c.fetchall()]
+        conn.close()
+        return jsonify(data)
     except:
         return jsonify([])
 
@@ -274,14 +216,17 @@ def apply():
         f = request.files['voiceRecord']
         fn = secure_filename(f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{f.filename}")
         f.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
-        c = get_db_connection().cursor()
+
+        conn = get_db_connection()
+        c = conn.cursor()
         d = request.form
         c.execute(
             "INSERT INTO JobApplications (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, Gender, GraduationStatus, MilitaryStatus, NationalID, Nationality, Address, VoiceRecordPath, SubmittedAt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,GETDATE())",
             (d.get('title'), d.get('company'), d.get('name'), d.get('email'), d.get('phone'), d.get('whatsapp'),
              d.get('english'), d.get('experience'), d.get('gender'), d.get('gradStatus'), d.get('militaryStatus'),
              d.get('nationalId'), d.get('nationality'), d.get('address'), fn))
-        c.connection.commit()
+        conn.commit()
+        conn.close()
         return jsonify({"message": "OK"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -289,21 +234,32 @@ def apply():
 
 @app.route('/api/admin/analyze/<int:id>', methods=['POST'])
 def analyze(id):
-    c = get_db_connection().cursor()
-    c.execute("SELECT VoiceRecordPath FROM JobApplications WHERE ApplicationID=?", (id,))
-    r = c.fetchone()
-    if r:
-        threading.Thread(target=ai_worker, args=(id, os.path.join(app.config['UPLOAD_FOLDER'], r[0]))).start()
-        return jsonify({"message": "Started"})
-    return jsonify({"error": "404"}), 404
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT VoiceRecordPath FROM JobApplications WHERE ApplicationID=?", (id,))
+        r = c.fetchone()
+        conn.close()
+        if r:
+            threading.Thread(target=ai_worker, args=(id, os.path.join(app.config['UPLOAD_FOLDER'], r[0]))).start()
+            return jsonify({"message": "Started"})
+        return jsonify({"error": "404"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/api/admin/applications', methods=['GET'])
 def apps():
-    c = get_db_connection().cursor()
-    c.execute("SELECT * FROM JobApplications ORDER BY SubmittedAt DESC")
-    cols = [x[0] for x in c.description]
-    return jsonify([dict(zip(cols, r)) for r in c.fetchall()])
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT * FROM JobApplications ORDER BY SubmittedAt DESC")
+        cols = [x[0] for x in c.description]
+        data = [dict(zip(cols, r)) for r in c.fetchall()]
+        conn.close()
+        return jsonify(data)
+    except:
+        return jsonify([])
 
 
 @app.route('/uploads/<fn>')
