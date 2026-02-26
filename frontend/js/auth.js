@@ -75,9 +75,14 @@ if (loginForm) {
             const data = await response.json();
 
             if (response.ok) {
-                // [CRITICAL UPDATE] Save the FULL user object (including name & email)
                 localStorage.setItem('user', JSON.stringify(data.user));
-                window.location.href = 'dashboard.html';
+                
+                // Check if the user is an admin and redirect accordingly
+                if (data.user.isAdmin) {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
             } else {
                 throw new Error(data.error || "Login failed");
             }

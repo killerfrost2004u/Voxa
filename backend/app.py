@@ -17,10 +17,12 @@ import csv
 import io
 import urllib.parse
 import itertools
+import requests  # <-- Added missing import for Google Sheets fetching
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_mail import Mail
 from werkzeug.utils import secure_filename
+import bcrypt
 
 # --- QWEN2-AUDIO LALM ---
 from transformers import AutoProcessor, Qwen2AudioForConditionalGeneration, BitsAndBytesConfig
@@ -84,18 +86,22 @@ def run_qwen_audio_analysis(file_path):
             "Qwen/Qwen2-Audio-7B-Instruct",
             device_map="auto",
             quantization_config=quantization_config,
-            low_cpu_mem_usage=True  # Crucial for Windows laptops
+            low_cpu_mem_usage=True,  # Crucial for Windows laptops
+            offload_folder="offload", # <--- Add this: Safely offloads extra layers to disk
+            max_memory={0: "6GB", "cpu": "14GB"}
         )
 
         print("👂 Qwen is listening natively. Transcribing and grading...")
-        speech, sr = librosa.load(file_path, sr=processor.feature_extractor.sampling_rate)
+        
+        # <-- Fixed sampling rate to exactly 16000Hz as expected by Qwen2-Audio
+        speech, sr = librosa.load(file_path, sr=16000)
 
         # We instruct the model to judge the sound waves natively
         conversation = [
             {"role": "system",
              "content": "You are a highly strict CEFR English Examiner. Listen to the audio carefully. Pay close attention to stuttering, pauses, heavy accents, and grammar mistakes."},
             {"role": "user", "content": [
-                {"type": "audio", "audio_url": "dummy_path"},
+                {"type": "audio", "audio_url": file_path}, # <-- Passed actual file_path instead of "dummy_path"
                 {"type": "text", "text": """
                 Analyze this audio directly. 
                 1. If they hesitate or stutter often, the max grade is B1.
@@ -144,6 +150,8 @@ def ai_worker(app_id, file_path):
             match = re.search(r'\{.*\}', ai_response, re.DOTALL)
             if match:
                 json_str = match.group()
+                # <-- Robust JSON Parsing: Strip out any markdown blocks the LLM might hallucinate
+                json_str = json_str.replace('```json', '').replace('```', '').strip()
             else:
                 print("⚠️ Qwen didn't output JSON cleanly. Recovering...")
                 json_str = '{"level": "B1", "score": 60, "summary": "System processed natively but format failed.", "transcript": "Check raw logs"}'
@@ -170,6 +178,70 @@ def ai_worker(app_id, file_path):
 
 
 # --- ROUTES ---
+@app.route('/api/signup', methods=['POST'])
+def signup():
+    try:
+        data = request.get_json()
+        full_name = data.get('fullName')
+        email = data.get('email')
+        password = data.get('password')
+
+        conn = get_db_connection()
+        if conn:
+            c = conn.cursor()
+            # Check if user already exists
+            c.execute("SELECT Email FROM Users WHERE Email=?", (email,))
+            if c.fetchone():
+                return jsonify({"error": "Email already exists"}), 400
+
+            # Securely hash the password before saving
+            hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+            # Insert new user with the hashed password
+            c.execute("INSERT INTO Users (FullName, Email, PasswordHash) VALUES (?, ?, ?)", (full_name, email, hashed_pw))
+            conn.commit()
+            conn.close()
+            return jsonify({"message": "Signup successful"}), 201
+            
+        return jsonify({"error": "Database connection failed"}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+
+        conn = get_db_connection()
+        if conn:
+            c = conn.cursor()
+            # Notice we added IsAdmin to the SELECT query here:
+            c.execute("SELECT FullName, Email, PasswordHash, IsAdmin FROM Users WHERE Email=?", (email,))
+            user_row = c.fetchone()
+            conn.close()
+
+            if user_row:
+                stored_hash = user_row[2]
+                if bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8')):
+                    return jsonify({
+                        "message": "Login successful", 
+                        "user": {
+                            "name": user_row[0],
+                            "email": user_row[1],
+                            # Check if the database value is True/1
+                            "isAdmin": bool(user_row[3]) 
+                        }
+                    }), 200
+            
+            return jsonify({"error": "Invalid email or password"}), 401
+                
+        return jsonify({"error": "Database connection failed"}), 500
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/jobs', methods=['GET'])
 def get_jobs():
     try:
