@@ -17,6 +17,8 @@ from flask_mail import Mail
 from werkzeug.utils import secure_filename
 import google.generativeai as genai
 from dotenv import load_dotenv
+from twilio.rest import Client
+from twilio.twiml.messaging_response import MessagingResponse
 
 # --- CONFIGURATION ---
 # Load hidden variables from the .env file
@@ -195,13 +197,98 @@ def ai_worker(app_id, file_path):
                 )
                 conn.commit()
                 conn.close()
+                # --- NEW: Trigger WhatsApp Bot ---
+                # Fetch the candidate's details from the database
+                conn2 = get_db_connection()
+                c2 = conn2.cursor()
+                c2.execute("SELECT FullName, WhatsApp, JobTitle FROM JobApplications WHERE ApplicationID=?", (app_id,))
+                candidate_data = c2.fetchone()
+                conn2.close()
+            
+                if candidate_data and candidate_data[1]:
+                    c_name = candidate_data[0].split()[0] # Get first name
+                    c_whatsapp = candidate_data[1]
+                    c_job = candidate_data[2]
+                
+                    print(f"🤖 AI Finished. Handing over to WhatsApp Bot for {c_name}...")
+                    process_job_offer(app_id, ai_data['overall_level'], c_name, c_whatsapp, c_job)
         else:
             print("❌ AI returned no response.")
 
     except Exception as e:
         print(f"❌ Worker Error: {e}")
 
+
+# --- WHATSAPP BOT ENGINE ---
+def send_whatsapp_message(to_number, message_body):
+    try:
+        # Format number for Twilio (e.g., +201234567890 -> whatsapp:+201234567890)
+        # Assuming the user inputted their number with the country code
+        if not to_number.startswith('+'):
+            to_number = '+' + to_number
+            
+        formatted_number = f"whatsapp:{to_number}"
+        
+        client = Client(os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
+        message = client.messages.create(
+            from_=os.getenv("TWILIO_WHATSAPP_NUMBER"),
+            body=message_body,
+            to=formatted_number
+        )
+        print(f"📱 WhatsApp sent to {to_number}! Message SID: {message.sid}")
+    except Exception as e:
+        print(f"❌ Failed to send WhatsApp: {e}")
+
+def process_job_offer(application_id, ai_overall_level, candidate_name, whatsapp_number, applied_job_title):
+    # This is a basic matching logic. You can make this as complex as you want!
+    
+    # Let's say the job they applied for requires C1.
+    requires_c1 = ["Closer", "Acquisition Specialist", "Senior Cold Caller"]
+    
+    is_high_level_job = any(job in applied_job_title for job in requires_c1)
+    
+    if is_high_level_job and ai_overall_level in ["C1", "C1+", "C2"]:
+        # Scenario B: They applied for a hard job and are qualified!
+        msg = f"🎉 Hello {candidate_name}! Congratulations, Dark Wolves has reviewed your voice intro and you passed our C1 English requirement!\n\nYou are officially accepted for the '{applied_job_title}' position. Please reply 'ACCEPT' to begin onboarding, or 'DECLINE' if you are no longer interested."
+        
+    elif is_high_level_job and ai_overall_level in ["B1+", "B2", "B2+"]:
+        # Scenario A: They applied for a hard job, but their English is B2.
+        alternative_job = "Junior Lead Generation Specialist"
+        msg = f"🐺 Hello {candidate_name}. Thank you for applying to Dark Wolves!\n\nWhile your English level ({ai_overall_level}) is great, the '{applied_job_title}' role requires a C1 level. However, we were very impressed by your fluency and would like to offer you a position as a '{alternative_job}' instead!\n\nWould you like to accept this alternative offer? Reply 'ACCEPT' or 'DECLINE'."
+        
+    elif not is_high_level_job and ai_overall_level in ["B1+", "B2", "B2+", "C1", "C1+", "C2"]:
+        # They applied for a standard job and meet the requirements
+         msg = f"🎉 Hello {candidate_name}! Congratulations, you are officially accepted for the '{applied_job_title}' position at Dark Wolves!\n\nPlease reply 'ACCEPT' to begin onboarding, or 'DECLINE' if you are no longer interested."
+    else:
+        # Scenario C: They scored below B1+
+        msg = f"Hello {candidate_name}. Thank you for applying to Dark Wolves for the '{applied_job_title}' role. Unfortunately, we require a minimum B1+ English proficiency for our current openings. We encourage you to apply again in the future!"
+
+    # Send the message!
+    send_whatsapp_message(whatsapp_number, msg)
+
 # --- ROUTES ---
+@app.route('/api/whatsapp/reply', methods=['POST'])
+def whatsapp_reply():
+    # Get the message the candidate sent
+    incoming_msg = request.values.get('Body', '').strip().lower()
+    sender_number = request.values.get('From', '')
+
+    # Create a Twilio response object
+    resp = MessagingResponse()
+    msg = resp.message()
+
+    if 'accept' in incoming_msg:
+        # Here you could write an SQL command to update their status in the DB to "Accepted"
+        msg.body("🐺 Awesome! Welcome to the pack. Our HR team will reach out shortly with your contract and onboarding details.")
+    elif 'decline' in incoming_msg:
+        # Here you could update their status to "Declined"
+        msg.body("Understood. Thank you for your time, and we wish you the best of luck in your career!")
+    else:
+        msg.body("I didn't quite catch that. Please reply with 'ACCEPT' or 'DECLINE'.")
+
+    return str(resp)
+
+
 @app.route('/api/signup', methods=['POST'])
 def signup():
     try:
