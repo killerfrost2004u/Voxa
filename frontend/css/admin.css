@@ -329,13 +329,19 @@ body {
 }
 
 .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 1rem; margin-bottom: 1rem; }
+
 .modal-header h2 { font-size: 1.2rem; color: #ff6600; }
+
 .close-btn { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; }
 
 .transcript-p { font-style: italic; color: #aaa; background: #0a0a0a; padding: 10px; border-radius: 6px; }
+
 .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+
 .stat-item { background: #1a1a1a; padding: 10px; border-radius: 8px; text-align: center; }
+
 .stat-item h4 { font-size: 0.7rem; color: #666; text-transform: uppercase; margin-bottom: 5px; }
+
 .stat-item p { font-size: 1.1rem; font-weight: bold; color: white; }
 
 

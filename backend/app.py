@@ -68,10 +68,13 @@ def get_db_connection():
 def run_gemini_audio_analysis(file_path):
     print(f"⏳ Uploading media to Gemini API: {file_path}")
     try:
-        # 1. Upload the file natively
-        audio_file = genai.upload_file(path=file_path)
+        # Detect if it's an mp4 and force Google to treat it as pure audio
+        forced_mime = "audio/mp4" if file_path.lower().endswith(".mp4") else None
 
-        # 2. Wait for Google's servers to process the file (Crucial for .mp4s!)
+        # 1. Upload the file natively with the forced mime type
+        audio_file = genai.upload_file(path=file_path, mime_type=forced_mime)
+
+        # 2. Wait for Google's servers to process the file
         print(f"⏳ Waiting for Google servers to process media...", end="")
         while audio_file.state.name == "PROCESSING":
             print(".", end="", flush=True)
