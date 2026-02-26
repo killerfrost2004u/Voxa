@@ -124,17 +124,31 @@ def run_gemini_audio_analysis(file_path):
         }
         """
 
-        print("🧠 Gemini is analyzing the audio natively...")
-        response = model.generate_content([audio_file, prompt])
+        # --- AUTO-RETRY LOGIC ---
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                print(f"🧠 Gemini is analyzing the audio natively (Attempt {attempt + 1})...")
+                response = model.generate_content([audio_file, prompt])
+                
+                print(f" raw AI Output: {response.text}")
+                audio_file.delete() # Clean up
+                return response.text
 
-        print(f" raw AI Output: {response.text}")
-        
-        # Clean up the file from Google's servers
+            except Exception as e:
+                error_msg = str(e)
+                if "429" in error_msg or "Quota" in error_msg:
+                    print(f"⚠️ Hit Rate Limit. Waiting 30 seconds before retrying...")
+                    time.sleep(30) # Wait for the quota to reset
+                else:
+                    print(f"❌ Unhandled Gemini Error: {error_msg}")
+                    break # Break if it's a different kind of error
+
         audio_file.delete()
-        
-        return response.text
+        return None
+
     except Exception as e:
-        print(f"❌ Gemini Error: {e}")
+        print(f"❌ Gemini Setup Error: {e}")
         return None
 
 # --- WORKER ---
