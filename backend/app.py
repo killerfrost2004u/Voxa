@@ -18,9 +18,17 @@ from werkzeug.utils import secure_filename
 import google.generativeai as genai
 
 # --- CONFIGURATION ---
-# 🔑 PASTE YOUR GEMINI API KEY HERE:
-GEMINI_API_KEY = "AIzaSyDMz4l0qQ1Veo7wcbYeQhANh5JXaQx_2s8"
+# Load hidden variables from the .env file
+load_dotenv()
+
+# Fetch the key securely
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not GEMINI_API_KEY:
+    raise ValueError("No API key found. Please make sure you have a .env file with GEMINI_API_KEY set.")
+
 genai.configure(api_key=GEMINI_API_KEY)
+
 
 SERVER_NAME = r'localhost\SQLEXPRESS'
 SHEET_ID = "1oYDMBIXMCrIdfDbf-EFhuPal0NYo5jphkkX3AWYonjU"
@@ -66,35 +74,35 @@ def run_gemini_audio_analysis(file_path):
         model = genai.GenerativeModel('gemini-2.5-flash')
 
         
-        # 3. Apply the Ultimate Category-Based HR Prompt
+        # 3. Apply the Ultimate Category-Based HR Prompt (Calibrated for C1 Spontaneity)
         prompt = """
         You are an expert CEFR English Examiner and Technical Recruiter. Listen to the candidate's audio natively.
         Evaluate their English proficiency and provide individual CEFR grades for Fluency, Pronunciation, and Grammar, plus an Overall grade.
 
         SCORING RUBRIC (Applies to all categories):
-        - A1 & A2 (Beginner)
-        - B1 (Intermediate)
-        - B1+ (Strong Intermediate)
-        - B2 (Upper Intermediate)
-        - C1 (Advanced)
-        - C2 (Mastery)
+        - 0-25: A1 & A2 (Beginner)
+        - 26-45: B1 (Intermediate)
+        - 46-60: B1+ (Strong Intermediate)
+        - 61-75: B2 (Upper Intermediate)
+        - 76-95: C1 (Advanced)
+        - 96-100: C2 (Mastery)
 
         CRITICAL GRADING RULES:
-        1. FLUENCY: Focus on spontaneous rhythm, natural pacing, and thought vs. language hesitation. Reading a script caps fluency at B2.
-        2. PRONUNCIATION: Focus on clarity, syllable stress, and how easy it is to understand through their accent. A heavy accent caps this at B1+.
-        3. GRAMMAR: Focus on accurate sentence structure. Missing basic verbs ('is/are') or messing up continuous tenses caps grammar at B1+. Minor preposition errors can still be C1.
-        4. OVERALL: The overall score out of 100 and overall level should be a weighted average, but heavily penalize the overall score if Pronunciation or Fluency are B1+ or lower.
-        5. STRICT JSON FORMATTING: Use ONLY single quotes inside the JSON string values.
+        1. THE STORYTELLER ALLOWANCE (Protects C1): If a candidate is highly spontaneous, speaking unscripted, and easily telling a detailed story about their background, DO NOT penalize their fluency for using 'um' or 'uh' to remember dates, numbers, or company names. Furthermore, non-idiomatic phrasing (e.g., 'they hold the company' or 'the last January') are minor translation quirks, NOT foundational grammar errors. A strong storyteller with these traits should be C1.
+        2. THE ACCENT FORGIVENESS: A noticeable regional accent DOES NOT cap pronunciation at B1+ unless it makes the words actually incomprehensible. If you can easily understand them despite the accent, they deserve B2 or C1.
+        3. THE FOUNDATIONAL GRAMMAR CAP (Protects B1+): Only cap grammar at B1/B1+ if the candidate drops crucial verbs (e.g., 'this my last year', 'I looking forward') or completely breaks sentence structure. 
+        4. SCRIPT READING PENALTY: If the candidate sounds like they are reading a rehearsed script rather than speaking spontaneously, cap their fluency and overall grade at B2 (max score 75).
+        5. STRICT JSON FORMATTING: Use ONLY single quotes inside the JSON string values. DO NOT copy the placeholder values below.
 
-        Provide a summary of their speech, mentioning fluency, spontaneity, and specific grammar errors. Return ONLY valid JSON in this EXACT format:
+        Provide a summary of their speech. Return ONLY valid JSON in this EXACT format (replace the bracketed placeholders with your actual assessment):
         {
-            "overall_level": "B2",
-            "overall_score": 68,
-            "fluency_level": "C1",
-            "pronunciation_level": "B2",
-            "grammar_level": "B1+",
-            "summary": "They had great flow but missed some basic verbs...",
-            "transcript": "..."
+            "overall_level": "[Insert Level here, e.g. B2]",
+            "overall_score": [Insert Integer Score here, e.g. 68],
+            "fluency_level": "[Insert Level here]",
+            "pronunciation_level": "[Insert Level here]",
+            "grammar_level": "[Insert Level here]",
+            "summary": "[Insert detailed summary here...]",
+            "transcript": "[Insert transcript here...]"
         }
         """
 
