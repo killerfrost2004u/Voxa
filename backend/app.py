@@ -66,12 +66,26 @@ def get_db_connection():
 
 # --- THE NATIVE MULTIMODAL CLOUD AI ---
 def run_gemini_audio_analysis(file_path):
-    print(f"⏳ Uploading audio to Gemini API: {file_path}")
+    print(f"⏳ Uploading media to Gemini API: {file_path}")
     try:
-        # 1. Upload the audio file natively
+        # 1. Upload the file natively
         audio_file = genai.upload_file(path=file_path)
 
-        # 2. Use the fast Flash model
+        # 2. Wait for Google's servers to process the file (Crucial for .mp4s!)
+        print(f"⏳ Waiting for Google servers to process media...", end="")
+        while audio_file.state.name == "PROCESSING":
+            print(".", end="", flush=True)
+            time.sleep(2)
+            # Refresh the file status
+            audio_file = genai.get_file(audio_file.name)
+
+        if audio_file.state.name == "FAILED":
+            print("\n❌ Google servers failed to process this file format.")
+            return None
+            
+        print("\n🧠 Media processed! Gemini is analyzing...")
+
+        # 3. Use the fast Flash model
         model = genai.GenerativeModel('gemini-2.5-flash')
 
         

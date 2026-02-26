@@ -337,3 +337,17 @@ body {
 .stat-item { background: #1a1a1a; padding: 10px; border-radius: 8px; text-align: center; }
 .stat-item h4 { font-size: 0.7rem; color: #666; text-transform: uppercase; margin-bottom: 5px; }
 .stat-item p { font-size: 1.1rem; font-weight: bold; color: white; }
+
+
+.modal-card {
+    background: #141414; 
+    width: 600px; 
+    max-width: 90%; 
+    /* Add these two lines to fix the scrolling and height: */
+    max-height: 85vh; 
+    overflow-y: auto;
+    
+    border-radius: 12px; 
+    border: 1px solid #333; 
+    padding: 1.5rem;
+}
