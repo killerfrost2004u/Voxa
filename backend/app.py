@@ -16,6 +16,7 @@ from flask_cors import CORS
 from flask_mail import Mail
 from werkzeug.utils import secure_filename
 import google.generativeai as genai
+from dotenv import load_dotenv
 
 # --- CONFIGURATION ---
 # Load hidden variables from the .env file
