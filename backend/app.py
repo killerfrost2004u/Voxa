@@ -66,30 +66,38 @@ def run_gemini_audio_analysis(file_path):
         model = genai.GenerativeModel('gemini-2.5-flash')
 
         
-        # 3. Apply a Recruiter prompt prioritizing Spontaneous Fluency & Clear Accent
+        # 3. Apply the Ultimate Category-Based HR Prompt
         prompt = """
         You are an expert CEFR English Examiner and Technical Recruiter. Listen to the candidate's audio natively.
-        Evaluate their English proficiency, making SPONTANEOUS FLUENCY and a CLEAR ACCENT (Pronunciation) your absolute highest priorities.
+        Evaluate their English proficiency and provide individual CEFR grades for Fluency, Pronunciation, and Grammar, plus an Overall grade.
 
-        SCORING RUBRIC (Score must be out of 100):
-        - 0-25: A1 & A2 (Beginner) - Very broken English, highly hesitant, difficult to understand.
-        - 26-45: B1 (Intermediate) - Heavy accent that impedes clarity, struggles to find words, very choppy flow.
-        - 46-60: B1+ (Strong Intermediate) - Good overall communication, but has noticeable language hesitation or a thick accent that requires effort for a native speaker to understand.
-        - 61-75: B2 (Upper Intermediate) - Very good spontaneous fluency AND a clear, easily understandable accent. May still make foundational grammatical errors (e.g., 'this my last year' or 'I looking'), but their confident flow and clear accent completely compensate for it.
-        - 76-95: C1 (Advanced) - Highly fluent, natural conversational rhythm, rich vocabulary, extremely clear and near-neutral accent. Spontaneous and completely comfortable.
-        - 96-100: C2 (Mastery) - Near-native, flawless accent, effortless.
+        SCORING RUBRIC (Applies to all categories):
+        - A1 & A2 (Beginner)
+        - B1 (Intermediate)
+        - B1+ (Strong Intermediate)
+        - B2 (Upper Intermediate)
+        - C1 (Advanced)
+        - C2 (Mastery)
 
         CRITICAL GRADING RULES:
-        1. ACCENT & FLUENCY OVER GRAMMAR: A candidate CAN achieve a B2 despite foundational grammar mistakes ONLY IF they have an excellent, confident flow AND a very clear, easy-to-understand accent. 
-        2. THE ACCENT PENALTY: If the candidate has a heavy, thick, or distracting accent that makes them hard to understand, you MUST cap them at B1 or B1+, even if their grammar and vocabulary are perfect.
-        3. SCRIPT READING PENALTY: Listen to their intonation. If the candidate sounds like they are reading from a prepared script or reciting a highly memorized text (flat, robotic intonation, lack of natural conversational rhythm), DO NOT grade them higher than B1+ or B2. True advanced English requires spontaneous thought.
-        4. THOUGHT VS LANGUAGE HESITATION: 'Um' to remember a date or job history is totally fine. Stuttering because they don't know the English word lowers the fluency grade.
-        5. Match the Score: Your 'score' number MUST fall exactly within the range of the 'level' in the rubric above.
-        6. STRICT JSON FORMATTING: Do NOT use double quotes inside your summary or transcript values. If you need to quote the speaker, use single quotes (e.g., they said 'hello').
+        1. FLUENCY: Focus on spontaneous rhythm, natural pacing, and thought vs. language hesitation. Reading a script caps fluency at B2.
+        2. PRONUNCIATION: Focus on clarity, syllable stress, and how easy it is to understand through their accent. A heavy accent caps this at B1+.
+        3. GRAMMAR: Focus on accurate sentence structure. Missing basic verbs ('is/are') or messing up continuous tenses caps grammar at B1+. Minor preposition errors can still be C1.
+        4. OVERALL: The overall score out of 100 and overall level should be a weighted average, but heavily penalize the overall score if Pronunciation or Fluency are B1+ or lower.
+        5. STRICT JSON FORMATTING: Use ONLY single quotes inside the JSON string values.
 
-        Provide a summary of their speech. Explicitly mention their fluency, their accent/pronunciation clarity, whether they sound spontaneous or scripted, and note their grammar. Return ONLY valid JSON in this exact format:
-        {"level": "B2", "score": 68, "summary": "They had a 'minor' error...", "transcript": "..."}
+        Provide a summary of their speech, mentioning fluency, spontaneity, and specific grammar errors. Return ONLY valid JSON in this EXACT format:
+        {
+            "overall_level": "B2",
+            "overall_score": 68,
+            "fluency_level": "C1",
+            "pronunciation_level": "B2",
+            "grammar_level": "B1+",
+            "summary": "They had great flow but missed some basic verbs...",
+            "transcript": "..."
+        }
         """
+
         print("🧠 Gemini is analyzing the audio natively...")
         response = model.generate_content([audio_file, prompt])
 
@@ -116,20 +124,32 @@ def ai_worker(app_id, file_path):
                 json_str = json_str.replace('```json', '').replace('```', '').strip()
             else:
                 print("⚠️ AI didn't output JSON cleanly. Recovering...")
-                json_str = '{"level": "B1", "score": 60, "summary": "System processed natively but format failed.", "transcript": "Check raw logs"}'
+                json_str = '{"overall_level": "B1", "overall_score": 60, "fluency_level": "B1", "pronunciation_level": "B1", "grammar_level": "B1", "summary": "Format failed.", "transcript": "Check raw logs"}'
 
             ai_data = json.loads(json_str)
-            final_grade = f"{ai_data['level']} ({ai_data['score']})"
+            
+            # Format the new variables
+            overall_grade = f"{ai_data['overall_level']} ({ai_data['overall_score']})"
+            fluency_grade = ai_data.get('fluency_level', 'N/A')
+            pronunciation_grade = ai_data.get('pronunciation_level', 'N/A')
+            grammar_grade = ai_data.get('grammar_level', 'N/A')
             transcript = ai_data.get('transcript', 'Transcript not provided.')
 
-            print(f"✅ FINAL GRADE: {final_grade}")
+            print(f"✅ FINAL OVERALL GRADE: {overall_grade}")
+            print(f"📊 BREAKDOWN -> Fluency: {fluency_grade} | Pronunciation: {pronunciation_grade} | Grammar: {grammar_grade}")
 
             conn = get_db_connection()
             if conn:
                 c = conn.cursor()
+                # Update the SQL execution to save the 3 new columns!
                 c.execute(
-                    "UPDATE JobApplications SET Transcription=?, AI_Rating=?, AI_Summary=?, SpeechRate=0 WHERE ApplicationID=?",
-                    (transcript, final_grade, ai_data['summary'], app_id))
+                    """UPDATE JobApplications 
+                       SET Transcription=?, AI_Rating=?, AI_Summary=?, SpeechRate=0,
+                           Grammar_Rating=?, Fluency_Rating=?, Pronunciation_Rating=?
+                       WHERE ApplicationID=?""",
+                    (transcript, overall_grade, ai_data['summary'], 
+                     grammar_grade, fluency_grade, pronunciation_grade, app_id)
+                )
                 conn.commit()
                 conn.close()
         else:
