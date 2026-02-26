@@ -92,30 +92,33 @@ def run_gemini_audio_analysis(file_path):
         model = genai.GenerativeModel('gemini-2.5-flash')
 
         
-        # 3. Apply the Ultimate Category-Based HR Prompt (Calibrated for C1 Spontaneity)
+        # 3. Apply the Ultimate Category-Based HR Prompt (Expanded with Plus Levels)
         prompt = """
         You are an expert CEFR English Examiner and Technical Recruiter. Listen to the candidate's audio natively.
         Evaluate their English proficiency and provide individual CEFR grades for Fluency, Pronunciation, and Grammar, plus an Overall grade.
 
         SCORING RUBRIC (Applies to all categories):
         - 0-25: A1 & A2 (Beginner)
-        - 26-45: B1 (Intermediate)
-        - 46-60: B1+ (Strong Intermediate)
-        - 61-75: B2 (Upper Intermediate)
-        - 76-95: C1 (Advanced)
+        - 26-40: B1 (Intermediate)
+        - 41-50: B1+ (Strong Intermediate)
+        - 51-65: B2 (Upper Intermediate)
+        - 66-75: B2+ (Advanced Intermediate) - Flawless basic grammar, very clear accent, confident flow, but lacks the rich vocabulary or highly complex storytelling of C1.
+        - 76-85: C1 (Advanced) - Highly fluent, natural rhythm, minor preposition quirks allowed if spontaneous storytelling is strong.
+        - 86-95: C1+ (Strong Advanced) - Extremely compelling vocabulary, near-flawless execution, exceptional native-like rhythm and expression.
         - 96-100: C2 (Mastery)
 
         CRITICAL GRADING RULES:
-        1. THE STORYTELLER ALLOWANCE (Protects C1): If a candidate is highly spontaneous, speaking unscripted, and easily telling a detailed story about their background, DO NOT penalize their fluency for using 'um' or 'uh' to remember dates, numbers, or company names. Furthermore, non-idiomatic phrasing (e.g., 'they hold the company' or 'the last January') are minor translation quirks, NOT foundational grammar errors. A strong storyteller with these traits should be C1.
-        2. THE ACCENT FORGIVENESS: A noticeable regional accent DOES NOT cap pronunciation at B1+ unless it makes the words actually incomprehensible. If you can easily understand them despite the accent, they deserve B2 or C1.
-        3. THE FOUNDATIONAL GRAMMAR CAP (Protects B1+): Only cap grammar at B1/B1+ if the candidate drops crucial verbs (e.g., 'this my last year', 'I looking forward') or completely breaks sentence structure. 
-        4. SCRIPT READING PENALTY: If the candidate sounds like they are reading a rehearsed script rather than speaking spontaneously, cap their fluency and overall grade at B2 (max score 75).
-        5. STRICT JSON FORMATTING: Use ONLY single quotes inside the JSON string values. DO NOT copy the placeholder values below.
+        1. THE STORYTELLER ALLOWANCE (Protects C1/C1+): If a candidate is highly spontaneous and easily telling a detailed story, DO NOT penalize fluency for using 'um' or 'uh' to remember facts. Non-idiomatic phrasing (e.g., 'they hold the company') are minor translation quirks, NOT foundational errors. A strong storyteller belongs in C1 or C1+.
+        2. B2 vs B2+ vs C1: If a candidate has perfect grammar and clear pronunciation but sounds slightly rehearsed or uses mostly standard vocabulary, give them a B2+. If they use rich idioms and complex spontaneous structures, push them to C1 or C1+.
+        3. THE ACCENT FORGIVENESS: A noticeable regional accent DOES NOT cap pronunciation at B1+ unless it makes the words actually incomprehensible. If easily understood, they deserve B2, B2+, or C1.
+        4. THE FOUNDATIONAL GRAMMAR CAP (Protects B1+): Only cap grammar at B1/B1+ if the candidate drops crucial verbs (e.g., 'this my last year', 'I looking forward') or completely breaks sentence structure. 
+        5. SCRIPT READING PENALTY: If the candidate sounds like they are reading a rehearsed script, cap their fluency and overall grade at B2 or B2+ maximum.
+        6. STRICT JSON FORMATTING: Use ONLY single quotes inside the JSON string values. DO NOT copy the placeholder values below.
 
         Provide a summary of their speech. Return ONLY valid JSON in this EXACT format (replace the bracketed placeholders with your actual assessment):
         {
-            "overall_level": "[Insert Level here, e.g. B2]",
-            "overall_score": [Insert Integer Score here, e.g. 68],
+            "overall_level": "[Insert Level here, e.g. C1+]",
+            "overall_score": [Insert Integer Score here, e.g. 88],
             "fluency_level": "[Insert Level here]",
             "pronunciation_level": "[Insert Level here]",
             "grammar_level": "[Insert Level here]",
