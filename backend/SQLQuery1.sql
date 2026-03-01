@@ -1,20 +1,23 @@
 USE DarkWolvesDB;
 GO
 
-CREATE TABLE Jobs (
-    JobID INT IDENTITY(1,1) PRIMARY KEY,
-    Title NVARCHAR(255) NOT NULL,
-    Company NVARCHAR(255) NOT NULL,
-    Location NVARCHAR(255) DEFAULT 'Remote',
-    Salary NVARCHAR(100) DEFAULT 'Competitive Base + Commission',
-    Schedule NVARCHAR(255) DEFAULT 'Monday - Friday (US Business Hours)',
-    Requirements NVARCHAR(MAX),
-    Description NVARCHAR(MAX),
-    Status NVARCHAR(50) DEFAULT 'Active' -- Can be 'Active' or 'On Hold'
-);
+-- Drop the old table if you already created it
+IF OBJECT_ID('Jobs', 'U') IS NOT NULL DROP TABLE Jobs;
 GO
 
--- Insert a test job so your frontend isn't empty!
-INSERT INTO Jobs (Title, Company, Location, Salary, Schedule, Status)
-VALUES ('Senior Cold Caller', 'Dark Wolves', 'Remote', '$500/month + 5% Commission', 'Mon-Fri 9AM-5PM EST', 'Active');
+-- Create the new detailed Jobs table
+CREATE TABLE Jobs (
+    JobID INT IDENTITY(1,1) PRIMARY KEY,
+    Status NVARCHAR(50) DEFAULT 'Active',
+    CompanyName NVARCHAR(255) NOT NULL,
+    JobTitle NVARCHAR(255) NOT NULL,
+    AccountType NVARCHAR(255),
+    WorkingHours NVARCHAR(255),
+    InterviewTime NVARCHAR(255),
+    SalaryPackage NVARCHAR(255),
+    TargetAudience NVARCHAR(255), -- For "Who can apply & Max age"
+    Location NVARCHAR(255),
+    Training NVARCHAR(255),
+    OfferDetails NVARCHAR(MAX)    -- For "OFFER ??"
+);
 GO

@@ -71,18 +71,28 @@
         </div>
 
         <div id="section-jobs" class="data-table-container" style="display: none;">
-            <div class="job-form">
-                <input type="text" id="newJobTitle" placeholder="Job Title (e.g. Real Estate Closer)">
-                <input type="text" id="newJobCompany" placeholder="Company Name" value="Dark Wolves">
-                <input type="text" id="newJobSalary" placeholder="Salary (e.g. $800/mo + Comm)">
-                <input type="text" id="newJobSchedule" placeholder="Schedule (e.g. Mon-Fri 9-5 EST)">
-                <button onclick="addNewJob()" class="btn-analyze" style="grid-column: span 2;">+ Create New Job Posting</button>
+            <div class="job-form" style="grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                <input type="text" id="jCompany" placeholder="Company Name (e.g. Dark Wolves)">
+                <input type="text" id="jTitle" placeholder="Job Title">
+                <input type="text" id="jAccount" placeholder="Account Type (e.g. Real Estate)">
+                
+                <input type="text" id="jHours" placeholder="Working Hours">
+                <input type="text" id="jInterview" placeholder="Interview Time">
+                <input type="text" id="jSalary" placeholder="Salary Package">
+                
+                <input type="text" id="jTarget" placeholder="Who can apply & Max age">
+                <input type="text" id="jLocation" placeholder="Location">
+                <input type="text" id="jTraining" placeholder="Training Details">
+                
+                <textarea id="jOffer" placeholder="Extra OFFER 🐺 details..." style="grid-column: span 3; background: #141414; color: white; border: 1px solid #444; padding: 10px; border-radius: 5px; font-family: inherit; resize: vertical; min-height: 60px;"></textarea>
+                
+                <button onclick="addNewJob()" class="btn-analyze" style="grid-column: span 3;">+ Create New Job Posting</button>
             </div>
             
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>ID</th><th>Job Title</th><th>Salary & Schedule</th><th>Status</th><th>Actions</th>
+                        <th>ID</th><th>Job Title</th><th>Account & Hours</th><th>Salary Package</th><th>Status</th><th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="jobs-table-body"></tbody>
@@ -322,7 +332,6 @@
             if(document.getElementById('section-jobs').style.display === 'block') loadAdminJobs();
         }
 
-        // Job Management Logic
         async function loadAdminJobs() {
             const tbody = document.getElementById('jobs-table-body');
             const res = await fetch('http://127.0.0.1:5000/api/admin/jobs');
@@ -331,8 +340,9 @@
             tbody.innerHTML = jobs.map(j => `
                 <tr>
                     <td>#${j.JobID}</td>
-                    <td><b>${j.Title}</b><br><small>${j.Company}</small></td>
-                    <td>${j.Salary}<br><small>${j.Schedule}</small></td>
+                    <td><b>${j.JobTitle}</b><br><small>${j.CompanyName}</small></td>
+                    <td>${j.AccountType}<br><small>${j.WorkingHours}</small></td>
+                    <td>${j.SalaryPackage}</td>
                     <td>
                         <button onclick="toggleJobStatus(${j.JobID}, '${j.Status}')" 
                                 class="status-btn ${j.Status === 'Active' ? 'status-active' : 'status-hold'}">
@@ -340,26 +350,35 @@
                         </button>
                     </td>
                     <td>
-                        <button onclick="deleteJob(${j.JobID})" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i class="fas fa-trash"></i> Delete</button>
+                        <button onclick="deleteJob(${j.JobID})" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
         }
 
         async function addNewJob() {
-            const title = document.getElementById('newJobTitle').value;
-            const company = document.getElementById('newJobCompany').value;
-            const salary = document.getElementById('newJobSalary').value;
-            const schedule = document.getElementById('newJobSchedule').value;
+            const payload = {
+                companyName: document.getElementById('jCompany').value,
+                jobTitle: document.getElementById('jTitle').value,
+                accountType: document.getElementById('jAccount').value,
+                workingHours: document.getElementById('jHours').value,
+                interviewTime: document.getElementById('jInterview').value,
+                salaryPackage: document.getElementById('jSalary').value,
+                targetAudience: document.getElementById('jTarget').value,
+                location: document.getElementById('jLocation').value,
+                training: document.getElementById('jTraining').value,
+                offerDetails: document.getElementById('jOffer').value
+            };
 
-            if(!title) return alert("Title is required!");
+            if(!payload.jobTitle) return alert("Job Title is required!");
 
             await fetch('http://127.0.0.1:5000/api/admin/jobs', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, company, salary, schedule })
+                body: JSON.stringify(payload)
             });
             
-            document.getElementById('newJobTitle').value = '';
+            // Clear inputs
+            document.querySelectorAll('.job-form input, .job-form textarea').forEach(el => el.value = '');
             loadAdminJobs();
         }
 

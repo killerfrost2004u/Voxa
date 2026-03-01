@@ -242,43 +242,46 @@ def send_whatsapp_message(to_number, message_body):
     except Exception as e:
         print(f"❌ Failed to send WhatsApp: {e}")
 
-# --- 1. UPDATED WHATSAPP BOT ENGINE ---
-def process_job_offer_manual(candidate_name, whatsapp_number, job_title, decision, custom_job="", salary="Competitive", schedule="Standard US Hours"):
+# --- 1. UPDATED WHATSAPP BOT ENGINE WITH FULL DETAILS ---
+def process_job_offer_manual(candidate_name, whatsapp_number, job_title, decision, custom_job="", job_data=None):
+    # Default fallback data just in case the job was deleted
+    if not job_data:
+        job_data = {
+            "CompanyName": "Dark Wolves", "AccountType": "TBD", "WorkingHours": "Standard US Hours", 
+            "SalaryPackage": "Competitive", "Location": "Remote", "Training": "Paid Training provided", "OfferDetails": "Welcome to the team."
+        }
+
     if decision == 'accept_original':
-        msg = f"""🎉 *OFFICIAL JOB OFFER from Dark Wolves* 🎉
+        msg = f"""🎉 *OFFICIAL JOB OFFER: {job_data['CompanyName']}* 🎉
 
 Hello {candidate_name}! 
 Congratulations! We have reviewed your AI Voice Analysis and you passed our English requirement. We are thrilled to officially offer you the position of *{job_title}*!
 
 📋 *Offer Details:*
 • *Role:* {job_title}
-• *Type:* Full-Time / Remote
-• *Schedule:* {schedule}
-• *Base Salary:* {salary}
-• *Equipment:* Bring Your Own Device (BYOD)
+• *Account Type:* {job_data['AccountType']}
+• *Location:* {job_data['Location']}
+• *Working Hours:* {job_data['WorkingHours']}
+• *Salary Package:* {job_data['SalaryPackage']}
+• *Training:* {job_data['Training']}
+
+🐺 *Extra Offer Notes:* {job_data['OfferDetails']}
 
 🚀 *Next Steps:*
-To secure your spot, please reply to this message with exactly *"ACCEPT"*. Once received, our HR team will email you the official contract.
+To secure your spot, please reply to this message with exactly *"ACCEPT"*. Once received, our HR team will reach out with the contract.
 
-If you are no longer interested, please reply *"DECLINE"*.
-
-Welcome to the pack! 🐺"""
+If you are no longer interested, please reply *"DECLINE"*."""
 
     elif decision == 'offer_alternative':
         msg = f"""🐺 *APPLICATION UPDATE: Dark Wolves* 🐺
 
 Hello {candidate_name},
-Thank you for applying! While your English profile is fantastic, we would love to officially offer you a position as a *{custom_job}* instead, which we feel is a better fit!
+Thank you for applying! While your English profile is fantastic, that specific campaign requires a different dialect profile. However, we were incredibly impressed by you and would love to officially offer you a position as a *{custom_job}* instead!
 
-📋 *Alternative Offer Details:*
-• *Role:* {custom_job}
-• *Type:* Full-Time / Remote
-• *Growth:* Fast-track promotion opportunities.
-
-Please reply *"ACCEPT"* to begin onboarding, or *"DECLINE"* if you are passing on this offer."""
+Please reply *"ACCEPT"* to begin onboarding for this new role, or *"DECLINE"* if you are passing on this offer."""
 
     elif decision == 'reject':
-        msg = f"Hello {candidate_name},\n\nThank you for submitting your voice introduction for the {job_title} role. After reviewing your AI proficiency report, we have decided to move forward with other candidates whose English profiles more closely align with our current requirements.\n\nWe keep all applications on file. We wish you the absolute best! 🐺"
+        msg = f"Hello {candidate_name},\n\nThank you for submitting your voice introduction for the {job_title} role. After reviewing your AI proficiency report, we have decided to move forward with other candidates whose English profiles more closely align with our current client campaign requirements.\n\nWe keep all applications on file and wish you the best! 🐺"
     else:
         return False
 
@@ -307,34 +310,33 @@ def send_offer(id):
         c_whatsapp = app_row[1]
         c_job = app_row[2]
 
-        # 2. Fetch REAL Job Details from the new Jobs table
-        salary = "Competitive"
-        schedule = "Standard US Hours"
-        c.execute("SELECT Salary, Schedule FROM Jobs WHERE Title=?", (c_job,))
+        # 2. Fetch ALL Job Details from the database
+        c.execute("SELECT CompanyName, AccountType, WorkingHours, SalaryPackage, Location, Training, OfferDetails FROM Jobs WHERE JobTitle=?", (c_job,))
         job_row = c.fetchone()
+        
+        job_data = None
         if job_row:
-            salary = job_row[0]
-            schedule = job_row[1]
-            
+            job_data = {
+                "CompanyName": job_row[0], "AccountType": job_row[1], "WorkingHours": job_row[2],
+                "SalaryPackage": job_row[3], "Location": job_row[4], "Training": job_row[5], "OfferDetails": job_row[6]
+            }
         conn.close()
 
-        # 3. Send message with real details injected
-        success = process_job_offer_manual(c_name, c_whatsapp, c_job, decision, custom_job, salary, schedule)
+        # 3. Send message
+        success = process_job_offer_manual(c_name, c_whatsapp, c_job, decision, custom_job, job_data)
         if success:
             return jsonify({"message": "WhatsApp message sent successfully!"}), 200
         return jsonify({"error": "Invalid decision"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 # --- 2. NEW JOB MANAGEMENT ROUTES ---
 @app.route('/api/jobs', methods=['GET'])
 def get_public_jobs():
-    # Only shows 'Active' jobs to the public frontend
     try:
         conn = get_db_connection()
         c = conn.cursor()
-        c.execute("SELECT JobID as id, Title as title, Company as company, Location as location, Salary as salary, Schedule as schedule, Requirements as requirements, Description as description FROM Jobs WHERE Status = 'Active'")
+        c.execute("SELECT * FROM Jobs WHERE Status = 'Active'")
         cols = [column[0] for column in c.description]
         jobs = [dict(zip(cols, row)) for row in c.fetchall()]
         conn.close()
@@ -356,8 +358,11 @@ def handle_admin_jobs():
     if request.method == 'POST':
         d = request.get_json()
         c.execute(
-            "INSERT INTO Jobs (Title, Company, Location, Salary, Schedule, Status) VALUES (?, ?, ?, ?, ?, ?)",
-            (d.get('title'), d.get('company'), d.get('location'), d.get('salary'), d.get('schedule'), d.get('status', 'Active'))
+            """INSERT INTO Jobs (CompanyName, JobTitle, AccountType, WorkingHours, InterviewTime, SalaryPackage, TargetAudience, Location, Training, OfferDetails, Status) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (d.get('companyName'), d.get('jobTitle'), d.get('accountType'), d.get('workingHours'), 
+             d.get('interviewTime'), d.get('salaryPackage'), d.get('targetAudience'), d.get('location'), 
+             d.get('training'), d.get('offerDetails'), d.get('status', 'Active'))
         )
         conn.commit()
         conn.close()
@@ -367,14 +372,12 @@ def handle_admin_jobs():
 def update_delete_job(id):
     conn = get_db_connection()
     c = conn.cursor()
-    
     if request.method == 'PUT':
         data = request.get_json()
         c.execute("UPDATE Jobs SET Status=? WHERE JobID=?", (data.get('status'), id))
         conn.commit()
         conn.close()
         return jsonify({"message": "Status updated"})
-        
     if request.method == 'DELETE':
         c.execute("DELETE FROM Jobs WHERE JobID=?", (id,))
         conn.commit()
