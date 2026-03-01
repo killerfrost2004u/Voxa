@@ -242,23 +242,23 @@ def send_whatsapp_message(to_number, message_body):
     except Exception as e:
         print(f"❌ Failed to send WhatsApp: {e}")
 
-def process_job_offer_manual(candidate_name, whatsapp_number, original_job, decision, custom_job=""):
-    
+# --- 1. UPDATED WHATSAPP BOT ENGINE ---
+def process_job_offer_manual(candidate_name, whatsapp_number, job_title, decision, custom_job="", salary="Competitive", schedule="Standard US Hours"):
     if decision == 'accept_original':
         msg = f"""🎉 *OFFICIAL JOB OFFER from Dark Wolves* 🎉
 
 Hello {candidate_name}! 
-Congratulations! We have reviewed your AI Voice Analysis, and your English proficiency perfectly matches our elite standards. We are thrilled to officially offer you the position of *{original_job}*!
+Congratulations! We have reviewed your AI Voice Analysis and you passed our English requirement. We are thrilled to officially offer you the position of *{job_title}*!
 
 📋 *Offer Details:*
-• *Role:* {original_job}
+• *Role:* {job_title}
 • *Type:* Full-Time / Remote
-• *Schedule:* Monday - Friday (US Business Hours)
-• *Base Salary:* $XXX/month + Performance Commissions (To be discussed in onboarding)
+• *Schedule:* {schedule}
+• *Base Salary:* {salary}
 • *Equipment:* Bring Your Own Device (BYOD)
 
 🚀 *Next Steps:*
-To secure your spot in our upcoming training wave, please reply to this message with exactly *"ACCEPT"*. Once received, our HR team will email you the official contract.
+To secure your spot, please reply to this message with exactly *"ACCEPT"*. Once received, our HR team will email you the official contract.
 
 If you are no longer interested, please reply *"DECLINE"*.
 
@@ -268,34 +268,118 @@ Welcome to the pack! 🐺"""
         msg = f"""🐺 *APPLICATION UPDATE: Dark Wolves* 🐺
 
 Hello {candidate_name},
-Thank you for applying for the '{original_job}' role! While your English profile is fantastic, that specific campaign requires a different dialect profile. 
-
-However, we were incredibly impressed by your confidence and fluency, and we do not want to lose you! We would love to officially offer you a position as a *{custom_job}* instead!
+Thank you for applying! While your English profile is fantastic, we would love to officially offer you a position as a *{custom_job}* instead, which we feel is a better fit!
 
 📋 *Alternative Offer Details:*
 • *Role:* {custom_job}
 • *Type:* Full-Time / Remote
-• *Schedule:* Monday - Friday (US Business Hours)
-• *Growth:* Fast-track promotion opportunities based on performance.
+• *Growth:* Fast-track promotion opportunities.
 
-Would you like to accept this alternative position? 
 Please reply *"ACCEPT"* to begin onboarding, or *"DECLINE"* if you are passing on this offer."""
 
     elif decision == 'reject':
-        msg = f"""Hello {candidate_name},
-
-Thank you for your interest in joining Dark Wolves and for taking the time to submit your voice introduction for the *{original_job}* role.
-
-After reviewing your AI proficiency report, we have decided to move forward with other candidates whose English profiles more closely align with our current client campaign requirements. 
-
-We keep all applications on file and will reach out if a campaign opens up that matches your specific skill set. We wish you the absolute best in your career journey! 🐺"""
-
+        msg = f"Hello {candidate_name},\n\nThank you for submitting your voice introduction for the {job_title} role. After reviewing your AI proficiency report, we have decided to move forward with other candidates whose English profiles more closely align with our current requirements.\n\nWe keep all applications on file. We wish you the absolute best! 🐺"
     else:
         return False
 
-    # Send the message!
     send_whatsapp_message(whatsapp_number, msg)
     return True
+
+@app.route('/api/admin/send-offer/<int:id>', methods=['POST'])
+def send_offer(id):
+    try:
+        data = request.get_json()
+        decision = data.get('decision')
+        custom_job = data.get('customJob', '')
+
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # 1. Get Candidate Data
+        c.execute("SELECT FullName, WhatsApp, JobTitle FROM JobApplications WHERE ApplicationID=?", (id,))
+        app_row = c.fetchone()
+        
+        if not app_row or not app_row[1]:
+            conn.close()
+            return jsonify({"error": "Candidate data or WhatsApp number not found"}), 404
+            
+        c_name = app_row[0].split()[0]
+        c_whatsapp = app_row[1]
+        c_job = app_row[2]
+
+        # 2. Fetch REAL Job Details from the new Jobs table
+        salary = "Competitive"
+        schedule = "Standard US Hours"
+        c.execute("SELECT Salary, Schedule FROM Jobs WHERE Title=?", (c_job,))
+        job_row = c.fetchone()
+        if job_row:
+            salary = job_row[0]
+            schedule = job_row[1]
+            
+        conn.close()
+
+        # 3. Send message with real details injected
+        success = process_job_offer_manual(c_name, c_whatsapp, c_job, decision, custom_job, salary, schedule)
+        if success:
+            return jsonify({"message": "WhatsApp message sent successfully!"}), 200
+        return jsonify({"error": "Invalid decision"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# --- 2. NEW JOB MANAGEMENT ROUTES ---
+@app.route('/api/jobs', methods=['GET'])
+def get_public_jobs():
+    # Only shows 'Active' jobs to the public frontend
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT JobID as id, Title as title, Company as company, Location as location, Salary as salary, Schedule as schedule, Requirements as requirements, Description as description FROM Jobs WHERE Status = 'Active'")
+        cols = [column[0] for column in c.description]
+        jobs = [dict(zip(cols, row)) for row in c.fetchall()]
+        conn.close()
+        return jsonify(jobs)
+    except: return jsonify([])
+
+@app.route('/api/admin/jobs', methods=['GET', 'POST'])
+def handle_admin_jobs():
+    conn = get_db_connection()
+    c = conn.cursor()
+    
+    if request.method == 'GET':
+        c.execute("SELECT * FROM Jobs ORDER BY JobID DESC")
+        cols = [column[0] for column in c.description]
+        jobs = [dict(zip(cols, row)) for row in c.fetchall()]
+        conn.close()
+        return jsonify(jobs)
+        
+    if request.method == 'POST':
+        d = request.get_json()
+        c.execute(
+            "INSERT INTO Jobs (Title, Company, Location, Salary, Schedule, Status) VALUES (?, ?, ?, ?, ?, ?)",
+            (d.get('title'), d.get('company'), d.get('location'), d.get('salary'), d.get('schedule'), d.get('status', 'Active'))
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Job added"}), 201
+
+@app.route('/api/admin/jobs/<int:id>', methods=['PUT', 'DELETE'])
+def update_delete_job(id):
+    conn = get_db_connection()
+    c = conn.cursor()
+    
+    if request.method == 'PUT':
+        data = request.get_json()
+        c.execute("UPDATE Jobs SET Status=? WHERE JobID=?", (data.get('status'), id))
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Status updated"})
+        
+    if request.method == 'DELETE':
+        c.execute("DELETE FROM Jobs WHERE JobID=?", (id,))
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Job deleted"})
 
 # --- ROUTES ---
 @app.route('/api/whatsapp/reply', methods=['POST'])
@@ -318,34 +402,6 @@ def whatsapp_reply():
         msg.body("I didn't quite catch that. Please reply with 'ACCEPT' or 'DECLINE'.")
 
     return str(resp)
-
-@app.route('/api/admin/send-offer/<int:id>', methods=['POST'])
-def send_offer(id):
-    try:
-        data = request.get_json()
-        decision = data.get('decision')
-        custom_job = data.get('customJob', '')
-
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute("SELECT FullName, WhatsApp, JobTitle FROM JobApplications WHERE ApplicationID=?", (id,))
-        row = c.fetchone()
-        conn.close()
-
-        if row and row[1]:
-            c_name = row[0].split()[0] # First name
-            c_whatsapp = row[1]
-            c_job = row[2]
-            
-            success = process_job_offer_manual(c_name, c_whatsapp, c_job, decision, custom_job)
-            if success:
-                return jsonify({"message": "WhatsApp message sent successfully!"}), 200
-            else:
-                return jsonify({"error": "Invalid decision type"}), 400
-                
-        return jsonify({"error": "Candidate data or WhatsApp number not found"}), 404
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/signup', methods=['POST'])
 def signup():
@@ -396,30 +452,6 @@ def login():
                 
         return jsonify({"error": "Database connection failed"}), 500
     except Exception as e: return jsonify({"error": str(e)}), 500
-
-@app.route('/api/jobs', methods=['GET'])
-def get_jobs():
-    try:
-        encoded_name = urllib.parse.quote(SHEET_NAME)
-        url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={encoded_name}"
-        response = requests.get(url, timeout=5)
-        if response.status_code != 200: return jsonify([])
-
-        csv_content = response.content.decode('utf-8-sig')
-        raw_data = list(csv.reader(io.StringIO(csv_content)))
-        transposed_data = list(map(list, itertools.zip_longest(*raw_data, fillvalue="")))
-
-        jobs = []
-        for i, col in enumerate(transposed_data):
-            if i == 0 or len(col) < 10: continue
-            jobs.append({
-                "id": i, "title": col[2].strip(), "company": col[1].strip(),
-                "location": col[8].strip() or "Remote", "salary": col[6].strip() or "Competitive",
-                "requirements": col[3].strip() + "\n" + col[7].strip(),
-                "description": col[10].strip(), "logo": (col[1].strip()[:2]).upper()
-            })
-        return jsonify(jobs)
-    except: return jsonify([])
 
 @app.route('/api/dashboard/<email>', methods=['GET'])
 def get_user_dashboard(email):
