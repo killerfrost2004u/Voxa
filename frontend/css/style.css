@@ -551,3 +551,182 @@ footer .container { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 
     }
     .auth-buttons.show-menu { display: flex !important; }
 }
+
+/* =========================================
+   📱 LAYOUT ORGANIZATION & MOBILE FIXES 
+   (Strictly keeping the Dark Theme)
+   ========================================= */
+
+/* 1. Universal Form Styling (Apply & Contact Pages) */
+/* This wraps your forms in a neat, centered card */
+.apply-container form,
+.contact-container form,
+.main-form {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    padding: 2.5rem;
+    border-radius: 12px;
+    max-width: 700px;
+    margin: 2rem auto;
+    box-sizing: border-box;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.6rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.form-group input, 
+.form-group textarea, 
+.form-group select {
+    width: 100%;
+    padding: 1rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-main);
+    font-size: 1rem; /* 1rem prevents iPhones from auto-zooming! */
+    box-sizing: border-box;
+}
+
+/* Ensure the audio record button takes full width inside forms */
+.btn-record {
+    width: 100%;
+    margin-top: 10px;
+    box-sizing: border-box;
+}
+
+/* 2. Job Card Overflow Fixes (Jobs Page) */
+.job-card-wide .meta {
+    flex-wrap: wrap; /* Forces tags to move to the next line instead of going off-screen */
+    gap: 8px;
+    line-height: 1.8;
+}
+
+.tag {
+    display: inline-flex;
+    white-space: nowrap;
+    align-items: center;
+}
+
+/* 3. About & Contact Page Text Alignments */
+.text-center { text-align: center; }
+.content-block {
+    max-width: 800px;
+    margin: 0 auto;
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    line-height: 1.8;
+}
+
+/* =========================================
+   📱 MOBILE RESPONSIVENESS (MAX 768px)
+   ========================================= */
+@media (max-width: 768px) {
+    
+    /* Adjust Page Headers */
+    .page-header {
+        padding: 2.5rem 1rem;
+        text-align: center;
+    }
+    .page-header h1 {
+        font-size: 2rem; /* Shrink massive headers */
+    }
+    
+    /* Section Padding */
+    .section-padding {
+        padding: 2rem 1rem;
+    }
+
+    /* Make Forms fit exactly inside mobile screens */
+    .apply-container form,
+    .contact-container form,
+    .main-form {
+        padding: 1.5rem;
+        margin: 1rem 0;
+        width: 100%;
+        border-radius: 8px;
+    }
+
+    /* Jobs Layout Stack */
+    .jobs-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    /* Sidebar Filters take full width on mobile */
+    .sidebar {
+        width: 100%;
+        position: static;
+        margin-bottom: 1rem;
+    }
+
+    /* Wide Job Cards structure for phones */
+    .job-card-wide {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.2rem;
+    }
+    .job-card-wide .logo-box {
+        margin-bottom: 1rem;
+    }
+    
+    /* Align buttons side-by-side on tablet, stack on tiny phones */
+    .job-card-wide .actions {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+    }
+
+    /* Fix Modals overflowing off the screen */
+    .modal-content {
+        width: 95%;
+        padding: 1.5rem;
+        margin: 10px;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+    .modal-grid-2 {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    /* Center the modal header info on mobile */
+    .modal-header {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+    }
+    .modal-header .company-logo-large {
+        margin-bottom: 10px !important;
+    }
+}
+
+/* =========================================
+   📱 TINY PHONES (MAX 480px)
+   ========================================= */
+@media (max-width: 480px) {
+    /* Stack job card buttons vertically if the screen is super narrow */
+    .job-card-wide .actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    .job-card-wide .actions button,
+    .job-card-wide .actions .btn-primary {
+        width: 100%;
+        text-align: center;
+    }
+}
