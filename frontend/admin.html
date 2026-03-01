@@ -63,7 +63,7 @@
                 <thead>
                     <tr>
                         <th width="50">ID</th><th width="180">Candidate</th><th width="220">Voice Intro</th>
-                        <th width="200">AI Grade</th><th width="200">Contact</th><th>Experience</th><th width="120">Date</th>
+                        <th width="200">AI Grade</th><th width="100">Status</th><th width="200">Contact</th><th>Experience</th><th width="120">Date</th>
                     </tr>
                 </thead>
                 <tbody id="admin-table-body"></tbody>
@@ -307,6 +307,12 @@
                 if (res.ok) {
                     btn.style.background = '#3b82f6';
                     btn.innerHTML = '<i class="fas fa-check"></i> Sent Successfully!';
+                    
+                    // NEW: Auto-close the modal and refresh the table after 1.5 seconds!
+                    setTimeout(() => {
+                        closeModal();
+                        loadApplications(); 
+                    }, 1500);
                 } else {
                     alert(data.error || "Failed to send message.");
                     btn.disabled = false;

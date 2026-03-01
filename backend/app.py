@@ -193,7 +193,7 @@ def ai_worker(app_id, file_path):
                 c.execute(
                     """UPDATE JobApplications 
                        SET Transcription=?, AI_Rating=?, AI_Summary=?, SpeechRate=0,
-                           Grammar_Rating=?, Fluency_Rating=?, Pronunciation_Rating=?, Accent_Profile=?
+                           Grammar_Rating=?, Fluency_Rating=?, Pronunciation_Rating=?, Accent_Profile=?, Status='Analyzed'
                        WHERE ApplicationID=?""",
                     (transcript, overall_grade, ai_data['summary'], 
                      grammar_grade, fluency_grade, pronunciation_grade, accent_profile, app_id)
@@ -322,9 +322,25 @@ def send_offer(id):
             }
         conn.close()
 
-        # 3. Send message
+        
+        # 3. Send message with real details injected
         success = process_job_offer_manual(c_name, c_whatsapp, c_job, decision, custom_job, job_data)
         if success:
+            # --- NEW: UPDATE THE STATUS IN THE DATABASE ---
+            status_map = {
+                'accept_original': 'Accepted',
+                'offer_alternative': 'Alternative Offered',
+                'reject': 'Rejected'
+            }
+            new_status = status_map.get(decision, 'In Review')
+            
+            conn2 = get_db_connection()
+            c2 = conn2.cursor()
+            c2.execute("UPDATE JobApplications SET Status=? WHERE ApplicationID=?", (new_status, id))
+            conn2.commit()
+            conn2.close()
+            # ----------------------------------------------
+            
             return jsonify({"message": "WhatsApp message sent successfully!"}), 200
         return jsonify({"error": "Invalid decision"}), 400
     except Exception as e:
@@ -338,10 +354,31 @@ def get_public_jobs():
         c = conn.cursor()
         c.execute("SELECT * FROM Jobs WHERE Status = 'Active'")
         cols = [column[0] for column in c.description]
-        jobs = [dict(zip(cols, row)) for row in c.fetchall()]
+        raw_jobs = [dict(zip(cols, row)) for row in c.fetchall()]
         conn.close()
-        return jsonify(jobs)
-    except: return jsonify([])
+
+        # Translate the new SQL columns back to the exact format your frontend expects!
+        formatted_jobs = []
+        for j in raw_jobs:
+            formatted_jobs.append({
+                "id": j.get("JobID"),
+                "title": j.get("JobTitle", "Unknown Title"),
+                "company": j.get("CompanyName", "Dark Wolves"),
+                "location": j.get("Location") or "Remote",
+                "salary": j.get("SalaryPackage") or "Competitive",
+                
+                # We combine your new specific fields so they fit into your old UI layout
+                "requirements": f"Account: {j.get('AccountType', 'N/A')} | Hours: {j.get('WorkingHours', 'N/A')} | Target: {j.get('TargetAudience', 'N/A')}",
+                "description": j.get("OfferDetails", ""),
+                
+                # Keep your old logo logic!
+                "logo": j.get("CompanyName", "DW")[:2].upper()
+            })
+
+        return jsonify(formatted_jobs)
+    except Exception as e: 
+        print(f"Error loading jobs: {e}")
+        return jsonify([])
 
 @app.route('/api/admin/jobs', methods=['GET', 'POST'])
 def handle_admin_jobs():

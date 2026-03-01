@@ -290,26 +290,57 @@
 
         async function fetchAndRenderDashboard(email) {
             try {
-                // Ensure this URL matches your backend
+                // Fetch the logged-in user's applications based on their email
                 const response = await fetch(`http://127.0.0.1:5000/api/dashboard/${email}`);
                 if (!response.ok) throw new Error("Failed to fetch dashboard data");
                 
-                const data = await response.json();
-                const apps = data.applications || [];
+                // The backend returns the array directly, so we just await the JSON
+                const apps = await response.json(); 
 
-                // Update Counts
+                // Update Total Applications Count
                 document.getElementById('stat-applied').textContent = apps.length;
 
-                // Render Dashboard Table (First 5)
+                // Helper to format the SQL Date nicely (e.g., "Mar 1, 2026")
+                const formatDate = (dateString) => {
+                    if (!dateString) return 'N/A';
+                    return new Date(dateString).toLocaleDateString('en-US', { 
+                        month: 'short', day: 'numeric', year: 'numeric' 
+                    });
+                };
+
+                // Render Dashboard Table (First 5 Recent Hunts)
                 const dashTableBody = document.querySelector('#dashboard-table tbody');
                 dashTableBody.innerHTML = apps.length ? '' : '<tr><td colspan="4" style="text-align:center; color:#666;">No hunts started yet.</td></tr>';
+                
+                // Render Dashboard Table (First 5 Recent Hunts)
+                const dashTableBody = document.querySelector('#dashboard-table tbody');
+                dashTableBody.innerHTML = apps.length ? '' : '<tr><td colspan="4" style="text-align:center; color:#666;">No hunts started yet.</td></tr>';
+                
                 apps.slice(0, 5).forEach(app => {
+                    // STRICT CANDIDATE STATUS LOGIC
+                    let displayStatus = 'In Review';
+                    let statusColor = '#333'; 
+                    let textColor = '#aaa';
+
+                    if (app.Status === 'Accepted') {
+                        displayStatus = 'Accepted';
+                        statusColor = '#064e3b'; textColor = '#34d399';
+                    } else if (app.Status === 'Alternative Offered') {
+                        displayStatus = 'Alternative Offered';
+                        statusColor = '#78350f'; textColor = '#fbbf24';
+                    } else if (app.Status === 'Rejected') {
+                        displayStatus = 'Rejected';
+                        statusColor = '#7f1d1d'; textColor = '#fca5a5';
+                    }
+
+                    const finalBadge = `<span class="status-badge" style="background:${statusColor}; color:${textColor}; border: 1px solid ${textColor};">${displayStatus}</span>`;
+
                     dashTableBody.innerHTML += `
                         <tr>
-                            <td style="color:white; font-weight:600;">${app.title}</td>
-                            <td>${app.company}</td>
-                            <td>${app.date}</td>
-                            <td><span class="status-badge status-applied">${app.status}</span></td>
+                            <td style="color:white; font-weight:600;">${app.JobTitle}</td>
+                            <td>${app.Company}</td>
+                            <td>${formatDate(app.SubmittedAt)}</td>
+                            <td>${finalBadge}</td>
                         </tr>
                     `;
                 });
@@ -317,22 +348,134 @@
                 // Render Full Applications Table
                 const appTableBody = document.querySelector('#applications-table tbody');
                 appTableBody.innerHTML = apps.length ? '' : '<tr><td colspan="5" style="text-align:center; color:#666;">No applications yet.</td></tr>';
+                
                 apps.forEach(app => {
+                    // STRICT CANDIDATE STATUS LOGIC
+                    let displayStatus = 'In Review';
+                    let statusColor = '#333'; 
+                    let textColor = '#aaa';
+
+                    if (app.Status === 'Accepted') {
+                        displayStatus = 'Accepted';
+                        statusColor = '#064e3b'; textColor = '#34d399';
+                    } else if (app.Status === 'Alternative Offered') {
+                        displayStatus = 'Alternative Offered';
+                        statusColor = '#78350f'; textColor = '#fbbf24';
+                    } else if (app.Status === 'Rejected') {
+                        displayStatus = 'Rejected';
+                        statusColor = '#7f1d1d'; textColor = '#fca5a5';
+                    }
+
+                    const finalBadge = `<span class="status-badge" style="background:${statusColor}; color:${textColor}; border: 1px solid ${textColor};">${displayStatus}</span>`;
+
+                    // Only show the AI grade to the candidate IF they have been officially validated. 
+                    // Otherwise, keep it as a loading hourglass.
+                    const aiGrade = (app.Status === 'Accepted' || app.Status === 'Alternative Offered' || app.Status === 'Rejected') 
+                                    ? app.AI_Rating 
+                                    : '<i class="fas fa-hourglass-half" style="color:#666;"></i>';
+
                     appTableBody.innerHTML += `
                         <tr>
-                            <td style="color:white; font-weight:600;">${app.title}</td>
-                            <td>${app.company}</td>
-                            <td>${app.date}</td>
-                            <td><span class="status-badge status-applied">${app.status}</span></td>
-                            <td><a href="#" style="color:var(--primary-color)">View</a></td>
+                            <td style="color:white; font-weight:600;">${app.JobTitle}</td>
+                            <td>${app.Company}</td>
+                            <td>${formatDate(app.SubmittedAt)}</td>
+                            <td>${finalBadge}</td>
+                            <td style="color:var(--primary-color); font-weight:bold;">${aiGrade}</td>
+                        </tr>
+                    `;
+                });
+
+                // Update Header for the Full Applications Table to show "AI Grade" instead of "Action"
+                document.querySelector('#applications-table thead').innerHTML = `
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Company</th>
+                        <th>Applied On</th>
+                        <th>Status</th>
+                        <th>AI Grade</th>
+                    </tr>
+                `;
+
+                // Render Full Applications Table
+                const appTableBody = document.querySelector('#applications-table tbody');
+                appTableBody.innerHTML = apps.length ? '' : '<tr><td colspan="5" style="text-align:center; color:#666;">No applications yet.</td></tr>';
+                
+                // Render Dashboard Table (First 5 Recent Hunts)
+                const dashTableBody = document.querySelector('#dashboard-table tbody');
+                dashTableBody.innerHTML = apps.length ? '' : '<tr><td colspan="4" style="text-align:center; color:#666;">No hunts started yet.</td></tr>';
+                
+                apps.slice(0, 5).forEach(app => {
+                    // STRICT CANDIDATE STATUS LOGIC
+                    let displayStatus = 'In Review';
+                    let statusColor = '#333'; 
+                    let textColor = '#aaa';
+
+                    if (app.Status === 'Accepted') {
+                        displayStatus = 'Accepted';
+                        statusColor = '#064e3b'; textColor = '#34d399';
+                    } else if (app.Status === 'Alternative Offered') {
+                        displayStatus = 'Alternative Offered';
+                        statusColor = '#78350f'; textColor = '#fbbf24';
+                    } else if (app.Status === 'Rejected') {
+                        displayStatus = 'Rejected';
+                        statusColor = '#7f1d1d'; textColor = '#fca5a5';
+                    }
+
+                    const finalBadge = `<span class="status-badge" style="background:${statusColor}; color:${textColor}; border: 1px solid ${textColor};">${displayStatus}</span>`;
+
+                    dashTableBody.innerHTML += `
+                        <tr>
+                            <td style="color:white; font-weight:600;">${app.JobTitle}</td>
+                            <td>${app.Company}</td>
+                            <td>${formatDate(app.SubmittedAt)}</td>
+                            <td>${finalBadge}</td>
+                        </tr>
+                    `;
+                });
+
+                // Render Full Applications Table
+                const appTableBody = document.querySelector('#applications-table tbody');
+                appTableBody.innerHTML = apps.length ? '' : '<tr><td colspan="5" style="text-align:center; color:#666;">No applications yet.</td></tr>';
+                
+                apps.forEach(app => {
+                    // STRICT CANDIDATE STATUS LOGIC
+                    let displayStatus = 'In Review';
+                    let statusColor = '#333'; 
+                    let textColor = '#aaa';
+
+                    if (app.Status === 'Accepted') {
+                        displayStatus = 'Accepted';
+                        statusColor = '#064e3b'; textColor = '#34d399';
+                    } else if (app.Status === 'Alternative Offered') {
+                        displayStatus = 'Alternative Offered';
+                        statusColor = '#78350f'; textColor = '#fbbf24';
+                    } else if (app.Status === 'Rejected') {
+                        displayStatus = 'Rejected';
+                        statusColor = '#7f1d1d'; textColor = '#fca5a5';
+                    }
+
+                    const finalBadge = `<span class="status-badge" style="background:${statusColor}; color:${textColor}; border: 1px solid ${textColor};">${displayStatus}</span>`;
+
+                    // Only show the AI grade to the candidate IF they have been officially validated. 
+                    // Otherwise, keep it as a loading hourglass.
+                    const aiGrade = (app.Status === 'Accepted' || app.Status === 'Alternative Offered' || app.Status === 'Rejected') 
+                                    ? app.AI_Rating 
+                                    : '<i class="fas fa-hourglass-half" style="color:#666;"></i>';
+
+                    appTableBody.innerHTML += `
+                        <tr>
+                            <td style="color:white; font-weight:600;">${app.JobTitle}</td>
+                            <td>${app.Company}</td>
+                            <td>${formatDate(app.SubmittedAt)}</td>
+                            <td>${finalBadge}</td>
+                            <td style="color:var(--primary-color); font-weight:bold;">${aiGrade}</td>
                         </tr>
                     `;
                 });
 
             } catch (error) {
                 console.error("Dashboard Load Error:", error);
-                // Fallback to local storage if API fails
-                // loadDashboardData(); // from script.js
+                document.querySelector('#dashboard-table tbody').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#ef4444;">Failed to load data. Make sure backend is running.</td></tr>';
             }
         }
 
