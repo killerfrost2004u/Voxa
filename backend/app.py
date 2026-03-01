@@ -112,7 +112,7 @@ def run_gemini_audio_analysis(file_path):
         CRITICAL GRADING CALIBRATION (YOU MUST FOLLOW THESE 4 PROFILES STRICTLY):
         1. THE C1+ EXECUTIVE (Score 86-95): High-speed, highly confident, native-like rhythm, uses industry jargon smoothly. EXTREMELY IMPORTANT: If they possess this level of fluency, IGNORE minor grammar or preposition slips (like 'get it sorted out' or 'negotiating in the deals'). Their Overall Grade MUST be C1+.
         2. THE C1 FLUENT STORYTELLER (Score 76-85): Speaks fluently, clearly, and confidently, but has a noticeable regional accent and makes direct translation errors (e.g., 'they hold the company', 'in a university'). Because fluency and pronunciation are the top priority, their Overall Grade MUST be C1. Do NOT drop them to B2.
-        3. THE SCRIPT READER (Score 51-65): If the candidate has flawless grammar but sounds like they are reading a prepared script (monotonous, unnatural rhythm), their Overall Grade MUST be strictly capped at B1+ or B2. Never give a script reader a C1.
+        3. THE SCRIPT READER PENALTY (Score 51-65): LISTEN CAREFULLY TO THE INTONATION. If a candidate has absolutely flawless grammar and rich vocabulary but sounds like they are reading from a prepared piece of paper (monotonous, rhythmic pacing, lack of spontaneous 'thinking' pauses, unnatural breathing), you MUST penalize them. True C1 requires spontaneous thought. If they are reading, their Overall Grade MUST be B2 (max score 65), even if their grammar is C2 level. You MUST mention that they sound rehearsed in the summary.
         4. THE B1+ GRAMMAR DROPPER (Score 41-50): If the candidate has a good accent and confidence, but consistently drops foundational verbs ('this my last year', 'I looking forward') or articles, their Overall Grade MUST be capped at B1+. 
         
         5. ACCENT PROFILING: Explicitly name their accent (e.g., 'Clear Egyptian'). A strong but clear accent does not lower the grade.
@@ -213,8 +213,8 @@ def ai_worker(app_id, file_path):
                     c_whatsapp = candidate_data[1]
                     c_job = candidate_data[2]
                 
-                    print(f"🤖 AI Finished. Handing over to WhatsApp Bot for {c_name}...")
-                    process_job_offer(app_id, ai_data['overall_level'], c_name, c_whatsapp, c_job)
+                    # print(f"🤖 AI Finished. Handing over to WhatsApp Bot for {c_name}...")
+                    # process_job_offer(app_id, ai_data['overall_level'], c_name, c_whatsapp, c_job)
         else:
             print("❌ AI returned no response.")
 
@@ -242,32 +242,60 @@ def send_whatsapp_message(to_number, message_body):
     except Exception as e:
         print(f"❌ Failed to send WhatsApp: {e}")
 
-def process_job_offer(application_id, ai_overall_level, candidate_name, whatsapp_number, applied_job_title):
-    # This is a basic matching logic. You can make this as complex as you want!
+def process_job_offer_manual(candidate_name, whatsapp_number, original_job, decision, custom_job=""):
     
-    # Let's say the job they applied for requires C1.
-    requires_c1 = ["Closer", "Acquisition Specialist", "Senior Cold Caller"]
-    
-    is_high_level_job = any(job in applied_job_title for job in requires_c1)
-    
-    if is_high_level_job and ai_overall_level in ["C1", "C1+", "C2"]:
-        # Scenario B: They applied for a hard job and are qualified!
-        msg = f"🎉 Hello {candidate_name}! Congratulations, Dark Wolves has reviewed your voice intro and you passed our C1 English requirement!\n\nYou are officially accepted for the '{applied_job_title}' position. Please reply 'ACCEPT' to begin onboarding, or 'DECLINE' if you are no longer interested."
-        
-    elif is_high_level_job and ai_overall_level in ["B1+", "B2", "B2+"]:
-        # Scenario A: They applied for a hard job, but their English is B2.
-        alternative_job = "Junior Lead Generation Specialist"
-        msg = f"🐺 Hello {candidate_name}. Thank you for applying to Dark Wolves!\n\nWhile your English level ({ai_overall_level}) is great, the '{applied_job_title}' role requires a C1 level. However, we were very impressed by your fluency and would like to offer you a position as a '{alternative_job}' instead!\n\nWould you like to accept this alternative offer? Reply 'ACCEPT' or 'DECLINE'."
-        
-    elif not is_high_level_job and ai_overall_level in ["B1+", "B2", "B2+", "C1", "C1+", "C2"]:
-        # They applied for a standard job and meet the requirements
-         msg = f"🎉 Hello {candidate_name}! Congratulations, you are officially accepted for the '{applied_job_title}' position at Dark Wolves!\n\nPlease reply 'ACCEPT' to begin onboarding, or 'DECLINE' if you are no longer interested."
+    if decision == 'accept_original':
+        msg = f"""🎉 *OFFICIAL JOB OFFER from Dark Wolves* 🎉
+
+Hello {candidate_name}! 
+Congratulations! We have reviewed your AI Voice Analysis, and your English proficiency perfectly matches our elite standards. We are thrilled to officially offer you the position of *{original_job}*!
+
+📋 *Offer Details:*
+• *Role:* {original_job}
+• *Type:* Full-Time / Remote
+• *Schedule:* Monday - Friday (US Business Hours)
+• *Base Salary:* $XXX/month + Performance Commissions (To be discussed in onboarding)
+• *Equipment:* Bring Your Own Device (BYOD)
+
+🚀 *Next Steps:*
+To secure your spot in our upcoming training wave, please reply to this message with exactly *"ACCEPT"*. Once received, our HR team will email you the official contract.
+
+If you are no longer interested, please reply *"DECLINE"*.
+
+Welcome to the pack! 🐺"""
+
+    elif decision == 'offer_alternative':
+        msg = f"""🐺 *APPLICATION UPDATE: Dark Wolves* 🐺
+
+Hello {candidate_name},
+Thank you for applying for the '{original_job}' role! While your English profile is fantastic, that specific campaign requires a different dialect profile. 
+
+However, we were incredibly impressed by your confidence and fluency, and we do not want to lose you! We would love to officially offer you a position as a *{custom_job}* instead!
+
+📋 *Alternative Offer Details:*
+• *Role:* {custom_job}
+• *Type:* Full-Time / Remote
+• *Schedule:* Monday - Friday (US Business Hours)
+• *Growth:* Fast-track promotion opportunities based on performance.
+
+Would you like to accept this alternative position? 
+Please reply *"ACCEPT"* to begin onboarding, or *"DECLINE"* if you are passing on this offer."""
+
+    elif decision == 'reject':
+        msg = f"""Hello {candidate_name},
+
+Thank you for your interest in joining Dark Wolves and for taking the time to submit your voice introduction for the *{original_job}* role.
+
+After reviewing your AI proficiency report, we have decided to move forward with other candidates whose English profiles more closely align with our current client campaign requirements. 
+
+We keep all applications on file and will reach out if a campaign opens up that matches your specific skill set. We wish you the absolute best in your career journey! 🐺"""
+
     else:
-        # Scenario C: They scored below B1+
-        msg = f"Hello {candidate_name}. Thank you for applying to Dark Wolves for the '{applied_job_title}' role. Unfortunately, we require a minimum B1+ English proficiency for our current openings. We encourage you to apply again in the future!"
+        return False
 
     # Send the message!
     send_whatsapp_message(whatsapp_number, msg)
+    return True
 
 # --- ROUTES ---
 @app.route('/api/whatsapp/reply', methods=['POST'])
@@ -291,6 +319,33 @@ def whatsapp_reply():
 
     return str(resp)
 
+@app.route('/api/admin/send-offer/<int:id>', methods=['POST'])
+def send_offer(id):
+    try:
+        data = request.get_json()
+        decision = data.get('decision')
+        custom_job = data.get('customJob', '')
+
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT FullName, WhatsApp, JobTitle FROM JobApplications WHERE ApplicationID=?", (id,))
+        row = c.fetchone()
+        conn.close()
+
+        if row and row[1]:
+            c_name = row[0].split()[0] # First name
+            c_whatsapp = row[1]
+            c_job = row[2]
+            
+            success = process_job_offer_manual(c_name, c_whatsapp, c_job, decision, custom_job)
+            if success:
+                return jsonify({"message": "WhatsApp message sent successfully!"}), 200
+            else:
+                return jsonify({"error": "Invalid decision type"}), 400
+                
+        return jsonify({"error": "Candidate data or WhatsApp number not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/signup', methods=['POST'])
 def signup():

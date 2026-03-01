@@ -161,49 +161,66 @@
             }
         }
 
-function openModal(id) {
+        function openModal(id) {
             const app = appData.find(a => a.ApplicationID === id);
             if(!app) return;
             
-            // Build the new HTML layout with the 4 AI metrics
             document.getElementById('modal-content').innerHTML = `
                 <div style="text-align: center; margin-bottom: 20px;">
                     <span style="background: rgba(59, 130, 246, 0.1); color: #60a5fa; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(59, 130, 246, 0.3); display: inline-flex; align-items: center; gap: 6px;">
                         <i class="fas fa-globe"></i> ${app.Accent_Profile || 'Accent Analysis Pending...'}
                     </span>
                 </div>
-                
+
                 <div class="report-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; text-align: center;">
-                    
-                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Overall Level</h4>
+                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333;">
+                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase;">Overall</h4>
                         <p style="margin:0; color: #3b82f6; font-size: 1.5rem; font-weight: 800;">${app.AI_Rating || 'N/A'}</p>
                     </div>
-
-                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Fluency</h4>
+                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333;">
+                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase;">Fluency</h4>
                         <p style="margin:0; color: #f3f4f6; font-size: 1.25rem; font-weight: 700;">${app.Fluency_Rating || 'N/A'}</p>
                     </div>
-
-                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Pronunciation</h4>
+                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333;">
+                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase;">Pronunciation</h4>
                         <p style="margin:0; color: #f3f4f6; font-size: 1.25rem; font-weight: 700;">${app.Pronunciation_Rating || 'N/A'}</p>
                     </div>
-
-                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Grammar</h4>
+                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333;">
+                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase;">Grammar</h4>
                         <p style="margin:0; color: #f3f4f6; font-size: 1.25rem; font-weight: 700;">${app.Grammar_Rating || 'N/A'}</p>
                     </div>
-
                 </div>
 
                 <div class="report-section" style="margin-bottom: 20px;">
                     <h3 style="color: #e5e7eb; margin-bottom: 12px; font-size: 1.05rem; border-bottom: 1px solid #333; padding-bottom: 8px;">
-                        <i class="fas fa-file-alt" style="color:#3b82f6; margin-right:5px;"></i> Executive Summary & Accent Profile
+                        <i class="fas fa-file-alt" style="color:#3b82f6; margin-right:5px;"></i> Executive Summary
                     </h3>
                     <p style="color: #d1d5db; line-height: 1.7; font-size: 0.95rem; background: #1a1a1a; padding: 16px; border-radius: 8px; border: 1px solid #222;">
                         ${app.AI_Summary || 'Analysis in progress...'}
                     </p>
+                </div>
+
+                <div class="report-section" style="margin-bottom: 20px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.3); padding: 16px; border-radius: 8px;">
+                    <h3 style="color: #10b981; margin-top:0; margin-bottom: 12px; font-size: 1.05rem;">
+                        <i class="fab fa-whatsapp" style="margin-right:5px;"></i> Validator Decision
+                    </h3>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <select id="offer-decision" onchange="toggleCustomJob()" style="padding: 10px; border-radius: 6px; background: #141414; color: white; border: 1px solid #333; font-family: inherit;">
+                            <option value="none">-- Select Action --</option>
+                            <option value="accept_original">Accept for Original Role (${app.JobTitle})</option>
+                            <option value="offer_alternative">Offer Alternative Role</option>
+                            <option value="reject">Reject Candidate</option>
+                        </select>
+                        
+                        <div id="custom-job-container" style="display: none; flex-direction: column; gap: 5px;">
+                            <input type="text" id="custom-job-input" placeholder="Type new job title (e.g., Junior Lead Gen)" style="padding: 10px; border-radius: 6px; background: #141414; color: white; border: 1px solid #333; font-family: inherit;">
+                        </div>
+                        
+                        <button id="send-wa-btn" onclick="sendWhatsAppDecision(${app.ApplicationID})" style="background: #10b981; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; display: none; transition: 0.2s;">
+                            Send WhatsApp Message
+                        </button>
+                    </div>
                 </div>
 
                 <div class="report-section">
@@ -219,6 +236,50 @@ function openModal(id) {
         }
 
         function closeModal() { document.getElementById('ai-modal').style.display = 'none'; }
+
+        // Shows/Hides the alternative job input box and the send button based on dropdown choice
+        function toggleCustomJob() {
+            const decision = document.getElementById('offer-decision').value;
+            document.getElementById('custom-job-container').style.display = (decision === 'offer_alternative') ? 'flex' : 'none';
+            document.getElementById('send-wa-btn').style.display = (decision === 'none') ? 'none' : 'block';
+        }
+
+        // Sends the Validator's command to the Backend
+        async function sendWhatsAppDecision(id) {
+            const decision = document.getElementById('offer-decision').value;
+            const customJob = document.getElementById('custom-job-input').value;
+            
+            if (decision === 'offer_alternative' && customJob.trim() === '') {
+                alert("Please enter the Alternative Job Title!");
+                return;
+            }
+
+            const btn = document.getElementById('send-wa-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+            try {
+                const res = await fetch(`http://127.0.0.1:5000/api/admin/send-offer/${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ decision: decision, customJob: customJob })
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    btn.style.background = '#3b82f6';
+                    btn.innerHTML = '<i class="fas fa-check"></i> Sent Successfully!';
+                } else {
+                    alert(data.error || "Failed to send message.");
+                    btn.disabled = false;
+                    btn.innerHTML = 'Try Again';
+                }
+            } catch (e) {
+                alert("Server Error while sending message.");
+                btn.disabled = false;
+                btn.innerHTML = 'Try Again';
+            }
+        }
     </script>
 </body>
 </html>
