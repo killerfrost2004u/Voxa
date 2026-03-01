@@ -17,7 +17,6 @@
         .btn-analyze:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(37, 99, 235, 0.4); }
         .btn-analyze:disabled { background: #4b5563; cursor: not-allowed; transform: none; box-shadow: none; }
         
-        /* New Re-Validate Button Styles */
         .btn-revalidate {
             background: none; border: 1px solid #d1d5db; color: #4b5563; 
             padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-left: 8px;
@@ -29,11 +28,100 @@
         .tab-btn { background: none; border: none; color: #9ca3af; font-size: 1.1rem; cursor: pointer; padding: 5px 10px; font-weight: 600; transition: 0.3s; }
         .tab-btn.active { color: #3b82f6; border-bottom: 3px solid #3b82f6; }
         
-        .job-form { background: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .job-form { background: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
         .job-form input, .job-form select { background: #141414; color: white; border: 1px solid #444; padding: 10px; border-radius: 5px; width: 100%; }
         .status-btn { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; border: none; font-weight: bold;}
         .status-active { background: rgba(16, 185, 129, 0.2); color: #10b981; }
         .status-hold { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        
+        /* Assign/Edit Grade Button Hover */
+        .btn-assign:hover { background: rgba(59, 130, 246, 0.2) !important; color: white !important; border-color: #3b82f6 !important; }
+
+        /* --- UPGRADED AI ACTIONS & AUDIO PLAYER STYLES --- */
+        
+        /* Force perfect vertical centering for all table rows */
+        .data-table td {
+            vertical-align: middle !important;
+        }
+
+        /* Dark Mode Audio Player */
+        .custom-audio {
+            height: 36px;
+            width: 180px;
+            border-radius: 20px;
+            outline: none;
+            color-scheme: dark;
+            vertical-align: middle;
+        }
+        .custom-audio::-webkit-media-controls-panel {
+            background-color: #1e1e1e; 
+        }
+
+        /* Compact AI Grade Badge */
+        .badge-ai-grade {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            display: inline-flex;
+            align-items: center;
+        }
+
+        /* Compact View AI Report Button */
+        .btn-view-report {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #444;
+            color: #d1d5db;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-view-report:hover {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: #3b82f6;
+            color: #60a5fa;
+            transform: translateY(-1px);
+        }
+
+        /* Compact Re-Run Analysis Button */
+        .btn-revalidate {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #444; 
+            color: #9ca3af; 
+            padding: 4px 8px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 0.8rem; 
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-revalidate:hover { 
+            background: rgba(16, 185, 129, 0.1); 
+            color: #10b981; 
+            border-color: #10b981; 
+        }
+        .btn-revalidate i { transition: transform 0.4s ease; }
+        .btn-revalidate:hover i { transform: rotate(180deg); }
+
+        /* Lock elements to a single row without wrapping */
+        .ai-actions { 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            flex-wrap: nowrap; 
+            white-space: nowrap; 
+        }
     </style>
 </head>
 <body>
@@ -62,15 +150,15 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Candidate</th>
-                        <th>Voice Intro</th>
-                        <th>AI Grade</th>
-                        <th>Human Grade</th> 
-                        <th>Status</th>
-                        <th>Contact</th>
+                        <th width="50">ID</th>
+                        <th width="180">Candidate</th>
+                        <th width="220">Voice Intro</th>
+                        <th width="150">AI Grade</th>
+                        <th width="150">Human Grade</th> 
+                        <th width="100">Status</th>
+                        <th width="200">Contact</th>
                         <th>Experience</th>
-                        <th>Date</th>
+                        <th width="120">Date</th>
                     </tr>
                 </thead>
                 <tbody id="admin-table-body"></tbody>
@@ -78,7 +166,7 @@
         </div>
 
         <div id="section-jobs" class="data-table-container" style="display: none;">
-            <div class="job-form" style="grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div class="job-form">
                 <input type="text" id="jCompany" placeholder="Company Name (e.g. Dark Wolves)">
                 <input type="text" id="jTitle" placeholder="Job Title">
                 <input type="text" id="jAccount" placeholder="Account Type (e.g. Real Estate)">
@@ -111,9 +199,19 @@
         <div class="modal-card">
             <div class="modal-header">
                 <h2><i class="fas fa-robot"></i> AI Intelligence Report</h2>
-                <button onclick="closeModal()" class="close-btn">&times;</button>
+                <button onclick="closeAIModal()" class="close-btn">&times;</button>
             </div>
             <div id="modal-content" class="modal-body"></div>
+        </div>
+    </div>
+
+    <div id="human-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-check" style="color: #10b981;"></i> Human Validation</h2>
+                <button onclick="closeHumanModal()" class="close-btn">&times;</button>
+            </div>
+            <div id="human-modal-content" class="modal-body"></div>
         </div>
     </div>
 
@@ -134,28 +232,41 @@
                 appData = await res.json();
                 
                 tbody.innerHTML = appData.map(app => {
+                    // 1. Sleek Dark Audio Player
                     const hasAudio = app.VoiceRecordPath && app.VoiceRecordPath !== 'null' && app.VoiceRecordPath !== 'No_File';
                     const audioContent = hasAudio 
-                        ? `<audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}" style="height:30px; width:180px;"></audio>` 
+                        ? `<audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}" class="custom-audio"></audio>` 
                         : '<span style="color:#666; font-style:italic;">No Audio</span>';
 
+                    // 2. Upgraded AI Action Buttons
                     let aiContent;
                     if (app.AI_Rating && app.AI_Rating !== 'null') {
-                        // Analysis Done: Show Grade + Re-Validate Button
                         aiContent = `
                             <div class="ai-actions">
-                                <span class="badge badge-ai">${app.AI_Rating}</span>
-                                <button onclick="openModal(${app.ApplicationID})" class="report-link">View</button>
+                                <span class="badge-ai-grade">${app.AI_Rating}</span>
+                                
+                                <button onclick="openAIModal(${app.ApplicationID})" class="btn-view-report" title="Read Full Report">
+                                    <i class="fas fa-file-alt"></i> View Report
+                                </button>
+                                
                                 <button id="btn-${app.ApplicationID}" onclick="startAnalysis(${app.ApplicationID})" class="btn-revalidate" title="Re-Run Analysis">
                                     <i class="fas fa-redo"></i>
                                 </button>
                             </div>`;
                     } else if (hasAudio) {
-                        // Analysis Pending: Show Start Button
                         aiContent = `<button id="btn-${app.ApplicationID}" onclick="startAnalysis(${app.ApplicationID})" class="btn-analyze"><i class="fas fa-magic"></i> Start AI</button>`;
                     } else {
                         aiContent = '<span style="color:#666;">N/A</span>';
                     }
+
+                    // --- HUMAN GRADE BADGE (CLICKABLE FOR RE-VALIDATION) ---
+                    const humanGradeBadge = app.Human_Rating 
+                        ? `<button class="btn-assign" onclick="openHumanModal(${app.ApplicationID})" style="background:#4b5563; color:#f3f4f6; padding:4px 10px; border-radius:4px; font-size:0.8rem; font-weight:bold; border: 1px solid #6b7280; cursor: pointer; transition: 0.2s;" title="Click to Edit Grade">
+                              ${app.Human_Rating} <i class="fas fa-edit" style="font-size: 0.75rem; margin-left: 5px; color: #9ca3af;"></i>
+                           </button>` 
+                        : `<button class="btn-assign" onclick="openHumanModal(${app.ApplicationID})" style="background: rgba(59, 130, 246, 0.05); border: 1px dashed #3b82f6; color: #60a5fa; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight:bold; cursor: pointer; transition:0.2s;">
+                              + Assign Grade
+                           </button>`;
 
                     // --- Status Badge Logic ---
                     const currentStatus = app.Status || (app.AI_Rating && app.AI_Rating !== 'null' ? 'Analyzed' : 'In Review');
@@ -166,18 +277,14 @@
                     if(currentStatus === 'Alternative Offered') statusBadge = `<span style="background:#78350f; color:#fbbf24; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Alternative</span>`;
                     if(currentStatus === 'Analyzed') statusBadge = `<span style="background:#1e3a8a; color:#60a5fa; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Analyzed</span>`;
 
-                    // --- NEW: Human Grade Badge Logic ---
-                    const humanGradeBadge = app.Human_Rating 
-                        ? `<span style="background:#4b5563; color:#f3f4f6; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:bold; border: 1px solid #6b7280;">${app.Human_Rating}</span>` 
-                        : `<span style="color:#666; font-style:italic;">Pending</span>`;
-
                     return `
                         <tr>
                             <td>#${app.ApplicationID}</td>
                             <td><b>${app.FullName}</b><br><small>${app.JobTitle}</small></td>
                             <td>${audioContent}</td>
                             <td>${aiContent}</td>
-                            <td>${humanGradeBadge}</td> <td>${statusBadge}</td>
+                            <td>${humanGradeBadge}</td>
+                            <td>${statusBadge}</td> 
                             <td>${app.Email}<br>${app.Phone}</td>
                             <td><div class="exp-cell">${app.Experience}</div></td>
                             <td>${app.SubmittedAt}</td>
@@ -192,21 +299,15 @@
         async function startAnalysis(id) {
             const btn = document.getElementById(`btn-${id}`);
             const originalText = btn.innerHTML;
-            
-            // Disable button and show loading state
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             if(btn.classList.contains('btn-analyze')) btn.innerHTML += ' Analyzing...';
             
             try {
-                // Call the Manual Trigger Route
                 const res = await fetch(`http://127.0.0.1:5000/api/admin/analyze/${id}`, { method: 'POST' });
                 if (res.ok) {
-                    // Refresh data after 2 seconds to check if AI started writing to DB
-                    // Note: Real-time update requires WebSocket, but polling works for this
                     setTimeout(() => {
                         checkAuthAndLoad();
-                        // Re-enable button after 30s timeout (AI usually takes this long)
                         setTimeout(() => { btn.disabled = false; btn.innerHTML = originalText; }, 30000);
                     }, 2000);
                 } else {
@@ -221,71 +322,126 @@
             }
         }
 
-        function openModal(id) {
+        // --- OPEN MODAL 1: AI REPORT ---
+        function openAIModal(id) {
             const app = appData.find(a => a.ApplicationID === id);
             if(!app) return;
             
             document.getElementById('modal-content').innerHTML = `
-                <div class="report-section" style="margin-bottom: 20px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.3); padding: 16px; border-radius: 8px;">
-                    <h3 style="color: #10b981; margin-top:0; margin-bottom: 12px; font-size: 1.05rem;">
-                        <i class="fas fa-user-check" style="margin-right:5px;"></i> Human Validation & Feedback
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <span style="background: rgba(59, 130, 246, 0.1); color: #60a5fa; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(59, 130, 246, 0.3); display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-globe"></i> ${app.Accent_Profile || 'Accent Analysis Pending...'}
+                    </span>
+                </div>
+                <div class="report-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; text-align: center;">
+                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333;">
+                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase;">Overall</h4>
+                        <p style="margin:0; color: #3b82f6; font-size: 1.5rem; font-weight: 800;">${app.AI_Rating || 'N/A'}</p>
+                    </div>
+                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333;">
+                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase;">Fluency</h4>
+                        <p style="margin:0; color: #f3f4f6; font-size: 1.25rem; font-weight: 700;">${app.Fluency_Rating || 'N/A'}</p>
+                    </div>
+                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333;">
+                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase;">Pronunciation</h4>
+                        <p style="margin:0; color: #f3f4f6; font-size: 1.25rem; font-weight: 700;">${app.Pronunciation_Rating || 'N/A'}</p>
+                    </div>
+                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333;">
+                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase;">Grammar</h4>
+                        <p style="margin:0; color: #f3f4f6; font-size: 1.25rem; font-weight: 700;">${app.Grammar_Rating || 'N/A'}</p>
+                    </div>
+                </div>
+                <div class="report-section" style="margin-bottom: 20px;">
+                    <h3 style="color: #e5e7eb; margin-bottom: 12px; font-size: 1.05rem; border-bottom: 1px solid #333; padding-bottom: 8px;">
+                        <i class="fas fa-file-alt" style="color:#3b82f6; margin-right:5px;"></i> AI Executive Summary
                     </h3>
-                    
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <p style="color: #d1d5db; line-height: 1.7; font-size: 0.95rem; background: #1a1a1a; padding: 16px; border-radius: 8px; border: 1px solid #222;">
+                        ${app.AI_Summary || 'Analysis in progress...'}
+                    </p>
+                </div>
+                <div class="report-section">
+                    <h3 style="color: #e5e7eb; margin-bottom: 12px; font-size: 1.05rem; border-bottom: 1px solid #333; padding-bottom: 8px;">
+                        <i class="fas fa-quote-left" style="color:#3b82f6; margin-right:5px;"></i> Raw Transcription
+                    </h3>
+                    <p class="transcript-p" style="color: #9ca3af; font-style: italic; line-height: 1.6; font-size: 0.9rem; background: #141414; padding: 16px; border-radius: 8px; border: 1px dashed #333;">
+                        "${app.Transcription || 'Processing...'}"
+                    </p>
+                </div>
+            `;
+            document.getElementById('ai-modal').style.display = 'flex';
+        }
+
+        // --- OPEN MODAL 2: HUMAN VALIDATION ---
+        function openHumanModal(id) {
+            const app = appData.find(a => a.ApplicationID === id);
+            if(!app) return;
+            
+            document.getElementById('human-modal-content').innerHTML = `
+                <div class="report-section" style="background: rgba(16, 185, 129, 0.05); padding: 0px;">
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
                         
-                        <textarea id="val-feedback" placeholder="Write internal HR notes and validator feedback here..." style="padding: 10px; border-radius: 6px; background: #141414; color: white; border: 1px solid #333; font-family: inherit; resize: vertical; min-height: 80px;">${app.ValidatorFeedback || ''}</textarea>
+                        <div style="background: #1a1a1a; padding: 12px; border-radius: 6px; border: 1px solid #333;">
+                            <strong style="color: #9ca3af; font-size: 0.85rem; text-transform: uppercase;">Candidate:</strong>
+                            <div style="color: white; font-size: 1.1rem; margin-top: 4px;">${app.FullName} <span style="color:#60a5fa; font-size:0.9rem;">(${app.JobTitle})</span></div>
+                        </div>
+
+                        <textarea id="val-feedback" placeholder="Write internal HR notes and validator feedback here... (The candidate will never see this)" style="padding: 12px; border-radius: 6px; background: #141414; color: white; border: 1px solid #333; font-family: inherit; resize: vertical; min-height: 100px;">${app.ValidatorFeedback || ''}</textarea>
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                             <select id="human-grade" style="padding: 10px; border-radius: 6px; background: #141414; color: white; border: 1px solid #333; font-family: inherit;">
                                 <option value="" ${!app.Human_Rating ? 'selected':''}>-- Assign Human Grade --</option>
-                                <option value="B1 (Intermediate)" ${app.Human_Rating==='B1 (Intermediate)'?'selected':''}>B1 (Intermediate)</option>
-                                <option value="B2 (Upper Int)" ${app.Human_Rating==='B2 (Upper Int)'?'selected':''}>B2 (Upper Int)</option>
-                                <option value="C1 (Advanced)" ${app.Human_Rating==='C1 (Advanced)'?'selected':''}>C1 (Advanced)</option>
-                                <option value="C2 (Mastery)" ${app.Human_Rating==='C2 (Mastery)'?'selected':''}>C2 (Mastery)</option>
-                                <option value="Rejected (Accent/Grammar)" ${app.Human_Rating==='Rejected (Accent/Grammar)'?'selected':''}>Rejected (Accent/Grammar)</option>
+                                <option value="A1" ${app.Human_Rating==='A1'?'selected':''}>A1 (Beginner)</option>
+                                <option value="A2" ${app.Human_Rating==='A2'?'selected':''}>A2 (Pre-Int)</option>
+                                <option value="B1" ${app.Human_Rating==='B1'?'selected':''}>B1 (Intermediate)</option>
+                                <option value="B1+" ${app.Human_Rating==='B1+'?'selected':''}>B1+ (Strong Int)</option>
+                                <option value="B2" ${app.Human_Rating==='B2'?'selected':''}>B2 (Upper Int)</option>
+                                <option value="B2+" ${app.Human_Rating==='B2+'?'selected':''}>B2+ (Advanced Int)</option>
+                                <option value="C1" ${app.Human_Rating==='C1'?'selected':''}>C1 (Advanced)</option>
+                                <option value="C1+" ${app.Human_Rating==='C1+'?'selected':''}>C1+ (Fluent)</option>
+                                <option value="C2" ${app.Human_Rating==='C2'?'selected':''}>C2 (Mastery)</option>
+                                <option value="Rejected" ${app.Human_Rating==='Rejected'?'selected':''}>Failed / Rejected</option>
                             </select>
 
                             <select id="offer-decision" onchange="toggleCustomJob()" style="padding: 10px; border-radius: 6px; background: #141414; color: white; border: 1px solid #333; font-family: inherit;">
                                 <option value="none" ${app.Status==='In Review' || !app.Status ? 'selected':''}>-- Validation Status --</option>
-                                <option value="accept_original" ${app.Status==='Accepted'?'selected':''}>Accept (${app.JobTitle})</option>
+                                <option value="accept_original" ${app.Status==='Accepted'?'selected':''}>Accept for Role</option>
                                 <option value="offer_alternative" ${app.Status==='Alternative Offered'?'selected':''}>Offer Alternative</option>
                                 <option value="reject" ${app.Status==='Rejected'?'selected':''}>Reject Candidate</option>
                             </select>
                         </div>
                         
                         <div id="custom-job-container" style="display: ${app.Status === 'Alternative Offered' ? 'flex' : 'none'}; flex-direction: column; gap: 5px;">
-                            <input type="text" id="custom-job-input" placeholder="Type suggested new job title..." style="padding: 10px; border-radius: 6px; background: #141414; color: white; border: 1px solid #333; font-family: inherit;">
+                            <input type="text" id="custom-job-input" placeholder="Type suggested new job title (e.g., Junior Lead Gen)" style="padding: 10px; border-radius: 6px; background: #141414; color: white; border: 1px solid #333; font-family: inherit;">
                         </div>
                         
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px;">
-                            <button id="save-val-btn" onclick="saveValidation(${app.ApplicationID})" style="background: #3b82f6; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s;">
-                                <i class="fas fa-save"></i> Save to Website
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                            <button id="save-val-btn" onclick="saveValidation(${app.ApplicationID})" style="background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s;">
+                                <i class="fas fa-save"></i> Save Validation
                             </button>
                             
-                            <button id="send-wa-btn" onclick="sendWhatsAppDecision(${app.ApplicationID})" style="background: #25D366; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; display: ${['Accepted','Alternative Offered','Rejected'].includes(app.Status) ? 'block' : 'none'};">
+                            <button id="send-wa-btn" onclick="sendWhatsAppDecision(${app.ApplicationID})" style="background: #25D366; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; display: ${['Accepted','Alternative Offered','Rejected'].includes(app.Status) ? 'block' : 'none'};">
                                 <i class="fab fa-whatsapp"></i> Send WhatsApp 
                             </button>
                         </div>
                     </div>
                 </div>
             `;
-            document.getElementById('ai-modal').style.display = 'flex';
+            document.getElementById('human-modal').style.display = 'flex';
         }
 
-        function closeModal() { document.getElementById('ai-modal').style.display = 'none'; }
+        function closeAIModal() { document.getElementById('ai-modal').style.display = 'none'; }
+        function closeHumanModal() { document.getElementById('human-modal').style.display = 'none'; }
 
-        // Shows/Hides the alternative job input box and the send button based on dropdown choice
         function toggleCustomJob() {
             const decision = document.getElementById('offer-decision').value;
             document.getElementById('custom-job-container').style.display = (decision === 'offer_alternative') ? 'flex' : 'none';
             document.getElementById('send-wa-btn').style.display = (decision === 'none') ? 'none' : 'block';
         }
 
-        // Sends the Validator's command to the Backend
         async function saveValidation(id) {
             const decision = document.getElementById('offer-decision').value;
             const feedback = document.getElementById('val-feedback').value;
-            const humanGrade = document.getElementById('human-grade').value; // <-- NEW
+            const humanGrade = document.getElementById('human-grade').value;
             
             let newStatus = 'In Review';
             if (decision === 'accept_original') newStatus = 'Accepted';
@@ -305,12 +461,11 @@
                 
                 if (res.ok) {
                     btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
-                    btn.style.background = '#10b981'; // Turn green
-                    loadApplications(); // Refresh the table behind the modal
+                    btn.style.background = '#10b981';
+                    loadApplications();
                     setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.style.background = '#3b82f6'; // Reset to blue
-                    }, 2000);
+                        closeHumanModal(); // Close the modal automatically
+                    }, 1000);
                 } else {
                     alert("Failed to save validation.");
                     btn.innerHTML = originalText;
@@ -321,7 +476,6 @@
             }
         }
 
-        // --- UPDATED: Sends WhatsApp (Communication Only) ---
         async function sendWhatsAppDecision(id) {
             const decision = document.getElementById('offer-decision').value;
             const customJob = document.getElementById('custom-job-input').value;
@@ -346,9 +500,8 @@
                 if (res.ok) {
                     btn.innerHTML = '<i class="fas fa-check"></i> Sent!';
                     setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-                    }, 2000);
+                        closeHumanModal(); // Close the modal automatically
+                    }, 1500);
                 } else {
                     alert("Failed to send WhatsApp message.");
                     btn.innerHTML = originalText;
@@ -361,7 +514,6 @@
             }
         }
         
-        // Tab Switcher
         function switchTab(tab) {
             document.getElementById('section-apps').style.display = tab === 'apps' ? 'block' : 'none';
             document.getElementById('section-jobs').style.display = tab === 'jobs' ? 'block' : 'none';
@@ -420,7 +572,6 @@
                 body: JSON.stringify(payload)
             });
             
-            // Clear inputs
             document.querySelectorAll('.job-form input, .job-form textarea').forEach(el => el.value = '');
             loadAdminJobs();
         }
@@ -440,7 +591,6 @@
                 loadAdminJobs();
             }
         }
-
     </script>
 </body>
 </html>
