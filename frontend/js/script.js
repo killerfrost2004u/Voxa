@@ -453,3 +453,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 window.globalLogout = function() { localStorage.removeItem('user'); window.location.href = 'index.html'; }
+// Mobile Navbar Toggle
+document.addEventListener('DOMContentLoaded', () => {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    const authButtons = document.querySelector('.auth-buttons');
+
+    if (menuToggle) {
+        menuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('show-menu');
+            if(authButtons) authButtons.classList.toggle('show-menu');
+        });
+    }
+});

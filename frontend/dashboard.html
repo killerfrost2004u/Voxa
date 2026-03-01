@@ -123,6 +123,51 @@
         .form-group { margin-bottom: 1rem; }
         .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); }
         .form-group input { width: 100%; padding: 0.8rem; background: #222; border: 1px solid #333; color: white; border-radius: 6px; }
+
+        /* Dashboard Mobile View */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            
+            /* Hide Sidebar off-screen */
+            .sidebar {
+                transform: translateX(-100%);
+                z-index: 1000;
+                width: 260px;
+                box-shadow: 4px 0 15px rgba(0,0,0,0.5);
+            }
+            
+            /* Slide it in when active class is added */
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            /* Main content takes full width */
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+                padding-top: 60px; /* Leave room for mobile header */
+            }
+
+            .stats-grid { grid-template-columns: 1fr; }
+            
+            /* Mobile Header for Hamburger Menu */
+            .mobile-dash-header {
+                display: flex !important;
+                justify-content: space-between;
+                align-items: center;
+                background: #141414;
+                padding: 15px 20px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                z-index: 999;
+                border-bottom: 1px solid #333;
+            }
+        }
+        
+        /* Hide mobile header on desktop */
+        .mobile-dash-header { display: none; }
     </style>
 </head>
 <body>
@@ -158,6 +203,12 @@
     </aside>
 
     <main class="main-content">
+        <div class="mobile-dash-header">
+            <a href="index.html" class="logo" style="margin:0;">Dark<span>Wolves</span></a>
+            <button onclick="document.querySelector('.sidebar').classList.toggle('active')" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
             <div>
                 <h1 style="color:white;">Welcome back, <span id="header-name" style="color:var(--primary-color);">Hunter</span></h1>

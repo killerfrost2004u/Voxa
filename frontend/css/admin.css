@@ -357,3 +357,66 @@ body {
     border: 1px solid #333; 
     padding: 1.5rem;
 }
+
+/* =========================================
+   📱 MOBILE & TABLET RESPONSIVENESS (ADMIN)
+   ========================================= */
+
+/* Tablet View (Max 1024px) */
+@media (max-width: 1024px) {
+    .job-form { 
+        grid-template-columns: 1fr 1fr !important; 
+    }
+    #jOffer, .btn-analyze { 
+        grid-column: span 2 !important; 
+    }
+}
+
+/* Mobile View (Max 768px) */
+@media (max-width: 768px) {
+    .admin-container { 
+        padding: 1rem; 
+    }
+    
+    .admin-header { 
+        flex-direction: column; 
+        align-items: flex-start; 
+        gap: 15px; 
+    }
+    
+    .admin-tabs { 
+        overflow-x: auto; 
+        white-space: nowrap; 
+        padding-bottom: 5px; 
+    }
+    
+    /* Stack Job Form vertically */
+    .job-form { 
+        grid-template-columns: 1fr !important; 
+    }
+    #jOffer, .btn-analyze { 
+        grid-column: span 1 !important; 
+    }
+
+    /* Enable smooth swipe for the big table */
+    .data-table-container { 
+        -webkit-overflow-scrolling: touch; 
+        border-radius: 4px;
+    }
+    
+    /* Modal Responsive Fixes */
+    .modal-card {
+        padding: 1rem;
+        width: 95%;
+    }
+    .report-grid {
+        grid-template-columns: 1fr 1fr !important; /* 2 columns instead of 4 */
+    }
+}
+
+/* Small Mobile View (Max 480px) */
+@media (max-width: 480px) {
+    .report-grid {
+        grid-template-columns: 1fr !important; /* 1 column for very small screens */
+    }
+}
