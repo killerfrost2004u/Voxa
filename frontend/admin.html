@@ -161,21 +161,58 @@
             }
         }
 
-        function openModal(id) {
+function openModal(id) {
             const app = appData.find(a => a.ApplicationID === id);
             if(!app) return;
+            
+            // Build the new HTML layout with the 4 AI metrics
             document.getElementById('modal-content').innerHTML = `
-                <div class="report-section">
-                    <h3>Transcription</h3>
-                    <p class="transcript-p">"${app.Transcription || 'Processing...'}"</p>
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <span style="background: rgba(59, 130, 246, 0.1); color: #60a5fa; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(59, 130, 246, 0.3); display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-globe"></i> ${app.Accent_Profile || 'Accent Analysis Pending...'}
+                    </span>
                 </div>
-                <div class="report-grid">
-                    <div class="stat-item"><h4>Score</h4><p>${app.AI_Rating || 'N/A'}</p></div>
-                    <div class="stat-item"><h4>Speech Rate</h4><p>${app.SpeechRate || 0} WPM</p></div>
+                
+                <div class="report-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; text-align: center;">
+                    
+                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Overall Level</h4>
+                        <p style="margin:0; color: #3b82f6; font-size: 1.5rem; font-weight: 800;">${app.AI_Rating || 'N/A'}</p>
+                    </div>
+
+                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Fluency</h4>
+                        <p style="margin:0; color: #f3f4f6; font-size: 1.25rem; font-weight: 700;">${app.Fluency_Rating || 'N/A'}</p>
+                    </div>
+
+                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Pronunciation</h4>
+                        <p style="margin:0; color: #f3f4f6; font-size: 1.25rem; font-weight: 700;">${app.Pronunciation_Rating || 'N/A'}</p>
+                    </div>
+
+                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Grammar</h4>
+                        <p style="margin:0; color: #f3f4f6; font-size: 1.25rem; font-weight: 700;">${app.Grammar_Rating || 'N/A'}</p>
+                    </div>
+
                 </div>
+
+                <div class="report-section" style="margin-bottom: 20px;">
+                    <h3 style="color: #e5e7eb; margin-bottom: 12px; font-size: 1.05rem; border-bottom: 1px solid #333; padding-bottom: 8px;">
+                        <i class="fas fa-file-alt" style="color:#3b82f6; margin-right:5px;"></i> Executive Summary & Accent Profile
+                    </h3>
+                    <p style="color: #d1d5db; line-height: 1.7; font-size: 0.95rem; background: #1a1a1a; padding: 16px; border-radius: 8px; border: 1px solid #222;">
+                        ${app.AI_Summary || 'Analysis in progress...'}
+                    </p>
+                </div>
+
                 <div class="report-section">
-                    <h3>AI Personality Summary</h3>
-                    <p>${app.AI_Summary || 'Analysis in progress...'}</p>
+                    <h3 style="color: #e5e7eb; margin-bottom: 12px; font-size: 1.05rem; border-bottom: 1px solid #333; padding-bottom: 8px;">
+                        <i class="fas fa-quote-left" style="color:#3b82f6; margin-right:5px;"></i> Raw Transcription
+                    </h3>
+                    <p class="transcript-p" style="color: #9ca3af; font-style: italic; line-height: 1.6; font-size: 0.9rem; background: #141414; padding: 16px; border-radius: 8px; border: 1px dashed #333;">
+                        "${app.Transcription || 'Processing...'}"
+                    </p>
                 </div>
             `;
             document.getElementById('ai-modal').style.display = 'flex';

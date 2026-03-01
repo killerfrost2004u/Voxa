@@ -94,36 +94,38 @@ def run_gemini_audio_analysis(file_path):
         model = genai.GenerativeModel('gemini-2.5-flash')
 
         
-        # 3. Apply the Ultimate Category-Based HR Prompt (Expanded with Plus Levels)
+        # 3. Apply the Ultimate HR Prompt (Strictly Calibrated to the Recruiter's Ear)
         prompt = """
         You are an expert CEFR English Examiner and Technical Recruiter. Listen to the candidate's audio natively.
         Evaluate their English proficiency and provide individual CEFR grades for Fluency, Pronunciation, and Grammar, plus an Overall grade.
 
-        SCORING RUBRIC (Applies to all categories):
+        SCORING RUBRIC:
         - 0-25: A1 & A2 (Beginner)
         - 26-40: B1 (Intermediate)
         - 41-50: B1+ (Strong Intermediate)
         - 51-65: B2 (Upper Intermediate)
-        - 66-75: B2+ (Advanced Intermediate) - Flawless basic grammar, very clear accent, confident flow, but lacks the rich vocabulary or highly complex storytelling of C1.
-        - 76-85: C1 (Advanced) - Highly fluent, natural rhythm, minor preposition quirks allowed if spontaneous storytelling is strong.
-        - 86-95: C1+ (Strong Advanced) - Extremely compelling vocabulary, near-flawless execution, exceptional native-like rhythm and expression.
+        - 66-75: B2+ (Advanced Intermediate)
+        - 76-85: C1 (Advanced)
+        - 86-95: C1+ (Strong Advanced)
         - 96-100: C2 (Mastery)
 
-        CRITICAL GRADING RULES:
-        1. THE STORYTELLER ALLOWANCE (Protects C1/C1+): If a candidate is highly spontaneous and easily telling a detailed story, DO NOT penalize fluency for using 'um' or 'uh' to remember facts. Non-idiomatic phrasing (e.g., 'they hold the company') are minor translation quirks, NOT foundational errors. A strong storyteller belongs in C1 or C1+.
-        2. B2 vs B2+ vs C1: If a candidate has perfect grammar and clear pronunciation but sounds slightly rehearsed or uses mostly standard vocabulary, give them a B2+. If they use rich idioms and complex spontaneous structures, push them to C1 or C1+.
-        3. THE ACCENT FORGIVENESS: A noticeable regional accent DOES NOT cap pronunciation at B1+ unless it makes the words actually incomprehensible. If easily understood, they deserve B2, B2+, or C1.
-        4. THE FOUNDATIONAL GRAMMAR CAP (Protects B1+): Only cap grammar at B1/B1+ if the candidate drops crucial verbs (e.g., 'this my last year', 'I looking forward') or completely breaks sentence structure. 
-        5. SCRIPT READING PENALTY: If the candidate sounds like they are reading a rehearsed script, cap their fluency and overall grade at B2 or B2+ maximum.
-        6. STRICT JSON FORMATTING: Use ONLY single quotes inside the JSON string values. DO NOT copy the placeholder values below.
+        CRITICAL GRADING CALIBRATION (YOU MUST FOLLOW THESE 4 PROFILES STRICTLY):
+        1. THE C1+ EXECUTIVE (Score 86-95): High-speed, highly confident, native-like rhythm, uses industry jargon smoothly. EXTREMELY IMPORTANT: If they possess this level of fluency, IGNORE minor grammar or preposition slips (like 'get it sorted out' or 'negotiating in the deals'). Their Overall Grade MUST be C1+.
+        2. THE C1 FLUENT STORYTELLER (Score 76-85): Speaks fluently, clearly, and confidently, but has a noticeable regional accent and makes direct translation errors (e.g., 'they hold the company', 'in a university'). Because fluency and pronunciation are the top priority, their Overall Grade MUST be C1. Do NOT drop them to B2.
+        3. THE SCRIPT READER (Score 51-65): If the candidate has flawless grammar but sounds like they are reading a prepared script (monotonous, unnatural rhythm), their Overall Grade MUST be strictly capped at B1+ or B2. Never give a script reader a C1.
+        4. THE B1+ GRAMMAR DROPPER (Score 41-50): If the candidate has a good accent and confidence, but consistently drops foundational verbs ('this my last year', 'I looking forward') or articles, their Overall Grade MUST be capped at B1+. 
+        
+        5. ACCENT PROFILING: Explicitly name their accent (e.g., 'Clear Egyptian'). A strong but clear accent does not lower the grade.
+        6. STRICT JSON FORMATTING: Use ONLY single quotes inside the JSON string values.
 
-        Provide a summary of their speech. Return ONLY valid JSON in this EXACT format (replace the bracketed placeholders with your actual assessment):
+        Provide a summary of their speech detailing their fluency, grammar, and ACCENT PROFILE. Return ONLY valid JSON in this EXACT format:
         {
-            "overall_level": "[Insert Level here, e.g. C1+]",
-            "overall_score": [Insert Integer Score here, e.g. 88],
+            "overall_level": "[Insert Level here]",
+            "overall_score": [Insert Integer Score here],
             "fluency_level": "[Insert Level here]",
             "pronunciation_level": "[Insert Level here]",
             "grammar_level": "[Insert Level here]",
+            "accent_profile": "[Insert 2-3 words max, e.g., 'Clear Egyptian']",
             "summary": "[Insert detailed summary here...]",
             "transcript": "[Insert transcript here...]"
         }
@@ -178,6 +180,7 @@ def ai_worker(app_id, file_path):
             fluency_grade = ai_data.get('fluency_level', 'N/A')
             pronunciation_grade = ai_data.get('pronunciation_level', 'N/A')
             grammar_grade = ai_data.get('grammar_level', 'N/A')
+            accent_profile = ai_data.get('accent_profile', 'Not Specified') # <--- ADD THIS
             transcript = ai_data.get('transcript', 'Transcript not provided.')
 
             print(f"✅ FINAL OVERALL GRADE: {overall_grade}")
@@ -190,10 +193,10 @@ def ai_worker(app_id, file_path):
                 c.execute(
                     """UPDATE JobApplications 
                        SET Transcription=?, AI_Rating=?, AI_Summary=?, SpeechRate=0,
-                           Grammar_Rating=?, Fluency_Rating=?, Pronunciation_Rating=?
+                           Grammar_Rating=?, Fluency_Rating=?, Pronunciation_Rating=?, Accent_Profile=?
                        WHERE ApplicationID=?""",
                     (transcript, overall_grade, ai_data['summary'], 
-                     grammar_grade, fluency_grade, pronunciation_grade, app_id)
+                     grammar_grade, fluency_grade, pronunciation_grade, accent_profile, app_id)
                 )
                 conn.commit()
                 conn.close()
