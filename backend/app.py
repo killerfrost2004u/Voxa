@@ -326,21 +326,6 @@ def send_offer(id):
         # 3. Send message with real details injected
         success = process_job_offer_manual(c_name, c_whatsapp, c_job, decision, custom_job, job_data)
         if success:
-            # --- NEW: UPDATE THE STATUS IN THE DATABASE ---
-            status_map = {
-                'accept_original': 'Accepted',
-                'offer_alternative': 'Alternative Offered',
-                'reject': 'Rejected'
-            }
-            new_status = status_map.get(decision, 'In Review')
-            
-            conn2 = get_db_connection()
-            c2 = conn2.cursor()
-            c2.execute("UPDATE JobApplications SET Status=? WHERE ApplicationID=?", (new_status, id))
-            conn2.commit()
-            conn2.close()
-            # ----------------------------------------------
-            
             return jsonify({"message": "WhatsApp message sent successfully!"}), 200
         return jsonify({"error": "Invalid decision"}), 400
     except Exception as e:
@@ -422,6 +407,26 @@ def update_delete_job(id):
         return jsonify({"message": "Job deleted"})
 
 # --- ROUTES ---
+@app.route('/api/admin/applications/<int:id>/status', methods=['PUT'])
+def update_application_status(id):
+    try:
+        data = request.get_json()
+        new_status = data.get('status')
+        feedback = data.get('feedback', '')
+        human_grade = data.get('humanGrade', '') # <-- NEW: Catch the human grade
+        
+        conn = get_db_connection()
+        c = conn.cursor()
+        # <-- NEW: Save Human_Rating to the DB
+        c.execute("UPDATE JobApplications SET Status=?, ValidatorFeedback=?, Human_Rating=? WHERE ApplicationID=?", 
+                  (new_status, feedback, human_grade, id))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({"message": "Validation saved to database successfully!"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/whatsapp/reply', methods=['POST'])
 def whatsapp_reply():
     # Get the message the candidate sent

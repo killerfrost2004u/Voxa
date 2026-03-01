@@ -62,8 +62,15 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th width="50">ID</th><th width="180">Candidate</th><th width="220">Voice Intro</th>
-                        <th width="200">AI Grade</th><th width="100">Status</th><th width="200">Contact</th><th>Experience</th><th width="120">Date</th>
+                        <th>ID</th>
+                        <th>Candidate</th>
+                        <th>Voice Intro</th>
+                        <th>AI Grade</th>
+                        <th>Human Grade</th> 
+                        <th>Status</th>
+                        <th>Contact</th>
+                        <th>Experience</th>
+                        <th>Date</th>
                     </tr>
                 </thead>
                 <tbody id="admin-table-body"></tbody>
@@ -150,12 +157,27 @@
                         aiContent = '<span style="color:#666;">N/A</span>';
                     }
 
+                    // --- Status Badge Logic ---
+                    const currentStatus = app.Status || (app.AI_Rating && app.AI_Rating !== 'null' ? 'Analyzed' : 'In Review');
+                    let statusBadge = `<span style="background:#374151; color:#d1d5db; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:bold;">${currentStatus}</span>`;
+                    
+                    if(currentStatus === 'Accepted') statusBadge = `<span style="background:#064e3b; color:#34d399; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Accepted</span>`;
+                    if(currentStatus === 'Rejected') statusBadge = `<span style="background:#7f1d1d; color:#fca5a5; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Rejected</span>`;
+                    if(currentStatus === 'Alternative Offered') statusBadge = `<span style="background:#78350f; color:#fbbf24; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Alternative</span>`;
+                    if(currentStatus === 'Analyzed') statusBadge = `<span style="background:#1e3a8a; color:#60a5fa; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:bold;">Analyzed</span>`;
+
+                    // --- NEW: Human Grade Badge Logic ---
+                    const humanGradeBadge = app.Human_Rating 
+                        ? `<span style="background:#4b5563; color:#f3f4f6; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:bold; border: 1px solid #6b7280;">${app.Human_Rating}</span>` 
+                        : `<span style="color:#666; font-style:italic;">Pending</span>`;
+
                     return `
                         <tr>
                             <td>#${app.ApplicationID}</td>
                             <td><b>${app.FullName}</b><br><small>${app.JobTitle}</small></td>
                             <td>${audioContent}</td>
                             <td>${aiContent}</td>
+                            <td>${humanGradeBadge}</td> <td>${statusBadge}</td>
                             <td>${app.Email}<br>${app.Phone}</td>
                             <td><div class="exp-cell">${app.Experience}</div></td>
                             <td>${app.SubmittedAt}</td>
@@ -204,70 +226,47 @@
             if(!app) return;
             
             document.getElementById('modal-content').innerHTML = `
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <span style="background: rgba(59, 130, 246, 0.1); color: #60a5fa; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(59, 130, 246, 0.3); display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fas fa-globe"></i> ${app.Accent_Profile || 'Accent Analysis Pending...'}
-                    </span>
-                </div>
-
-                <div class="report-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; text-align: center;">
-                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333;">
-                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase;">Overall</h4>
-                        <p style="margin:0; color: #3b82f6; font-size: 1.5rem; font-weight: 800;">${app.AI_Rating || 'N/A'}</p>
-                    </div>
-                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333;">
-                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase;">Fluency</h4>
-                        <p style="margin:0; color: #f3f4f6; font-size: 1.25rem; font-weight: 700;">${app.Fluency_Rating || 'N/A'}</p>
-                    </div>
-                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333;">
-                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase;">Pronunciation</h4>
-                        <p style="margin:0; color: #f3f4f6; font-size: 1.25rem; font-weight: 700;">${app.Pronunciation_Rating || 'N/A'}</p>
-                    </div>
-                    <div class="stat-item" style="background: #1e1e1e; padding: 15px 10px; border-radius: 8px; border: 1px solid #333;">
-                        <h4 style="margin:0 0 8px 0; color: #9ca3af; font-size: 0.75rem; text-transform: uppercase;">Grammar</h4>
-                        <p style="margin:0; color: #f3f4f6; font-size: 1.25rem; font-weight: 700;">${app.Grammar_Rating || 'N/A'}</p>
-                    </div>
-                </div>
-
-                <div class="report-section" style="margin-bottom: 20px;">
-                    <h3 style="color: #e5e7eb; margin-bottom: 12px; font-size: 1.05rem; border-bottom: 1px solid #333; padding-bottom: 8px;">
-                        <i class="fas fa-file-alt" style="color:#3b82f6; margin-right:5px;"></i> Executive Summary
-                    </h3>
-                    <p style="color: #d1d5db; line-height: 1.7; font-size: 0.95rem; background: #1a1a1a; padding: 16px; border-radius: 8px; border: 1px solid #222;">
-                        ${app.AI_Summary || 'Analysis in progress...'}
-                    </p>
-                </div>
-
                 <div class="report-section" style="margin-bottom: 20px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.3); padding: 16px; border-radius: 8px;">
                     <h3 style="color: #10b981; margin-top:0; margin-bottom: 12px; font-size: 1.05rem;">
-                        <i class="fab fa-whatsapp" style="margin-right:5px;"></i> Validator Decision
+                        <i class="fas fa-user-check" style="margin-right:5px;"></i> Human Validation & Feedback
                     </h3>
                     
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <select id="offer-decision" onchange="toggleCustomJob()" style="padding: 10px; border-radius: 6px; background: #141414; color: white; border: 1px solid #333; font-family: inherit;">
-                            <option value="none">-- Select Action --</option>
-                            <option value="accept_original">Accept for Original Role (${app.JobTitle})</option>
-                            <option value="offer_alternative">Offer Alternative Role</option>
-                            <option value="reject">Reject Candidate</option>
-                        </select>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
                         
-                        <div id="custom-job-container" style="display: none; flex-direction: column; gap: 5px;">
-                            <input type="text" id="custom-job-input" placeholder="Type new job title (e.g., Junior Lead Gen)" style="padding: 10px; border-radius: 6px; background: #141414; color: white; border: 1px solid #333; font-family: inherit;">
+                        <textarea id="val-feedback" placeholder="Write internal HR notes and validator feedback here..." style="padding: 10px; border-radius: 6px; background: #141414; color: white; border: 1px solid #333; font-family: inherit; resize: vertical; min-height: 80px;">${app.ValidatorFeedback || ''}</textarea>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <select id="human-grade" style="padding: 10px; border-radius: 6px; background: #141414; color: white; border: 1px solid #333; font-family: inherit;">
+                                <option value="" ${!app.Human_Rating ? 'selected':''}>-- Assign Human Grade --</option>
+                                <option value="B1 (Intermediate)" ${app.Human_Rating==='B1 (Intermediate)'?'selected':''}>B1 (Intermediate)</option>
+                                <option value="B2 (Upper Int)" ${app.Human_Rating==='B2 (Upper Int)'?'selected':''}>B2 (Upper Int)</option>
+                                <option value="C1 (Advanced)" ${app.Human_Rating==='C1 (Advanced)'?'selected':''}>C1 (Advanced)</option>
+                                <option value="C2 (Mastery)" ${app.Human_Rating==='C2 (Mastery)'?'selected':''}>C2 (Mastery)</option>
+                                <option value="Rejected (Accent/Grammar)" ${app.Human_Rating==='Rejected (Accent/Grammar)'?'selected':''}>Rejected (Accent/Grammar)</option>
+                            </select>
+
+                            <select id="offer-decision" onchange="toggleCustomJob()" style="padding: 10px; border-radius: 6px; background: #141414; color: white; border: 1px solid #333; font-family: inherit;">
+                                <option value="none" ${app.Status==='In Review' || !app.Status ? 'selected':''}>-- Validation Status --</option>
+                                <option value="accept_original" ${app.Status==='Accepted'?'selected':''}>Accept (${app.JobTitle})</option>
+                                <option value="offer_alternative" ${app.Status==='Alternative Offered'?'selected':''}>Offer Alternative</option>
+                                <option value="reject" ${app.Status==='Rejected'?'selected':''}>Reject Candidate</option>
+                            </select>
                         </div>
                         
-                        <button id="send-wa-btn" onclick="sendWhatsAppDecision(${app.ApplicationID})" style="background: #10b981; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; display: none; transition: 0.2s;">
-                            Send WhatsApp Message
-                        </button>
+                        <div id="custom-job-container" style="display: ${app.Status === 'Alternative Offered' ? 'flex' : 'none'}; flex-direction: column; gap: 5px;">
+                            <input type="text" id="custom-job-input" placeholder="Type suggested new job title..." style="padding: 10px; border-radius: 6px; background: #141414; color: white; border: 1px solid #333; font-family: inherit;">
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px;">
+                            <button id="save-val-btn" onclick="saveValidation(${app.ApplicationID})" style="background: #3b82f6; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s;">
+                                <i class="fas fa-save"></i> Save to Website
+                            </button>
+                            
+                            <button id="send-wa-btn" onclick="sendWhatsAppDecision(${app.ApplicationID})" style="background: #25D366; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; display: ${['Accepted','Alternative Offered','Rejected'].includes(app.Status) ? 'block' : 'none'};">
+                                <i class="fab fa-whatsapp"></i> Send WhatsApp 
+                            </button>
+                        </div>
                     </div>
-                </div>
-
-                <div class="report-section">
-                    <h3 style="color: #e5e7eb; margin-bottom: 12px; font-size: 1.05rem; border-bottom: 1px solid #333; padding-bottom: 8px;">
-                        <i class="fas fa-quote-left" style="color:#3b82f6; margin-right:5px;"></i> Raw Transcription
-                    </h3>
-                    <p class="transcript-p" style="color: #9ca3af; font-style: italic; line-height: 1.6; font-size: 0.9rem; background: #141414; padding: 16px; border-radius: 8px; border: 1px dashed #333;">
-                        "${app.Transcription || 'Processing...'}"
-                    </p>
                 </div>
             `;
             document.getElementById('ai-modal').style.display = 'flex';
@@ -283,6 +282,46 @@
         }
 
         // Sends the Validator's command to the Backend
+        async function saveValidation(id) {
+            const decision = document.getElementById('offer-decision').value;
+            const feedback = document.getElementById('val-feedback').value;
+            const humanGrade = document.getElementById('human-grade').value; // <-- NEW
+            
+            let newStatus = 'In Review';
+            if (decision === 'accept_original') newStatus = 'Accepted';
+            if (decision === 'offer_alternative') newStatus = 'Alternative Offered';
+            if (decision === 'reject') newStatus = 'Rejected';
+
+            const btn = document.getElementById('save-val-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            try {
+                const res = await fetch(`http://127.0.0.1:5000/api/admin/applications/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus, feedback: feedback, humanGrade: humanGrade })
+                });
+                
+                if (res.ok) {
+                    btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+                    btn.style.background = '#10b981'; // Turn green
+                    loadApplications(); // Refresh the table behind the modal
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.style.background = '#3b82f6'; // Reset to blue
+                    }, 2000);
+                } else {
+                    alert("Failed to save validation.");
+                    btn.innerHTML = originalText;
+                }
+            } catch (e) {
+                alert("Server error while saving.");
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // --- UPDATED: Sends WhatsApp (Communication Only) ---
         async function sendWhatsAppDecision(id) {
             const decision = document.getElementById('offer-decision').value;
             const customJob = document.getElementById('custom-job-input').value;
@@ -293,6 +332,7 @@
             }
 
             const btn = document.getElementById('send-wa-btn');
+            const originalText = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
@@ -303,27 +343,24 @@
                     body: JSON.stringify({ decision: decision, customJob: customJob })
                 });
                 
-                const data = await res.json();
                 if (res.ok) {
-                    btn.style.background = '#3b82f6';
-                    btn.innerHTML = '<i class="fas fa-check"></i> Sent Successfully!';
-                    
-                    // NEW: Auto-close the modal and refresh the table after 1.5 seconds!
+                    btn.innerHTML = '<i class="fas fa-check"></i> Sent!';
                     setTimeout(() => {
-                        closeModal();
-                        loadApplications(); 
-                    }, 1500);
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }, 2000);
                 } else {
-                    alert(data.error || "Failed to send message.");
+                    alert("Failed to send WhatsApp message.");
+                    btn.innerHTML = originalText;
                     btn.disabled = false;
-                    btn.innerHTML = 'Try Again';
                 }
             } catch (e) {
                 alert("Server Error while sending message.");
+                btn.innerHTML = originalText;
                 btn.disabled = false;
-                btn.innerHTML = 'Try Again';
             }
         }
+        
         // Tab Switcher
         function switchTab(tab) {
             document.getElementById('section-apps').style.display = tab === 'apps' ? 'block' : 'none';
