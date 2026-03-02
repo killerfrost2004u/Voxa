@@ -420,3 +420,25 @@ body {
         grid-template-columns: 1fr !important; /* 1 column for very small screens */
     }
 }
+
+/* AI Report Modal Fix */
+.modal-card {
+    max-height: 90vh !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.modal-body {
+    overflow-y: auto; /* Scroll inside the modal only */
+    padding-right: 10px;
+}
+
+/* Job Management Grid Fix */
+@media (max-width: 768px) {
+    .job-form {
+        grid-template-columns: 1fr !important; /* Single column on mobile */
+    }
+    #jOffer, .btn-analyze {
+        grid-column: span 1 !important;
+    }
+}
