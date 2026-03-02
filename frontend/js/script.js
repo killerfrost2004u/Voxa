@@ -17,29 +17,59 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadJobs() {
     try {
         const res = await fetch(`${API_URL}/jobs`);
-        window.allJobs = await res.json();
+        let fetchedJobs = await res.json();
+        
+        // --- DATA NORMALIZATION ---
+        // The DB doesn't provide 'type' or 'isRemote', so we smartly infer them!
+        window.allJobs = fetchedJobs.map(job => {
+            // Infer Type
+            job.type = job.type || "Full Time"; 
+            if (job.hours && job.hours.toLowerCase().includes("part")) job.type = "Part Time";
+            
+            // Infer Remote Status
+            job.isRemote = job.isRemote || false;
+            if (job.location && job.location.toLowerCase().includes("remote")) job.isRemote = true;
+            if (job.title && job.title.toLowerCase().includes("remote")) job.isRemote = true;
+            
+            return job;
+        });
+        
         window.filteredJobs = [...window.allJobs];
         
         // --- PAGE SPECIFIC ROUTING ---
         const path = window.location.pathname;
 
         if (path.includes('jobs.html')) {
-            updateJobCount();
-            renderJobs();
+            // Read URL parameters if the user searched from the Homepage
+            const urlParams = new URLSearchParams(window.location.search);
+            const kw = urlParams.get('keyword');
+            const loc = urlParams.get('location');
+            
+            if (kw) {
+                if (document.getElementById('keyword-filter')) document.getElementById('keyword-filter').value = kw;
+                if (document.getElementById('job-search')) document.getElementById('job-search').value = kw;
+            }
+            if (loc) {
+                if (document.getElementById('location-filter')) document.getElementById('location-filter').value = loc;
+                if (document.getElementById('location-search')) document.getElementById('location-search').value = loc;
+            }
+
+            // Automatically filter and render based on URL params or defaults!
+            window.applyFilters();
         } 
         else if (path.includes('companies.html')) {
             processCompanies(window.allJobs);
             renderCompanies(companies);
-        }
-        else if (path.includes('company-profile.html')) { // <-- NEW ROUTE
+        } 
+        else if (path.includes('company-profile.html')) {
             const urlParams = new URLSearchParams(window.location.search);
             const targetCompany = urlParams.get('company');
             if (targetCompany) {
-                renderCompanyProfile(targetCompany, window.allJobs);
+                window.renderCompanyProfile(targetCompany, window.allJobs);
             } else {
                 document.getElementById('company-profile-header').innerHTML = `<h2 style="text-align:center; color:white;">No Company Selected</h2>`;
             }
-        } 
+        }
         else if (path.includes('salaries.html')) {
             processSalaries(window.allJobs);
             renderSalaries(salaryStats);
@@ -73,12 +103,12 @@ window.renderJobs = function() {
     container.innerHTML = "";
 
     if(jobsToShow.length === 0) { 
-        container.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#888;">No jobs found matching your criteria.</p>`; 
+        container.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#888;padding: 3rem 0;">No jobs found matching your search.</p>`; 
     } else {
         jobsToShow.forEach(job => appendJobCard(container, job, true));
     }
 
-    buildPaginationControls();
+    window.buildPaginationControls();
 }
 
 window.buildPaginationControls = function() {
@@ -127,8 +157,11 @@ window.applyFilters = function() {
     const checkedTypes = Array.from(document.querySelectorAll('.checkbox-group input:checked')).map(cb => cb.value.toLowerCase());
 
     window.filteredJobs = window.allJobs.filter(job => {
+        // Now checks Title, Company, AND Requirements for the keyword!
         const matchKeyword = (job.title && job.title.toLowerCase().includes(keyword)) || 
-                             (job.company && job.company.toLowerCase().includes(keyword));
+                             (job.company && job.company.toLowerCase().includes(keyword)) ||
+                             (job.requirements && job.requirements.toLowerCase().includes(keyword));
+                             
         const matchLocation = job.location && job.location.toLowerCase().includes(location);
         
         let matchType = true;
@@ -160,20 +193,36 @@ window.applyFilters = function() {
 window.resetFilters = function() {
     if(document.getElementById('keyword-filter')) document.getElementById('keyword-filter').value = "";
     if(document.getElementById('location-filter')) document.getElementById('location-filter').value = "";
+    if(document.getElementById('job-search')) document.getElementById('job-search').value = "";
+    if(document.getElementById('location-search')) document.getElementById('location-search').value = "";
     if(document.getElementById('salary-range')) document.getElementById('salary-range').value = 0;
     updateSalaryLabel(0);
     document.querySelectorAll('.checkbox-group input').forEach(cb => cb.checked = false);
     if(document.getElementById('sort-jobs')) document.getElementById('sort-jobs').value = "newest";
     
-    window.filteredJobs = [...window.allJobs];
-    window.currentPage = 1;
+    // Clear URL parameters
+    window.history.pushState({}, document.title, window.location.pathname);
     
-    updateJobCount();
-    window.renderJobs();
+    window.applyFilters();
 }
 
 window.updateSalaryLabel = function(val) {
     if(document.getElementById('salary-val')) document.getElementById('salary-val').textContent = val;
+}
+
+window.searchJobs = function() {
+    const keyword = document.getElementById('job-search')?.value || "";
+    const location = document.getElementById('location-search')?.value || "";
+    
+    if (window.location.pathname.includes('jobs.html')) {
+        // If already on jobs.html, sync the sidebar and apply instantly without reloading
+        if(document.getElementById('keyword-filter')) document.getElementById('keyword-filter').value = keyword;
+        if(document.getElementById('location-filter')) document.getElementById('location-filter').value = location;
+        window.applyFilters();
+    } else {
+        // If on homepage, redirect to jobs page
+        window.location.href = `jobs.html?keyword=${encodeURIComponent(keyword)}&location=${encodeURIComponent(location)}`;
+    }
 }
 
 // ==========================================
@@ -185,10 +234,9 @@ function renderHomeJobs(data) {
     if (!container) return;
     container.innerHTML = "";
     if (data.length === 0) { 
-        container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #888;">No jobs found in this category.</p>`; 
+        container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted);">No jobs found in this category.</p>`; 
         return; 
     }
-    // Only show top 6 jobs on the homepage
     data.slice(0, 6).forEach(job => appendJobCard(container, job, false));
 }
 
@@ -242,29 +290,20 @@ function renderCompanies(data) {
     });
 }
 
-// --- SPECIFIC COMPANY PROFILE LOGIC ---
 window.renderCompanyProfile = function(companyName, allJobsArray) {
-    // 1. Find only jobs belonging to this company
     const companyJobs = allJobsArray.filter(j => j.company === companyName);
-    
     const headerContainer = document.getElementById('company-profile-header');
     const jobsContainer = document.getElementById('company-jobs-container');
     
-    if (!headerContainer || !jobsContainer) return; // Failsafe
+    if (!headerContainer || !jobsContainer) return; 
 
     if(companyJobs.length === 0) {
         headerContainer.innerHTML = `<h2 style="text-align:center; color:white;">Company Not Found</h2>`;
         return;
     }
 
-    // 2. Extract company info from their first job listing
-    const companyInfo = { 
-        name: companyName, 
-        logo: companyJobs[0].logo || 'DW', 
-        count: companyJobs.length 
-    };
+    const companyInfo = { name: companyName, logo: companyJobs[0].logo || 'DW', count: companyJobs.length };
 
-    // 3. Render the Header
     headerContainer.innerHTML = `
         <div class="company-logo-large" style="margin: 0 auto 1rem auto; display:flex;">${companyInfo.logo}</div>
         <h1 style="text-align:center; color:white; margin-bottom:0.5rem; font-size: 2.5rem;">${companyInfo.name}</h1>
@@ -274,7 +313,6 @@ window.renderCompanyProfile = function(companyName, allJobsArray) {
         </div>
     `;
 
-    // 4. Render their specific jobs using your existing card generator!
     jobsContainer.innerHTML = "";
     companyJobs.forEach(job => appendJobCard(jobsContainer, job, true));
 }
@@ -320,7 +358,7 @@ function renderSalaries(data) {
     container.innerHTML = "";
     
     if (data.length === 0) {
-        container.innerHTML = `<p style="text-align:center; color:#888;">No salaries found matching your search.</p>`;
+        container.innerHTML = `<p style="text-align:center; color:var(--text-muted);">No salaries found matching your search.</p>`;
         return;
     }
 
@@ -366,8 +404,8 @@ function appendJobCard(container, job, isWide) {
                 <h3>${job.title}</h3>
                 <div class="company">${job.company}</div>
                 <div class="meta">
-                    <span><i class="fas fa-map-marker-alt"></i> ${job.location || 'Remote'}</span>
-                    <span><i class="fas fa-money-bill-wave"></i> ${job.salary || 'Competitive'}</span>
+                    <span class="tag"><i class="fas fa-map-marker-alt"></i> ${job.location || 'Remote'}</span>
+                    <span class="tag"><i class="fas fa-money-bill-wave"></i> ${job.salary || 'Competitive'}</span>
                 </div>
             </div>
             <div class="actions">
@@ -457,12 +495,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const user = JSON.parse(userStr);
         authButtons.innerHTML = `
             <a href="dashboard.html" class="btn-text"><i class="fas fa-user-circle"></i> ${user.name.split(' ')[0]}</a>
-            <a onclick="globalLogout()" class="btn-primary" style="cursor:pointer;">Logout</a>
+            <a onclick="globalLogout()" class="btn-primary" style="cursor:pointer; color: black;">Logout</a>
         `;
     } else if (authButtons) {
         authButtons.innerHTML = `
             <a href="login.html" class="btn-text">Log In</a>
-            <a href="login.html" class="btn-primary">Sign Up</a>
+            <a href="login.html" class="btn-primary" style="color: black;">Sign Up</a>
         `;
     }
 
