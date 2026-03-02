@@ -172,5 +172,110 @@
     </footer>
 
     <script src="js/script.js"></script>
+    <Script>
+        let allJobs = [];
+        let currentPage = 1;
+        const jobsPerPage = 10; // Limits the display to 10 jobs per page
+
+        document.addEventListener('DOMContentLoaded', loadJobs);
+
+        async function loadJobs() {
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/jobs');
+                allJobs = await res.json();
+                renderJobs();
+            } catch (err) {
+                console.error("Failed to load jobs:", err);
+            }
+        }
+
+        function renderJobs() {
+            // NOTE: Make sure the ID below matches your jobs div! (e.g., 'jobs-container' or 'jobs-list')
+            const container = document.getElementById('jobs-container') || document.querySelector('.jobs-layout'); 
+            if (!container) return;
+
+            // 1. Slice the array for the current page 
+            const startIndex = (currentPage - 1) * jobsPerPage;
+            const endIndex = startIndex + jobsPerPage;
+            const jobsToShow = allJobs.slice(startIndex, endIndex);
+
+            // 2. Render the Job Cards for just this page
+            container.innerHTML = jobsToShow.map(j => `
+                <div class="job-card-wide">
+                    <div class="logo-box">${j.logo}</div>
+                    <div class="job-info">
+                        <h3>${j.title}</h3>
+                        <p class="company">${j.company}</p>
+                        <div class="tags">
+                            <span class="tag"><i class="fas fa-map-marker-alt"></i> ${j.location}</span>
+                            <span class="tag"><i class="fas fa-money-bill-wave"></i> ${j.salary}</span>
+                        </div>
+                        <p class="reqs">${j.requirements}</p>
+                    </div>
+                    <div class="actions">
+                        <a href="apply.html?title=${encodeURIComponent(j.title)}&company=${encodeURIComponent(j.company)}" class="btn-primary">Apply with Voice Note</a>
+                    </div>
+                </div>
+            `).join('');
+
+            // 3. Render the Pagination Buttons
+            renderPaginationControls(container);
+        }
+
+        function renderPaginationControls(container) {
+            // Find or create the pagination container so we don't duplicate it
+            let pageDiv = document.getElementById('pagination-controls');
+            if (!pageDiv) {
+                pageDiv = document.createElement('div');
+                pageDiv.id = 'pagination-controls';
+                pageDiv.style.display = 'flex';
+                pageDiv.style.justifyContent = 'center';
+                pageDiv.style.gap = '8px';
+                pageDiv.style.marginTop = '30px';
+                pageDiv.style.paddingBottom = '30px';
+                container.parentNode.insertBefore(pageDiv, container.nextSibling);
+            }
+
+            const totalPages = Math.ceil(allJobs.length / jobsPerPage);
+            
+            // Hide pagination if there is only 1 page
+            if (totalPages <= 1) {
+                pageDiv.innerHTML = '';
+                return;
+            }
+
+            let buttonsHTML = '';
+
+            // Previous Button
+            if (currentPage > 1) {
+                buttonsHTML += `<button onclick="changePage(${currentPage - 1})" style="background: #1e1e1e; color: #d1d5db; border: 1px solid #333; padding: 8px 14px; border-radius: 6px; cursor: pointer; transition: 0.2s;"><i class="fas fa-chevron-left"></i> Prev</button>`;
+            }
+
+            // Page Numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === currentPage) {
+                    // Active Page (Blue)
+                    buttonsHTML += `<button style="background: #3b82f6; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: default;">${i}</button>`;
+                } else {
+                    // Inactive Page (Dark Grey)
+                    buttonsHTML += `<button onclick="changePage(${i})" style="background: #1e1e1e; color: #d1d5db; border: 1px solid #333; padding: 8px 14px; border-radius: 6px; cursor: pointer; transition: 0.2s;">${i}</button>`;
+                }
+            }
+
+            // Next Button
+            if (currentPage < totalPages) {
+                buttonsHTML += `<button onclick="changePage(${currentPage + 1})" style="background: #1e1e1e; color: #d1d5db; border: 1px solid #333; padding: 8px 14px; border-radius: 6px; cursor: pointer; transition: 0.2s;">Next <i class="fas fa-chevron-right"></i></button>`;
+            }
+
+            pageDiv.innerHTML = buttonsHTML;
+        }
+
+        function changePage(pageNumber) {
+            currentPage = pageNumber;
+            renderJobs();
+            // Smoothly scroll back to the top of the job list when clicking next page
+            window.scrollTo({ top: 0, behavior: 'smooth' }); 
+        }
+    </Script>
 </body>
 </html>

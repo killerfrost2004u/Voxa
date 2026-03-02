@@ -363,7 +363,7 @@
                     return `
                         <tr>
                             <td>#${app.ApplicationID}</td>
-                            <td><b>${app.FullName}</b><br><small>${app.JobTitle}</small></td>
+                            <td><b>${app.FullName}</b><br><small><span style="color: #60a5fa; font-weight: 600;">${app.Company || 'N/A'}</span> • ${app.JobTitle}</small></td>
                             <td>${audioContent}</td>
                             <td>${aiContent}</td>
                             <td>${humanGradeBadge}</td>
