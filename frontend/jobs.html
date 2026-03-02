@@ -41,72 +41,72 @@
             <p>Find your next mission from thousands of opportunities.</p>
         </div>
     </header>
+    <section class="section-padding">
+        <div class="container jobs-layout">
+            <aside class="sidebar">
+                <div class="filter-group">
+                    <h3><i class="fas fa-filter"></i> Filter</h3>
 
-    <div class="container jobs-layout">
-        
-        <aside class="sidebar">
-            <div class="filter-group">
-                <h3><i class="fas fa-filter"></i> Filter</h3>
+                    <div class="filter-item">
+                        <label>Keywords</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="keyword-filter" placeholder="Job title..." onkeyup="applyFilters()">
+                        </div>
+                    </div>
+
+                    <div class="filter-item">
+                        <label>Location</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <input type="text" id="location-filter" placeholder="City..." onkeyup="applyFilters()">
+                        </div>
+                    </div>
+
+                    <div class="filter-item">
+                        <label>Job Type</label>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" value="Full Time" onchange="applyFilters()"> Full Time</label>
+                            <label><input type="checkbox" value="Part Time" onchange="applyFilters()"> Part Time</label>
+                            <label><input type="checkbox" value="Rotational" onchange="applyFilters()"> Rotational</label>
+                            <label><input type="checkbox" value="Remote" onchange="applyFilters()"> Remote</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-item">
+                        <label>Min Salary</label>
+                        <input type="range" min="0" max="50" value="0" class="slider" id="salary-range" 
+                               oninput="updateSalaryLabel(this.value); applyFilters()">
+                        <div class="range-value" style="color:var(--text-muted); margin-top:5px;">
+                            Min: <span id="salary-val" style="color:var(--primary-color)">0</span>k EGP
+                        </div>
+                    </div>
+
+                    <button class="btn-primary full-width" onclick="applyFilters()">Apply Filters</button>
+                    <button class="reset-btn" onclick="resetFilters()">Reset</button>
+                </div>
+            </aside>
+
+            <main class="job-feed-wrapper">
+                <div class="feed-header">
+                    <span id="job-count">Loading Jobs...</span>
+                    <div class="sort-box">
+                        <label>Sort by:</label>
+                        <select id="sort-jobs" onchange="applyFilters()">
+                            <option value="newest">Newest</option>
+                            <option value="salary">Highest Salary</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="jobs-list" id="all-jobs-container">
+                </div>
                 
-                <div class="filter-item">
-                    <label>Keywords</label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="keyword-filter" placeholder="Job title..." onkeyup="applyFilters()">
-                    </div>
+                <div class="pagination">
                 </div>
-                
-                <div class="filter-item">
-                    <label>Location</label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <input type="text" id="location-filter" placeholder="City..." onkeyup="applyFilters()">
-                    </div>
-                </div>
-
-                <div class="filter-item">
-                    <label>Job Type</label>
-                    <div class="checkbox-group">
-                        <label><input type="checkbox" value="Full Time" onchange="applyFilters()"> Full Time</label>
-                        <label><input type="checkbox" value="Part Time" onchange="applyFilters()"> Part Time</label>
-                        <label><input type="checkbox" value="Rotational" onchange="applyFilters()"> Rotational</label>
-                        <label><input type="checkbox" value="Remote" onchange="applyFilters()"> Remote</label>
-                    </div>
-                </div>
-
-                <div class="filter-item">
-                    <label>Min Salary</label>
-                    <input type="range" min="0" max="50" value="0" class="slider" id="salary-range" 
-                           oninput="updateSalaryLabel(this.value); applyFilters()">
-                    <div class="range-value" style="color:var(--text-muted); margin-top:5px;">
-                        Min: <span id="salary-val" style="color:var(--primary-color)">0</span>k EGP
-                    </div>
-                </div>
-
-                <button class="btn-primary full-width" onclick="applyFilters()">Apply Filters</button>
-                <button class="reset-btn" onclick="resetFilters()">Reset</button>
-            </div>
-        </aside>
-
-        <main class="job-feed">
-            <div class="feed-header">
-                <span id="job-count">Loading Jobs...</span>
-                <div class="sort-box">
-                    <label>Sort by:</label>
-                    <select id="sort-jobs" onchange="applyFilters()">
-                        <option value="newest">Newest</option>
-                        <option value="salary">Highest Salary</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="jobs-list" id="all-jobs-container">
-                </div>
-            
-            <div class="pagination">
-            </div>
-        </main>
-    </div>
+            </main>
+        </div>
+    </section>
 
     <div id="job-modal" class="modal-overlay">
         <div class="modal-content">

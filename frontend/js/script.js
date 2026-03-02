@@ -225,6 +225,26 @@ window.searchJobs = function() {
     }
 }
 
+window.smartTagSearch = function(tag) {
+    const searchInput = document.getElementById('job-search');
+    const filterInput = document.getElementById('keyword-filter');
+    
+    // Reset filters first
+    window.resetFilters();
+    
+    // Map synonyms
+    let query = tag.toLowerCase();
+    if (query === 'customer support' || query === 'call center') query = 'customer service';
+    if (query === 'wfh') query = 'remote';
+    
+    // Set the inputs
+    if (searchInput) searchInput.value = query;
+    if (filterInput) filterInput.value = query;
+    
+    // Run the filter
+    window.applyFilters();
+}
+
 // ==========================================
 // 2. INDEX.HTML LOGIC
 // ==========================================

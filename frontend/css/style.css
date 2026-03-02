@@ -229,7 +229,11 @@ ul { list-style: none; }
 
 /* --- Jobs Page Layout --- */
 .jobs-layout {
-    display: grid; grid-template-columns: 280px 1fr; gap: 2rem; padding-bottom: 4rem;
+    display: grid; 
+    grid-template-columns: 280px minmax(0, 1fr); /* minmax(0, 1fr) is the magic fix for grid blowouts! */
+    gap: 2rem; 
+    align-items: start; /* Prevents the sidebar from stretching down forever */
+    padding-bottom: 4rem;
 }
 .sidebar {
     background: var(--bg-card); border: 1px solid var(--border-color);
@@ -521,3 +525,30 @@ footer .container { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 
     .job-card-wide .actions { flex-direction: column; align-items: stretch; gap: 10px; }
     .job-card-wide .actions button, .job-card-wide .actions .btn-primary { width: 100%; text-align: center; }
 }
+
+/* --- Jobs Page Layout --- */
+.jobs-layout {
+    display: grid; 
+    grid-template-columns: 280px minmax(0, 1fr); /* minmax(0, 1fr) is the magic fix for grid blowouts! */
+    gap: 2rem; 
+    align-items: start; /* Prevents the sidebar from stretching down forever */
+    padding-bottom: 4rem;
+}
+.job-feed-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Prevents flex children from overflowing the grid */
+}
+
+/* Tag Buttons */
+.tag-btn {
+    background: var(--bg-card);
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: 0.2s;
+}
+.tag-btn:hover { border-color: var(--primary-color); color: var(--primary-color); background: rgba(0, 229, 255, 0.05); }
