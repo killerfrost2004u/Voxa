@@ -3,10 +3,10 @@ let jobs = [];
 let companies = []; 
 let salaryStats = []; 
 
-// --- PAGINATION VARIABLES (Global Scope) ---
+// --- PAGINATION VARIABLES ---
 let allJobs = [];
-window.filteredJobs = []; // Make explicitly global so the filter function can write to it
-window.currentPage = 1;   // Make explicitly global so changePage can edit it
+let filteredJobs = [];
+let currentPage = 1;
 const jobsPerPage = 10; 
 
 // --- LOAD JOBS ---
@@ -14,97 +14,83 @@ async function loadJobs() {
     try {
         const res = await fetch('http://127.0.0.1:5000/api/jobs');
         allJobs = await res.json();
-        
-        // By default, filtered jobs is all jobs
-        window.filteredJobs = [...allJobs];
-        
-        // Update the top job count text
-        const countSpan = document.getElementById('job-count');
-        if(countSpan) countSpan.innerText = `${window.filteredJobs.length} Jobs Found`;
-
+        filteredJobs = [...allJobs];
+        updateJobCount();
         renderJobs();
     } catch (err) {
         console.error("Failed to load jobs:", err);
     }
 }
 
-// --- RENDER 10 JOBS PER PAGE (FIXED STYLING) ---
-window.renderJobs = function() {
+function updateJobCount() {
+    const countSpan = document.getElementById('job-count');
+    if (countSpan) countSpan.innerText = `${filteredJobs.length} Jobs Found`;
+}
+
+// --- RENDER 10 JOBS PER PAGE ---
+function renderJobs() {
     const container = document.getElementById('all-jobs-container');
-    if (!container) return; // Failsafe if we aren't on jobs.html
+    if (!container) return; 
 
-    // 1. Calculate which 10 jobs to show from the FILTERED list
-    const startIndex = (window.currentPage - 1) * jobsPerPage;
+    // 1. Slice Array
+    const startIndex = (currentPage - 1) * jobsPerPage;
     const endIndex = startIndex + jobsPerPage;
-    const jobsToShow = window.filteredJobs.slice(startIndex, endIndex);
+    const jobsToShow = filteredJobs.slice(startIndex, endIndex);
 
-    // 2. Clear the container
+    // 2. Clear and Render
     container.innerHTML = "";
-
-    // 3. Let YOUR original styling function draw the cards!
-    if(jobsToShow.length === 0) { 
+    if (jobsToShow.length === 0) { 
         container.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#888;">No jobs found matching your criteria.</p>`; 
     } else {
         jobsToShow.forEach(job => appendJobCard(container, job, true));
     }
 
-    // 4. Update the page buttons at the bottom
-    renderPaginationControls();
+    // 3. Build Controls via DOM (Not Strings)
+    buildPaginationControls();
 }
 
-// --- RENDER THE PAGE BUTTONS ---
-window.renderPaginationControls = function() {
+// --- BUILD PAGINATION CONTROLS (DOM Method) ---
+function buildPaginationControls() {
     const pageDiv = document.getElementById('pagination-controls');
     if (!pageDiv) return;
 
-    // Calculate pages based on the FILTERED list
-    const totalPages = Math.ceil(window.filteredJobs.length / jobsPerPage);
-    
-    if (totalPages <= 1) {
-        pageDiv.innerHTML = '';
-        return;
-    }
+    pageDiv.innerHTML = ""; // Clear existing
 
-    let buttonsHTML = '';
+    const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+    if (totalPages <= 1) return;
+
+    // Helper function to create safe DOM buttons
+    const createButton = (text, isIcon, isDisabled, isActive, pageTarget) => {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        if (isDisabled) btn.classList.add('disabled');
+        if (isActive) btn.classList.add('active');
+        
+        btn.innerHTML = isIcon ? `<i class="fas fa-chevron-${text}"></i>` : text;
+
+        if (!isDisabled && !isActive) {
+            btn.addEventListener('click', () => {
+                currentPage = pageTarget;
+                renderJobs();
+                const feedHeader = document.querySelector('.feed-header');
+                if (feedHeader) feedHeader.scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+        return btn;
+    };
 
     // Prev Button
-    if (window.currentPage > 1) {
-        buttonsHTML += `<button class="page-btn" onclick="changePage(${window.currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
-    } else {
-        buttonsHTML += `<button class="page-btn disabled"><i class="fas fa-chevron-left"></i></button>`;
-    }
+    pageDiv.appendChild(createButton('left', true, currentPage === 1, false, currentPage - 1));
 
-    // Numbered Pages
+    // Number Buttons
     for (let i = 1; i <= totalPages; i++) {
-        if (i === window.currentPage) {
-            buttonsHTML += `<button class="page-btn active">${i}</button>`;
-        } else {
-            buttonsHTML += `<button class="page-btn" onclick="changePage(${i})">${i}</button>`;
-        }
+        pageDiv.appendChild(createButton(i, false, false, i === currentPage, i));
     }
 
     // Next Button
-    if (window.currentPage < totalPages) {
-        buttonsHTML += `<button class="page-btn" onclick="changePage(${window.currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
-    } else {
-        buttonsHTML += `<button class="page-btn disabled"><i class="fas fa-chevron-right"></i></button>`;
-    }
-
-    pageDiv.innerHTML = buttonsHTML;
+    pageDiv.appendChild(createButton('right', true, currentPage === totalPages, false, currentPage + 1));
 }
 
-// --- TRIGGER PAGE CHANGE ---
-// This function MUST be global so HTML buttons can click it
-window.changePage = function(pageNumber) {
-    window.currentPage = pageNumber;
-    window.renderJobs();
-    
-    // Smoothly scroll back to the top of the job feed
-    const feedHeader = document.querySelector('.feed-header');
-    if (feedHeader) {
-        feedHeader.scrollIntoView({ behavior: 'smooth' });
-    }
-}
 
 // Load jobs when the page opens
 if (window.location.pathname.includes('jobs.html')) {
