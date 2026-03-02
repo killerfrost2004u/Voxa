@@ -3,72 +3,107 @@ let jobs = [];
 let companies = []; 
 let salaryStats = []; 
 
-// 1. Fetch Real Data
+// --- PAGINATION VARIABLES ---
+let allJobs = [];
+let currentPage = 1;
+const jobsPerPage = 10; 
+
+// --- LOAD JOBS ---
 async function loadJobs() {
     try {
-        const response = await fetch(`${API_URL}/jobs`);
-        if (!response.ok) throw new Error("Failed to fetch jobs");
+        const res = await fetch('http://127.0.0.1:5000/api/jobs');
+        allJobs = await res.json();
         
-        jobs = await response.json(); 
-        
-        // --- DATA NORMALIZATION ---
-        jobs.forEach(job => {
-            const loc = job.location ? job.location.toLowerCase() : '';
-            const type = job.type ? job.type.toLowerCase() : '';
-            const remoteKeywords = ['wfh', 'work from home', 'remotely', 'home'];
-            
-            job.isRemote = remoteKeywords.some(k => loc.includes(k) || type.includes(k));
-            if (job.isRemote && loc.length < 20 && (loc.includes('wfh') || loc.includes('home'))) {
-                job.location = "Remote"; 
-            }
+        // Update the top job count text
+        const countSpan = document.getElementById('job-count');
+        if(countSpan) countSpan.innerText = `${allJobs.length} Jobs Found`;
 
-            let salaryNum = 0;
-            const matches = job.salary.match(/(\d+(\.\d+)?)/g);
-            if (matches) {
-                let val = parseFloat(matches[0]);
-                if ((val < 100 || job.salary.toLowerCase().includes('k')) && !job.salary.includes('hour') && !job.salary.includes('$')) {
-                     val *= 1000;
-                }
-                salaryNum = val;
-            }
-            job.salaryNum = salaryNum;
-        });
-
-        processCompanies(jobs);
-        processSalaries(jobs);
-
-        // --- CHECK URL PARAMETERS ---
-        const urlParams = new URLSearchParams(window.location.search);
-        const query = urlParams.get('keyword');
-        const loc = urlParams.get('location');
-
-        if (document.getElementById('all-jobs-container') && (query || loc)) {
-            if(document.getElementById('keyword-filter')) document.getElementById('keyword-filter').value = query || '';
-            if(document.getElementById('location-filter')) document.getElementById('location-filter').value = loc || '';
-            applyFilters();
-        } else {
-            renderPageContent();
-        }
-
-    } catch (error) {
-        console.error("Error loading jobs:", error);
+        renderJobs();
+    } catch (err) {
+        console.error("Failed to load jobs:", err);
     }
 }
-loadJobs();
 
-function renderPageContent() {
-    if(document.getElementById('jobs-container')) renderHomeJobs(jobs);
-    if(document.getElementById('all-jobs-container')) {
-        renderAllJobs(jobs);
-        document.getElementById('job-count').textContent = `Showing ${jobs.length} Jobs`;
+// --- RENDER 10 JOBS PER PAGE (FIXED STYLING) ---
+function renderJobs() {
+    const container = document.getElementById('all-jobs-container');
+    if (!container) return; // Failsafe if we aren't on jobs.html
+
+    // 1. Calculate which 10 jobs to show
+    const startIndex = (currentPage - 1) * jobsPerPage;
+    const endIndex = startIndex + jobsPerPage;
+    const jobsToShow = allJobs.slice(startIndex, endIndex);
+
+    // 2. Clear the container
+    container.innerHTML = "";
+
+    // 3. Let YOUR original styling function draw the cards!
+    if(jobsToShow.length === 0) { 
+        container.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#888;">No jobs found matching your criteria.</p>`; 
+    } else {
+        jobsToShow.forEach(job => appendJobCard(container, job, true));
     }
-    if(document.getElementById('companies-container')) renderCompanies(companies);
-    if(document.getElementById('salaries-container')) renderSalaries(salaryStats);
-    if(document.getElementById('company-profile-header')) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const companyName = urlParams.get('company');
-        if(companyName) renderCompanyProfile(companyName, jobs);
+
+    // 4. Update the page buttons at the bottom
+    renderPaginationControls();
+}
+
+// --- RENDER THE PAGE BUTTONS ---
+function renderPaginationControls() {
+    const pageDiv = document.getElementById('pagination-controls');
+    if (!pageDiv) return;
+
+    const totalPages = Math.ceil(allJobs.length / jobsPerPage);
+    
+    // Hide pagination if there is 1 page or less
+    if (totalPages <= 1) {
+        pageDiv.innerHTML = '';
+        return;
     }
+
+    let buttonsHTML = '';
+
+    // Prev Button
+    if (currentPage > 1) {
+        buttonsHTML += `<button class="page-btn" onclick="changePage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    } else {
+        buttonsHTML += `<button class="page-btn disabled"><i class="fas fa-chevron-left"></i></button>`;
+    }
+
+    // Numbered Pages
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentPage) {
+            buttonsHTML += `<button class="page-btn active">${i}</button>`;
+        } else {
+            buttonsHTML += `<button class="page-btn" onclick="changePage(${i})">${i}</button>`;
+        }
+    }
+
+    // Next Button
+    if (currentPage < totalPages) {
+        buttonsHTML += `<button class="page-btn" onclick="changePage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    } else {
+        buttonsHTML += `<button class="page-btn disabled"><i class="fas fa-chevron-right"></i></button>`;
+    }
+
+    pageDiv.innerHTML = buttonsHTML;
+}
+
+// --- TRIGGER PAGE CHANGE ---
+function changePage(pageNumber) {
+    currentPage = pageNumber;
+    renderJobs();
+    
+    // Smoothly scroll back to the top of the job feed
+    const feedHeader = document.querySelector('.feed-header');
+    if (feedHeader) {
+        feedHeader.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// Load jobs when the page opens
+if (window.location.pathname.includes('jobs.html')) {
+    document.addEventListener('DOMContentLoaded', loadJobs);
 }
 
 // --- DASHBOARD LOGIC ---
@@ -143,7 +178,10 @@ window.removeSavedJob = function(id) {
 function applyForJob() {
     const title = document.getElementById('modal-title').textContent;
     const company = document.getElementById('modal-company').textContent;
-    const id = jobs.find(j => j.title === title && j.company === company)?.id || 0;
+    
+    // CHANGED 'jobs' to 'allJobs' so it finds the ID from the database!
+    const job = allJobs.find(j => j.title === title && j.company === company);
+    const id = job ? job.id : 0;
 
     window.location.href = `apply.html?id=${id}&title=${encodeURIComponent(title)}&company=${encodeURIComponent(company)}`;
 }
