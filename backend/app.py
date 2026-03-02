@@ -231,7 +231,7 @@ def ai_worker(app_id, file_path):
 
 
 # --- WHATSAPP BOT ENGINE ---
-def send_whatsapp_message(to_number, message_body):
+# def send_whatsapp_message(to_number, message_body):
     try:
         # Format number for Twilio (e.g., +201234567890 -> whatsapp:+201234567890)
         # Assuming the user inputted their number with the country code
@@ -251,7 +251,7 @@ def send_whatsapp_message(to_number, message_body):
         print(f"❌ Failed to send WhatsApp: {e}")
 
 # --- 1. UPDATED WHATSAPP BOT ENGINE WITH FULL DETAILS ---
-def process_job_offer_manual(candidate_name, whatsapp_number, job_title, decision, custom_job="", job_data=None, ai_feedback=""):
+# def process_job_offer_manual(candidate_name, whatsapp_number, job_title, decision, custom_job="", job_data=None, ai_feedback=""):
     # Default fallback data just in case the job was deleted
     if not job_data:
         job_data = {
@@ -304,8 +304,132 @@ We keep all applications on file and wish you the best in your career!"""
     send_whatsapp_message(whatsapp_number, msg)
     return True
 
-# --- GOOGLE SHEETS AUTO-EXPORT ---
-def export_to_google_sheet(app_id):
+# --- GOOGLE SHEETS AUTO-EXPORT (ENTERPRISE ROUTING) ---
+# def export_to_google_sheet(app_id):
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # 1. Fetch Candidate Data + Job Company + Recruiter's Hierarchy Data
+        # We use a SQL JOIN to automatically find the Recruiter's Leader and Unit Manager!
+        c.execute("""
+            SELECT 
+                a.FullName, a.Email, a.Phone, a.DateOfBirth, a.GraduationStatus, 
+                a.FacultyUniversity, a.MilitaryStatus, a.Nationality, a.NationalID, 
+                a.ClientPanel, a.Company, a.RecruiterSource,
+                u.TeamName, u.UnitName
+            FROM JobApplications a
+            LEFT JOIN Users u ON a.RecruiterSource = u.FullName
+            WHERE a.ApplicationID=?
+        """, (app_id,))
+        
+        app_data = c.fetchone()
+        conn.close()
+
+        if not app_data: return
+
+        # Unpack the data cleanly
+        name, email, phone, dob_val, grad, faculty, military, nationality, nid, panel, company, recruiter, leader, unit_manager = app_data
+
+        # 2. Format Data & Fallbacks
+        if not recruiter or recruiter == 'Direct/Organic': 
+            recruiter = "Direct"
+        leader = leader or "Unassigned Leader"
+        unit_manager = unit_manager or "Ibrahim Yasser" # Defaults to you if empty!
+
+        # Calculate Age
+        age = "N/A"
+        if dob_val:
+            dob = datetime.datetime.strptime(str(dob_val), '%Y-%m-%d')
+            age = int((datetime.datetime.now() - dob).days / 365.25)
+            
+        # Format the Date exactly like "Monday 2/3"
+        today = datetime.datetime.now()
+        formatted_date = f"{today.strftime('%A')} {today.day}/{today.month}"
+
+        # 3. Connect to Google Sheets
+        scopes = ['https://www.googleapis.com/auth/spreadsheets']
+        creds = Credentials.from_service_account_file('credentials.json', scopes=scopes)
+        client = gspread.authorize(creds)
+        
+        # Open your master file
+        sheet_file = client.open_by_key(SHEET_ID)
+        
+        # 4. DYNAMIC TAB ROUTING
+        # Try to open the tab matching the Company Name (e.g., 'CNX')
+        try:
+            worksheet = sheet_file.worksheet(company)
+        except gspread.exceptions.WorksheetNotFound:
+            print(f"⚠️ Tab for '{company}' not found! Falling back to Sheet1.")
+            worksheet = sheet_file.sheet1
+        
+        # 5. Construct the massive row
+        row_data = [
+            formatted_date, # E.g., Monday 2/3
+            name,           
+            email,          
+            phone,          
+            age,            
+            grad,           
+            faculty,        
+            military,       
+            str(dob_val) if dob_val else 'N/A', 
+            nationality,    
+            nid,            
+            panel,          # The AI written pitch
+            recruiter,      # The ?ref= referral name
+            leader,         # Auto-mapped from Users DB
+            unit_manager    # Auto-mapped from Users DB
+        ]
+        
+        # Append it to the very bottom of that specific company's tab
+        worksheet.append_row(row_data)
+        print(f"✅ Successfully exported {name} to Google Sheets -> Tab: {company}")
+        
+    except Exception as e:
+        print(f"❌ Google Sheets Export Failed: {e}")
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        # FIX: Changed (id,) to (app_id,)
+        c.execute("SELECT FullName, Email, Phone, DateOfBirth, GraduationStatus, FacultyUniversity, MilitaryStatus, Nationality, NationalID, ClientPanel FROM JobApplications WHERE ApplicationID=?", (app_id,))
+        app_data = c.fetchone()
+        conn.close()
+
+        if not app_data: return
+
+        # Calculate Age
+        age = "N/A"
+        if app_data[3]:
+            dob = datetime.datetime.strptime(str(app_data[3]), '%Y-%m-%d')
+            age = int((datetime.datetime.now() - dob).days / 365.25)
+
+        # Connect to Google Sheets
+        scopes = ['https://www.googleapis.com/auth/spreadsheets']
+        creds = Credentials.from_service_account_file('credentials.json', scopes=scopes)
+        client = gspread.authorize(creds)
+        
+        # Open your exact sheet
+        sheet = client.open_by_key(SHEET_ID).sheet1
+        
+        # Append the row exactly how your CEO wants it
+        row_data = [
+            app_data[0], # Name
+            app_data[1], # Email
+            app_data[2], # Phone
+            age,         # Calculated Age
+            app_data[4], # Grad Status
+            app_data[5], # Faculty
+            app_data[6], # Military
+            str(app_data[3]), # DOB
+            app_data[7], # Nationality
+            app_data[8], # National ID
+            app_data[9]  # AI Client Panel
+        ]
+        sheet.append_row(row_data)
+        print(f"✅ Successfully exported {app_data[0]} to Google Sheets!")
+    except Exception as e:
+        print(f"❌ Google Sheets Export Failed: {e}")
     try:
         conn = get_db_connection()
         c = conn.cursor()
