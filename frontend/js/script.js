@@ -5,6 +5,7 @@ let salaryStats = [];
 
 // --- PAGINATION VARIABLES ---
 let allJobs = [];
+let filteredJobs = [];
 let currentPage = 1;
 const jobsPerPage = 10; 
 
@@ -14,6 +15,8 @@ async function loadJobs() {
         const res = await fetch('http://127.0.0.1:5000/api/jobs');
         allJobs = await res.json();
         
+        filteredJobs = [...allJobs];
+
         // Update the top job count text
         const countSpan = document.getElementById('job-count');
         if(countSpan) countSpan.innerText = `${allJobs.length} Jobs Found`;
@@ -53,7 +56,7 @@ function renderPaginationControls() {
     const pageDiv = document.getElementById('pagination-controls');
     if (!pageDiv) return;
 
-    const totalPages = Math.ceil(allJobs.length / jobsPerPage);
+    const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
     
     // Hide pagination if there is 1 page or less
     if (totalPages <= 1) {
@@ -233,26 +236,35 @@ window.applyFilters = function() {
     const sortValue = document.getElementById('sort-jobs').value;
     const checkedTypes = Array.from(document.querySelectorAll('.checkbox-group input:checked')).map(cb => cb.value.toLowerCase());
 
-    let filtered = jobs.filter(job => {
+    // Update our global filtered list
+    filteredJobs = allJobs.filter(job => {
         const matchKeyword = job.title.toLowerCase().includes(keyword) || job.company.toLowerCase().includes(keyword);
         const matchLocation = job.location.toLowerCase().includes(location);
         let matchType = true;
         if (checkedTypes.length > 0) {
             matchType = checkedTypes.some(t => {
                 if (t === 'remote') return job.isRemote;
-                return job.type.toLowerCase().includes(t);
+                return job.type && job.type.toLowerCase().includes(t);
             });
         }
         let matchSalary = true;
-        if (minSalary > 0) matchSalary = job.salaryNum >= minSalary;
+        // Fix: Use a safe fallback for salary number if it's missing
+        const safeSalaryNum = job.salaryNum || 0; 
+        if (minSalary > 0) matchSalary = safeSalaryNum >= minSalary;
         return matchKeyword && matchLocation && matchType && matchSalary;
     });
 
-    if (sortValue === 'salary') filtered.sort((a, b) => b.salaryNum - a.salaryNum);
-    else filtered.sort((a, b) => b.id - a.id); 
+    if (sortValue === 'salary') filteredJobs.sort((a, b) => (b.salaryNum || 0) - (a.salaryNum || 0));
+    else filteredJobs.sort((a, b) => b.id - a.id); 
 
-    renderAllJobs(filtered);
-    document.getElementById('job-count').textContent = `Showing ${filtered.length} Jobs`;
+    // Reset to page 1 whenever a filter is applied!
+    currentPage = 1;
+    
+    // Render the paginated view!
+    renderJobs();
+    
+    const countSpan = document.getElementById('job-count');
+    if(countSpan) countSpan.textContent = `Showing ${filteredJobs.length} Jobs`;
 }
 
 // --- SALARY FILTER (NEW FUNCTION) ---
