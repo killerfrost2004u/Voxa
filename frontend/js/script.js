@@ -1,20 +1,23 @@
 const API_URL = "http://127.0.0.1:5000/api";
-let jobs = []; 
+let jobs = []; // Keep this for legacy functions if needed, but we will rely on allJobs
 let companies = []; 
 let salaryStats = []; 
 
-// --- PAGINATION VARIABLES ---
-let allJobs = [];
-let filteredJobs = [];
-let currentPage = 1;
+// --- PAGINATION VARIABLES (Global Scope) ---
+window.allJobs = [];
+window.filteredJobs = [];
+window.currentPage = 1;
 const jobsPerPage = 10; 
 
 // --- LOAD JOBS ---
 async function loadJobs() {
     try {
         const res = await fetch('http://127.0.0.1:5000/api/jobs');
-        allJobs = await res.json();
-        filteredJobs = [...allJobs];
+        window.allJobs = await res.json();
+        
+        // Initialize filteredJobs with all fetched jobs
+        window.filteredJobs = [...window.allJobs];
+        
         updateJobCount();
         renderJobs();
     } catch (err) {
@@ -24,39 +27,43 @@ async function loadJobs() {
 
 function updateJobCount() {
     const countSpan = document.getElementById('job-count');
-    if (countSpan) countSpan.innerText = `${filteredJobs.length} Jobs Found`;
+    if (countSpan) countSpan.innerText = `${window.filteredJobs.length} Jobs Found`;
 }
 
 // --- RENDER 10 JOBS PER PAGE ---
-function renderJobs() {
+window.renderJobs = function() {
     const container = document.getElementById('all-jobs-container');
-    if (!container) return; 
+    if (!container) return; // Failsafe if we aren't on jobs.html
 
-    // 1. Slice Array
-    const startIndex = (currentPage - 1) * jobsPerPage;
+    // 1. Calculate which 10 jobs to show from the FILTERED list
+    const startIndex = (window.currentPage - 1) * jobsPerPage;
     const endIndex = startIndex + jobsPerPage;
-    const jobsToShow = filteredJobs.slice(startIndex, endIndex);
+    const jobsToShow = window.filteredJobs.slice(startIndex, endIndex);
 
-    // 2. Clear and Render
+    // 2. Clear the container
     container.innerHTML = "";
-    if (jobsToShow.length === 0) { 
+
+    // 3. Render the job cards
+    if(jobsToShow.length === 0) { 
         container.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#888;">No jobs found matching your criteria.</p>`; 
     } else {
         jobsToShow.forEach(job => appendJobCard(container, job, true));
     }
 
-    // 3. Build Controls via DOM (Not Strings)
+    // 4. Build Controls via DOM
     buildPaginationControls();
 }
 
 // --- BUILD PAGINATION CONTROLS (DOM Method) ---
-function buildPaginationControls() {
-    const pageDiv = document.getElementById('pagination-controls');
+window.buildPaginationControls = function() {
+    const pageDiv = document.querySelector('.pagination'); // Using querySelector to find the class
     if (!pageDiv) return;
 
-    pageDiv.innerHTML = ""; // Clear existing
+    pageDiv.innerHTML = ""; // Clear existing buttons
 
-    const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+    const totalPages = Math.ceil(window.filteredJobs.length / jobsPerPage);
+    
+    // Don't show pagination if there's only 1 page
     if (totalPages <= 1) return;
 
     // Helper function to create safe DOM buttons
@@ -69,9 +76,11 @@ function buildPaginationControls() {
         btn.innerHTML = isIcon ? `<i class="fas fa-chevron-${text}"></i>` : text;
 
         if (!isDisabled && !isActive) {
-            btn.addEventListener('click', () => {
-                currentPage = pageTarget;
-                renderJobs();
+            btn.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent default button behavior
+                window.currentPage = pageTarget;
+                window.renderJobs();
+                // Smooth scroll to top
                 const feedHeader = document.querySelector('.feed-header');
                 if (feedHeader) feedHeader.scrollIntoView({ behavior: 'smooth' });
             });
@@ -80,17 +89,16 @@ function buildPaginationControls() {
     };
 
     // Prev Button
-    pageDiv.appendChild(createButton('left', true, currentPage === 1, false, currentPage - 1));
+    pageDiv.appendChild(createButton('left', true, window.currentPage === 1, false, window.currentPage - 1));
 
     // Number Buttons
     for (let i = 1; i <= totalPages; i++) {
-        pageDiv.appendChild(createButton(i, false, false, i === currentPage, i));
+        pageDiv.appendChild(createButton(i, false, false, i === window.currentPage, i));
     }
 
     // Next Button
-    pageDiv.appendChild(createButton('right', true, currentPage === totalPages, false, currentPage + 1));
+    pageDiv.appendChild(createButton('right', true, window.currentPage === totalPages, false, window.currentPage + 1));
 }
-
 
 // Load jobs when the page opens
 if (window.location.pathname.includes('jobs.html')) {
@@ -98,7 +106,6 @@ if (window.location.pathname.includes('jobs.html')) {
 }
 
 // --- DASHBOARD LOGIC ---
-
 window.loadDashboardData = function() {
     const apps = JSON.parse(localStorage.getItem('my_applications')) || [];
     const saved = JSON.parse(localStorage.getItem('my_saved_jobs')) || [];
@@ -170,9 +177,8 @@ window.removeSavedJob = function(id) {
 function applyForJob() {
     const title = document.getElementById('modal-title').textContent;
     const company = document.getElementById('modal-company').textContent;
-    
-    // CHANGED 'jobs' to 'allJobs' so it finds the ID from the database!
-    const job = allJobs.find(j => j.title === title && j.company === company);
+    // Fix: Search allJobs instead of empty jobs array
+    const job = window.allJobs.find(j => j.title === title && j.company === company);
     const id = job ? job.id : 0;
 
     window.location.href = `apply.html?id=${id}&title=${encodeURIComponent(title)}&company=${encodeURIComponent(company)}`;
@@ -225,10 +231,12 @@ window.applyFilters = function() {
     const sortValue = document.getElementById('sort-jobs').value;
     const checkedTypes = Array.from(document.querySelectorAll('.checkbox-group input:checked')).map(cb => cb.value.toLowerCase());
 
-    // Update our global filtered list
-    filteredJobs = allJobs.filter(job => {
-        const matchKeyword = job.title.toLowerCase().includes(keyword) || job.company.toLowerCase().includes(keyword);
-        const matchLocation = job.location.toLowerCase().includes(location);
+    // Fix: Filter against window.allJobs, not the empty jobs array
+    window.filteredJobs = window.allJobs.filter(job => {
+        const matchKeyword = (job.title && job.title.toLowerCase().includes(keyword)) || 
+                             (job.company && job.company.toLowerCase().includes(keyword));
+        const matchLocation = job.location && job.location.toLowerCase().includes(location);
+        
         let matchType = true;
         if (checkedTypes.length > 0) {
             matchType = checkedTypes.some(t => {
@@ -236,27 +244,27 @@ window.applyFilters = function() {
                 return job.type && job.type.toLowerCase().includes(t);
             });
         }
+        
         let matchSalary = true;
-        // Fix: Use a safe fallback for salary number if it's missing
-        const safeSalaryNum = job.salaryNum || 0; 
+        const safeSalaryNum = job.salaryNum || 0;
         if (minSalary > 0) matchSalary = safeSalaryNum >= minSalary;
+        
         return matchKeyword && matchLocation && matchType && matchSalary;
     });
 
-    if (sortValue === 'salary') filteredJobs.sort((a, b) => (b.salaryNum || 0) - (a.salaryNum || 0));
-    else filteredJobs.sort((a, b) => b.id - a.id); 
+    if (sortValue === 'salary') {
+        window.filteredJobs.sort((a, b) => (b.salaryNum || 0) - (a.salaryNum || 0));
+    } else {
+        window.filteredJobs.sort((a, b) => b.id - a.id); 
+    }
 
-    // Reset to page 1 whenever a filter is applied!
-    currentPage = 1;
-    
-    // Render the paginated view!
-    renderJobs();
-    
-    const countSpan = document.getElementById('job-count');
-    if(countSpan) countSpan.textContent = `Showing ${filteredJobs.length} Jobs`;
+    // Reset to page 1 and render
+    window.currentPage = 1;
+    updateJobCount();
+    window.renderJobs();
 }
 
-// --- SALARY FILTER (NEW FUNCTION) ---
+// --- SALARY FILTER ---
 window.filterSalaries = function() {
     const query = document.getElementById('salary-search').value.toLowerCase();
     const filtered = salaryStats.filter(s => s.title.toLowerCase().includes(query));
@@ -274,18 +282,28 @@ window.resetFilters = function() {
     updateSalaryLabel(0);
     document.querySelectorAll('.checkbox-group input').forEach(cb => cb.checked = false);
     document.getElementById('sort-jobs').value = "newest";
-    window.history.pushState({}, document.title, window.location.pathname);
-    applyFilters();
+    
+    // Reset filtered jobs to all jobs
+    window.filteredJobs = [...window.allJobs];
+    window.currentPage = 1;
+    
+    updateJobCount();
+    window.renderJobs();
 }
 
 window.filterHomeTabs = function(element, category) {
     const options = document.querySelectorAll('.view-options span');
     options.forEach(opt => opt.classList.remove('active'));
     element.classList.add('active');
-    let filteredJobs = jobs;
-    if (category === 'full time') filteredJobs = jobs.filter(job => job.type.toLowerCase().includes('full'));
-    else if (category === 'remote') filteredJobs = jobs.filter(job => job.isRemote);
-    renderHomeJobs(filteredJobs);
+    
+    // Fix: Filter against allJobs
+    let filteredForHome = window.allJobs;
+    if (category === 'full time') {
+        filteredForHome = window.allJobs.filter(job => job.type && job.type.toLowerCase().includes('full'));
+    } else if (category === 'remote') {
+        filteredForHome = window.allJobs.filter(job => job.isRemote);
+    }
+    renderHomeJobs(filteredForHome);
 }
 
 window.searchJobs = function() {
@@ -294,46 +312,7 @@ window.searchJobs = function() {
     window.location.href = `jobs.html?keyword=${encodeURIComponent(keyword)}&location=${encodeURIComponent(location)}`;
 }
 
-function processCompanies(data) {
-    const companyMap = {};
-    data.forEach(job => {
-        if (!companyMap[job.company]) companyMap[job.company] = { name: job.company, logo: job.logo, openJobs: 0 };
-        companyMap[job.company].openJobs++;
-    });
-    companies = Object.values(companyMap);
-}
-
-function processSalaries(data) {
-    const roleMap = {};
-    data.forEach(job => {
-        let title = job.title.split('(')[0].split('-')[0].trim();
-        if (!roleMap[title]) roleMap[title] = { title: title, total: 0, count: 0, rawSalaries: [] };
-        if (job.salaryNum > 0) { roleMap[title].total += job.salaryNum; roleMap[title].count++; }
-        roleMap[title].rawSalaries.push(job.salary);
-    });
-    salaryStats = Object.values(roleMap).map(r => ({
-        title: r.title,
-        avg: r.count > 0 ? Math.round(r.total / r.count) : 0,
-        samples: r.rawSalaries.length
-    })).sort((a, b) => b.avg - a.avg);
-}
-
-function renderHomeJobs(data) {
-    const container = document.getElementById('jobs-container');
-    if (!container) return;
-    container.innerHTML = "";
-    if (data.length === 0) { container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #888;">No jobs found in this category.</p>`; return; }
-    data.slice(0, 6).forEach(job => appendJobCard(container, job, false));
-}
-
-function renderAllJobs(data) {
-    const container = document.getElementById('all-jobs-container');
-    if (!container) return;
-    container.innerHTML = "";
-    if(data.length === 0) { container.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:#888;">No jobs found matching your criteria.</p>`; return; }
-    data.forEach(job => appendJobCard(container, job, true));
-}
-
+// --- RENDER HELPERS ---
 function appendJobCard(container, job, isWide) {
     const card = document.createElement('div');
     const saveJob = `event.stopPropagation(); saveJob(${job.id}, '${job.title.replace(/'/g, "\\'")}', '${job.company.replace(/'/g, "\\'")}', '${job.logo}')`;
@@ -346,9 +325,8 @@ function appendJobCard(container, job, isWide) {
                 <h3>${job.title}</h3>
                 <div class="company">${job.company}</div>
                 <div class="meta">
-                    <span><i class="fas fa-map-marker-alt"></i> ${job.location}</span>
-                    <span><i class="fas fa-money-bill-wave"></i> ${job.salary}</span>
-                    <span><i class="fas fa-clock"></i> ${job.hours}</span>
+                    <span><i class="fas fa-map-marker-alt"></i> ${job.location || 'Remote'}</span>
+                    <span><i class="fas fa-money-bill-wave"></i> ${job.salary || 'Competitive'}</span>
                 </div>
             </div>
             <div class="actions">
@@ -368,10 +346,10 @@ function appendJobCard(container, job, isWide) {
                     <p class="company-name">${job.company}</p>
                 </div>
             </div>
-            <span class="job-type">${job.type}</span>
+            <span class="job-type">${job.type || 'Full Time'}</span>
             <div class="job-details">
-                <span><i class="fas fa-map-marker-alt"></i> ${job.location}</span>
-                <span><i class="fas fa-money-bill-wave"></i> ${job.salary}</span>
+                <span><i class="fas fa-map-marker-alt"></i> ${job.location || 'Remote'}</span>
+                <span><i class="fas fa-money-bill-wave"></i> ${job.salary || 'Competitive'}</span>
             </div>
             <button class="apply-btn" onclick="openJobDetails(${job.id})">View Details</button>
         `;
@@ -379,89 +357,20 @@ function appendJobCard(container, job, isWide) {
     container.appendChild(card);
 }
 
-function renderCompanies(data) {
-    const container = document.getElementById('companies-container');
-    if (!container) return;
-    container.innerHTML = "";
-    data.forEach(comp => {
-        const card = document.createElement('div');
-        card.classList.add('company-card');
-        card.innerHTML = `
-            <div class="company-logo-large">${comp.logo}</div>
-            <h3>${comp.name}</h3>
-            <div class="company-rating" style="margin: 5px 0;">
-                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
-            </div>
-            <div class="open-jobs-tag">${comp.openJobs} Open Jobs</div>
-            <button class="btn-secondary" onclick="window.location.href='company-profile.html?company=${encodeURIComponent(comp.name)}'" style="margin-top:1.5rem; width:100%;">View Profile</button>
-        `;
-        container.appendChild(card);
-    });
-}
-
-function renderSalaries(data) {
-    const container = document.getElementById('salaries-container');
-    if (!container) return;
-    container.innerHTML = "";
-    
-    if (data.length === 0) {
-        container.innerHTML = `<p style="text-align:center; color:#888;">No salaries found matching your search.</p>`;
-        return;
-    }
-
-    const maxVal = Math.max(...data.map(d => d.avg)) || 20000;
-    data.forEach(stat => {
-        let width = (stat.avg / maxVal) * 100;
-        if(width > 100) width = 100; if(width < 10) width = 10;
-        const card = document.createElement('div');
-        card.classList.add('salary-card');
-        card.innerHTML = `
-            <div class="salary-info">
-                <h3>${stat.title}</h3>
-                <p class="text-muted" style="font-size:0.9rem;">Based on ${stat.samples} offers</p>
-            </div>
-            <div class="salary-visual">
-                <div class="salary-bar-bg"><div class="salary-bar-fill" style="width: ${stat.avg > 0 ? width : 0}%;">${stat.avg > 0 ? `<div class="salary-marker"></div>` : ''}</div></div>
-                <div class="salary-value">${stat.avg > 0 ? stat.avg.toLocaleString() + ' EGP' : 'N/A'}</div>
-            </div>
-        `;
-        container.appendChild(card);
-    });
-}
-
-function renderCompanyProfile(companyName, allJobs) {
-    const companyJobs = allJobs.filter(j => j.company === companyName);
-    if(companyJobs.length === 0) {
-        document.getElementById('company-profile-header').innerHTML = `<h2 style="text-align:center; color:white;">Company Not Found</h2>`;
-        return;
-    }
-    const companyInfo = { name: companyName, logo: companyJobs[0].logo, count: companyJobs.length };
-    document.getElementById('company-profile-header').innerHTML = `
-        <div class="company-logo-large" style="margin: 0 auto 1rem auto; display:flex;">${companyInfo.logo}</div>
-        <h1 style="text-align:center; color:white; margin-bottom:0.5rem; font-size: 2.5rem;">${companyInfo.name}</h1>
-        <div style="display:flex; justify-content:center; gap:1rem; margin-top:1rem;">
-            <span class="open-jobs-tag" style="margin:0; background:#333; color:white; border:1px solid #555;">Technology</span>
-            <span class="open-jobs-tag" style="margin:0;">${companyInfo.count} Active Positions</span>
-        </div>
-    `;
-    const jobsContainer = document.getElementById('company-jobs-container');
-    jobsContainer.innerHTML = "";
-    companyJobs.forEach(job => appendJobCard(jobsContainer, job, true));
-}
-
 function openJobDetails(jobId) {
-    const job = jobs.find(j => j.id === jobId);
+    // Fix: Search allJobs
+    const job = window.allJobs.find(j => j.id === jobId);
     if (!job) return;
     document.getElementById('modal-title').textContent = job.title;
     document.getElementById('modal-company').textContent = job.company;
-    document.getElementById('modal-salary').textContent = job.salary;
-    document.getElementById('modal-location').textContent = job.location;
-    document.getElementById('modal-hours').textContent = job.hours;
+    document.getElementById('modal-salary').textContent = job.salary || 'Competitive';
+    document.getElementById('modal-location').textContent = job.location || 'Remote';
+    document.getElementById('modal-hours').textContent = job.hours || 'Standard';
     document.getElementById('modal-logo').textContent = job.logo;
     
     const reqContainer = document.getElementById('modal-requirements');
-    if (Array.isArray(job.requirements) && job.requirements.length > 0) {
-        reqContainer.innerHTML = `<ul>${job.requirements.map(item => `<li>${item}</li>`).join('')}</ul>`;
+    if (job.requirements) {
+        reqContainer.innerHTML = `<p class="text-block">${job.requirements}</p>`;
     } else {
         reqContainer.innerHTML = "<p class='text-muted'>No specific requirements listed.</p>";
     }
@@ -470,9 +379,14 @@ function openJobDetails(jobId) {
     document.getElementById('job-modal').classList.add('open');
 }
 
-function closeJobModal() { document.getElementById('job-modal').classList.remove('open'); }
+function closeJobModal() { 
+    const modal = document.getElementById('job-modal');
+    if (modal) modal.classList.remove('open'); 
+}
 
-window.addEventListener('click', (e) => { if (e.target === document.getElementById('job-modal')) closeJobModal(); });
+window.addEventListener('click', (e) => { 
+    if (e.target === document.getElementById('job-modal')) closeJobModal(); 
+});
 
 // --- AUTH ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -493,7 +407,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 window.globalLogout = function() { localStorage.removeItem('user'); window.location.href = 'index.html'; }
 
-
 // --- MOBILE HAMBURGER MENU FIX ---
 document.addEventListener('DOMContentLoaded', () => {
     const menuToggle = document.querySelector('.menu-toggle');
@@ -507,4 +420,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-
