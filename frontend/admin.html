@@ -295,10 +295,23 @@
             await loadApplications();
         }
 
+        function calculateAge(dobString) {
+            if(!dobString) return 'N/A';
+            const dob = new Date(dobString);
+            const diff = Date.now() - dob.getTime();
+            const ageDate = new Date(diff);
+            return Math.abs(ageDate.getUTCFullYear() - 1970);
+        }
+
         async function loadApplications() {
             const tbody = document.getElementById('admin-table-body');
             try {
-                const res = await fetch('http://127.0.0.1:5000/api/admin/applications');
+                // Get the currently logged-in user from LocalStorage
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (!user || !user.email) return;
+
+                // Send their email to the backend so it knows what data they are allowed to see
+                const res = await fetch(`http://127.0.0.1:5000/api/admin/applications?email=${user.email}`);
                 appData = await res.json();
                 
                 tbody.innerHTML = appData.map(app => {
@@ -356,7 +369,10 @@
                             <td>${humanGradeBadge}</td>
                             <td>${statusBadge}</td> 
                             <td>${app.Email}<br>${app.Phone}</td>
-                            <td><div class="exp-cell">${app.Experience}</div></td>
+                            <td>
+                                <div class="exp-cell">${app.Experience}</div>
+                                <div style="margin-top:5px; font-size:0.75rem; color:#10b981;"><i class="fas fa-link"></i> Ref: ${app.RecruiterSource || 'Direct'}</div>
+                            </td>
                             <td>${app.SubmittedAt}</td>
                         </tr>
                     `;
@@ -445,6 +461,23 @@
         function openHumanModal(id) {
             const app = appData.find(a => a.ApplicationID === id);
             if(!app) return;
+
+            const age = calculateAge(app.DateOfBirth);
+            const panelText = `Quadruple Name: ${app.FullName}
+Email: ${app.Email}
+Phone number: ${app.Phone}
+Age: ${age}
+Graduation status: ${app.GraduationStatus}
+Faculty and university: ${app.FacultyUniversity || 'N/A'}
+Military status: ${app.MilitaryStatus || 'N/A'}
+Date of birth: ${app.DateOfBirth || 'N/A'}
+Nationality: ${app.Nationality}
+National ID: ${app.NationalID}
+
+AI Assessment:
+${app.ClientPanel || 'Pending AI Assessment...'}`;
+
+            const displayPanel = panelText.replace(/\n/g, '<br>');
             
             document.getElementById('human-modal-content').innerHTML = `
                 <div class="report-section" style="background: rgba(16, 185, 129, 0.05); padding: 0px;">
@@ -494,6 +527,30 @@
                             </button>
                         </div>
                     </div>
+
+                    <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.3); padding: 12px; border-radius: 6px; margin-top: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong style="color: #60a5fa; font-size: 0.85rem;"><i class="fas fa-file-export"></i> Client Panel (Ready to send)</strong>
+                                <button onclick="navigator.clipboard.writeText(\`${panelText}\`); alert('Panel Copied to Clipboard!');" style="background: #3b82f6; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: 0.2s;">
+                                    <i class="fas fa-copy"></i> Copy Panel
+                                </button>
+                            </div>
+                            <p style="color: #d1d5db; font-size: 0.85rem; line-height: 1.6; margin: 0; font-family: monospace; background: #0a0a0a; padding: 10px; border-radius: 4px; border: 1px solid #222;">
+                                ${displayPanel}
+                            </p>
+                    </div>
+
+                    <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.3); padding: 12px; border-radius: 6px; margin-top: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong style="color: #60a5fa; font-size: 0.85rem;"><i class="fas fa-file-export"></i> AI Client Panel (Ready to send)</strong>
+                                <button onclick="navigator.clipboard.writeText('${app.ClientPanel?.replace(/'/g, "\\'")}'); alert('Panel Copied to Clipboard!');" style="background: #3b82f6; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </div>
+                            <p style="color: #d1d5db; font-size: 0.9rem; line-height: 1.5; margin: 0; font-style: italic;">
+                                "${app.ClientPanel || 'No panel generated yet.'}"
+                            </p>
+                        </div>
                 </div>
             `;
             document.getElementById('human-modal').style.display = 'flex';

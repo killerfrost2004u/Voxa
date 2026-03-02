@@ -68,6 +68,10 @@
                     <div class="form-group"><label>National ID <span style="color:var(--primary-color)">*</span></label><input type="text" id="app-national-id" required placeholder="14-digit ID" maxlength="14"></div>
                     <div class="form-group"><label>Nationality <span style="color:var(--primary-color)">*</span></label><input type="text" id="app-nationality" required placeholder="Egyptian"></div>
                 </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group"><label>Date of Birth <span style="color:var(--primary-color)">*</span></label><input type="date" id="app-dob" required></div>
+                    <div class="form-group"><label>Faculty & University <span style="color:var(--primary-color)">*</span></label><input type="text" id="app-faculty" required placeholder="e.g. Faculty of Engineering, Cairo University"></div>
+                </div>
                 <div class="form-group"><label>Address (Egypt) <span style="color:var(--primary-color)">*</span></label><input type="text" id="app-address" required placeholder="Street, City, Governorate"></div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group"><label><i class="fas fa-phone-alt"></i> Phone (Calls) <span style="color:var(--primary-color)">*</span></label><input type="tel" id="app-phone" required placeholder="01xxxxxxxxx"></div>
@@ -208,7 +212,7 @@
                 }
 
                 // 2. SAFE TEXT FIELDS
-                const fields = ['name', 'email', 'phone', 'whatsapp', 'national-id', 'nationality', 'address', 'english', 'experience'];
+                const fields = ['name', 'email', 'phone', 'whatsapp', 'national-id', 'nationality', 'address', 'english', 'experience', 'dob', 'faculty'];
                 fields.forEach(id => {
                     const el = document.getElementById('app-' + id);
                     if(el) {
@@ -228,6 +232,9 @@
                 const params = new URLSearchParams(window.location.search);
                 formData.append('title', params.get('title') || 'General');
                 formData.append('company', params.get('company') || 'Dark Wolves');
+
+                // NEW: Capture the Recruiter's Name from the URL
+                formData.append('ref', params.get('ref') || 'Direct/Organic');
 
                 // 3. SEND
                 const res = await fetch('http://127.0.0.1:5000/api/apply', { 

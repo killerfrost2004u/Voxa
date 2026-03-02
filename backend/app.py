@@ -19,6 +19,8 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
+import gspread
+from google.oauth2.service_account import Credentials
 
 # --- CONFIGURATION ---
 # Load hidden variables from the .env file
@@ -118,6 +120,9 @@ def run_gemini_audio_analysis(file_path):
         5. ACCENT PROFILING: Explicitly name their accent (e.g., 'Clear Egyptian'). A strong but clear accent does not lower the grade.
         6. STRICT JSON FORMATTING: Use ONLY single quotes inside the JSON string values.
 
+        7. CLIENT PANEL: Write a highly professional, 2-3 sentence summary designed to be sent to a corporate client. Highlight their strengths, accent, and overall communication confidence.
+        8. CONSTRUCTIVE FEEDBACK: Write a single, polite sentence offering a specific tip on how they can improve their spoken English based on their audio.
+
         Provide a summary of their speech detailing their fluency, grammar, and ACCENT PROFILE. Return ONLY valid JSON in this EXACT format:
         {
             "overall_level": "[Insert Level here]",
@@ -180,8 +185,10 @@ def ai_worker(app_id, file_path):
             fluency_grade = ai_data.get('fluency_level', 'N/A')
             pronunciation_grade = ai_data.get('pronunciation_level', 'N/A')
             grammar_grade = ai_data.get('grammar_level', 'N/A')
-            accent_profile = ai_data.get('accent_profile', 'Not Specified') # <--- ADD THIS
+            accent_profile = ai_data.get('accent_profile', 'Not Specified') 
             transcript = ai_data.get('transcript', 'Transcript not provided.')
+            client_panel = ai_data.get('client_panel', 'No panel generated.') 
+            constructive_feedback = ai_data.get('constructive_feedback', 'Keep practicing!') 
 
             print(f"✅ FINAL OVERALL GRADE: {overall_grade}")
             print(f"📊 BREAKDOWN -> Fluency: {fluency_grade} | Pronunciation: {pronunciation_grade} | Grammar: {grammar_grade}")
@@ -193,7 +200,8 @@ def ai_worker(app_id, file_path):
                 c.execute(
                     """UPDATE JobApplications 
                        SET Transcription=?, AI_Rating=?, AI_Summary=?, SpeechRate=0,
-                           Grammar_Rating=?, Fluency_Rating=?, Pronunciation_Rating=?, Accent_Profile=?, Status='Analyzed'
+                           Grammar_Rating=?, Fluency_Rating=?, Pronunciation_Rating=?, Accent_Profile=?, 
+                           ClientPanel=?, ConstructiveFeedback=?, Status='Analyzed'
                        WHERE ApplicationID=?""",
                     (transcript, overall_grade, ai_data['summary'], 
                      grammar_grade, fluency_grade, pronunciation_grade, accent_profile, app_id)
@@ -281,12 +289,66 @@ Thank you for applying! While your English profile is fantastic, that specific c
 Please reply *"ACCEPT"* to begin onboarding for this new role, or *"DECLINE"* if you are passing on this offer."""
 
     elif decision == 'reject':
-        msg = f"Hello {candidate_name},\n\nThank you for submitting your voice introduction for the {job_title} role. After reviewing your AI proficiency report, we have decided to move forward with other candidates whose English profiles more closely align with our current client campaign requirements.\n\nWe keep all applications on file and wish you the best! 🐺"
+        msg = f"""Hello {candidate_name},
+
+Thank you for submitting your voice introduction for the {job_title} role. 
+
+After reviewing your AI proficiency report, we have decided to move forward with other candidates whose English profiles more closely align with our current client campaign requirements. 
+
+🐺 *AI Feedback Tip:* {ai_feedback}
+
+We keep all applications on file and wish you the best in your career!"""
     else:
         return False
 
     send_whatsapp_message(whatsapp_number, msg)
     return True
+
+# --- GOOGLE SHEETS AUTO-EXPORT ---
+def export_to_google_sheet(app_id):
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("SELECT FullName, Email, Phone, DateOfBirth, GraduationStatus, FacultyUniversity, MilitaryStatus, Nationality, NationalID, ClientPanel FROM JobApplications WHERE ApplicationID=?", (id,))
+        app_data = c.fetchone()
+        conn.close()
+
+        if not app_data: return
+
+        # Calculate Age
+        age = "N/A"
+        if app_data[3]:
+            dob = datetime.datetime.strptime(str(app_data[3]), '%Y-%m-%d')
+            age = int((datetime.datetime.now() - dob).days / 365.25)
+
+        # Connect to Google Sheets
+        scopes = ['https://www.googleapis.com/auth/spreadsheets']
+        creds = Credentials.from_service_account_file('credentials.json', scopes=scopes)
+        client = gspread.authorize(creds)
+        
+        # Open your exact sheet
+        sheet = client.open_by_key(SHEET_ID).sheet1
+        
+        # Append the row exactly how your CEO wants it
+        row_data = [
+            app_data[0], # Name
+            app_data[1], # Email
+            app_data[2], # Phone
+            age,         # Calculated Age
+            app_data[4], # Grad Status
+            app_data[5], # Faculty
+            app_data[6], # Military
+            str(app_data[3]), # DOB
+            app_data[7], # Nationality
+            app_data[8], # National ID
+            app_data[9]  # AI Client Panel
+        ]
+        sheet.append_row(row_data)
+        print(f"✅ Successfully exported {app_data[0]} to Google Sheets!")
+    except Exception as e:
+        print(f"❌ Google Sheets Export Failed: {e}")
+
+# --- ROUTES ---
 
 @app.route('/api/admin/send-offer/<int:id>', methods=['POST'])
 def send_offer(id):
@@ -298,8 +360,8 @@ def send_offer(id):
         conn = get_db_connection()
         c = conn.cursor()
         
-        # 1. Get Candidate Data
-        c.execute("SELECT FullName, WhatsApp, JobTitle FROM JobApplications WHERE ApplicationID=?", (id,))
+        # 1. Get Candidate Data AND the AI Feedback
+        c.execute("SELECT FullName, WhatsApp, JobTitle, ConstructiveFeedback FROM JobApplications WHERE ApplicationID=?", (id,))
         app_row = c.fetchone()
         
         if not app_row or not app_row[1]:
@@ -309,8 +371,9 @@ def send_offer(id):
         c_name = app_row[0].split()[0]
         c_whatsapp = app_row[1]
         c_job = app_row[2]
+        ai_feedback = app_row[3] or "Keep practicing your pronunciation!" # Catch the feedback here
 
-        # 2. Fetch ALL Job Details from the database
+        # 2. Fetch Job Details
         c.execute("SELECT CompanyName, AccountType, WorkingHours, SalaryPackage, Location, Training, OfferDetails FROM Jobs WHERE JobTitle=?", (c_job,))
         job_row = c.fetchone()
         
@@ -322,9 +385,8 @@ def send_offer(id):
             }
         conn.close()
 
-        
-        # 3. Send message with real details injected
-        success = process_job_offer_manual(c_name, c_whatsapp, c_job, decision, custom_job, job_data)
+        # 3. Send message (Pass the ai_feedback into the function)
+        success = process_job_offer_manual(c_name, c_whatsapp, c_job, decision, custom_job, job_data, ai_feedback)
         if success:
             return jsonify({"message": "WhatsApp message sent successfully!"}), 200
         return jsonify({"error": "Invalid decision"}), 400
@@ -406,24 +468,27 @@ def update_delete_job(id):
         conn.close()
         return jsonify({"message": "Job deleted"})
 
-# --- ROUTES ---
+
 @app.route('/api/admin/applications/<int:id>/status', methods=['PUT'])
 def update_application_status(id):
     try:
         data = request.get_json()
         new_status = data.get('status')
         feedback = data.get('feedback', '')
-        human_grade = data.get('humanGrade', '') # <-- NEW: Catch the human grade
+        human_grade = data.get('humanGrade', '')
         
         conn = get_db_connection()
         c = conn.cursor()
-        # <-- NEW: Save Human_Rating to the DB
         c.execute("UPDATE JobApplications SET Status=?, ValidatorFeedback=?, Human_Rating=? WHERE ApplicationID=?", 
                   (new_status, feedback, human_grade, id))
         conn.commit()
         conn.close()
         
-        return jsonify({"message": "Validation saved to database successfully!"}), 200
+        # --- NEW: IF ACCEPTED, EXPORT TO SHEET AUTOMATICALLY ---
+        if new_status == 'Accepted':
+            threading.Thread(target=export_to_google_sheet, args=(id,)).start()
+        
+        return jsonify({"message": "Validation saved!"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -521,10 +586,16 @@ def apply():
         c = conn.cursor()
         d = request.form
         c.execute(
-            "INSERT INTO JobApplications (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, Gender, GraduationStatus, MilitaryStatus, NationalID, Nationality, Address, VoiceRecordPath, SubmittedAt) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,GETDATE())",
+            """INSERT INTO JobApplications 
+            (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, 
+             Gender, GraduationStatus, MilitaryStatus, NationalID, Nationality, Address, 
+             DateOfBirth, FacultyUniversity, VoiceRecordPath, SubmittedAt, RecruiterSource) 
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,GETDATE(),?)""",
             (d.get('title'), d.get('company'), d.get('name'), d.get('email'), d.get('phone'), d.get('whatsapp'),
              d.get('english'), d.get('experience'), d.get('gender'), d.get('gradStatus'), d.get('militaryStatus'),
-             d.get('nationalId'), d.get('nationality'), d.get('address'), fn))
+             d.get('nationalId'), d.get('nationality'), d.get('address'),
+             d.get('dob'), d.get('faculty'), 
+             fn, d.get('ref', 'Direct/Organic')))
         conn.commit()
         conn.close()
         return jsonify({"message": "OK"}), 201
@@ -547,14 +618,55 @@ def analyze(id):
 @app.route('/api/admin/applications', methods=['GET'])
 def apps():
     try:
+        # Get the email of the person requesting the data
+        user_email = request.args.get('email')
+        if not user_email: return jsonify([])
+
         conn = get_db_connection()
         c = conn.cursor()
-        c.execute("SELECT * FROM JobApplications ORDER BY SubmittedAt DESC")
+        
+        # Find out who this user is and what their role is
+        c.execute("SELECT FullName, Role, TeamName, UnitName FROM Users WHERE Email=?", (user_email,))
+        user_data = c.fetchone()
+        
+        if not user_data: 
+            conn.close()
+            return jsonify([])
+            
+        u_name, u_role, u_team, u_unit = user_data
+
+        # FILTER DATA BASED ON HIERARCHY
+        if u_role in ['Admin', 'CEO']:
+            # CEO/Admin sees everyone
+            c.execute("SELECT * FROM JobApplications ORDER BY SubmittedAt DESC")
+            
+        elif u_role == 'UnitManager':
+            # Sees everyone whose Recruiter belongs to their Unit
+            c.execute("""
+                SELECT a.* FROM JobApplications a
+                LEFT JOIN Users u ON a.RecruiterSource = u.FullName
+                WHERE u.UnitName = ? ORDER BY a.SubmittedAt DESC
+            """, (u_unit,))
+            
+        elif u_role == 'Leader':
+            # Sees everyone whose Recruiter belongs to their Team
+            c.execute("""
+                SELECT a.* FROM JobApplications a
+                LEFT JOIN Users u ON a.RecruiterSource = u.FullName
+                WHERE u.TeamName = ? ORDER BY a.SubmittedAt DESC
+            """, (u_team,))
+            
+        else:
+            # Standard Recruiter only sees candidates who used their specific ?ref=Name link
+            c.execute("SELECT * FROM JobApplications WHERE RecruiterSource = ? ORDER BY SubmittedAt DESC", (u_name,))
+
         cols = [x[0] for x in c.description]
         data = [dict(zip(cols, r)) for r in c.fetchall()]
         conn.close()
         return jsonify(data)
-    except: return jsonify([])
+    except Exception as e:
+        print(f"Error loading apps: {e}")
+        return jsonify([])
 
 @app.route('/uploads/<fn>')
 def file(fn): return send_from_directory(app.config['UPLOAD_FOLDER'], fn)
