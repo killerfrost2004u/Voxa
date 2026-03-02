@@ -601,16 +601,34 @@ def update_delete_job(id):
     c = conn.cursor()
     if request.method == 'PUT':
         data = request.get_json()
-        c.execute("UPDATE Jobs SET Status=? WHERE JobID=?", (data.get('status'), id))
+        
+        # SMART UPDATE: Check if this is a full job edit, or just a status toggle
+        if 'jobTitle' in data:
+            # It's a full form edit
+            c.execute(
+                """UPDATE Jobs 
+                   SET CompanyName=?, JobTitle=?, AccountType=?, WorkingHours=?, 
+                       InterviewTime=?, SalaryPackage=?, TargetAudience=?, 
+                       Location=?, Training=?, OfferDetails=?
+                   WHERE JobID=?""",
+                (data.get('companyName'), data.get('jobTitle'), data.get('accountType'), 
+                 data.get('workingHours'), data.get('interviewTime'), data.get('salaryPackage'), 
+                 data.get('targetAudience'), data.get('location'), data.get('training'), 
+                 data.get('offerDetails'), id)
+            )
+        else:
+            # It's just a status toggle (Active/On Hold)
+            c.execute("UPDATE Jobs SET Status=? WHERE JobID=?", (data.get('status'), id))
+            
         conn.commit()
         conn.close()
-        return jsonify({"message": "Status updated"})
+        return jsonify({"message": "Job updated successfully"})
+        
     if request.method == 'DELETE':
         c.execute("DELETE FROM Jobs WHERE JobID=?", (id,))
         conn.commit()
         conn.close()
         return jsonify({"message": "Job deleted"})
-
 
 @app.route('/api/admin/applications/<int:id>/status', methods=['PUT'])
 def update_application_status(id):

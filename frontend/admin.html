@@ -168,8 +168,8 @@
                 <input type="text" id="jTraining" placeholder="Training Details">
                 
                 <textarea id="jOffer" placeholder="Extra OFFER 🎙️ details..." style="grid-column: span 3; resize: vertical; min-height: 60px;"></textarea>
-                
-                <button onclick="addNewJob()" class="btn-analyze" style="grid-column: span 3;">+ Create New Job Posting</button>
+
+                <button id="btn-submit-job" onclick="saveJobData()" class="btn-analyze" style="grid-column: span 3;">+ Create New Job Posting</button>
             </div>
             
             <table class="data-table">
@@ -204,6 +204,8 @@
     </div>
 
     <script>
+        let adminJobsData = []; 
+        let editingJobId = null;
         let appData = [];
         document.addEventListener('DOMContentLoaded', checkAuthAndLoad);
 
@@ -568,9 +570,9 @@ ${app.ClientPanel || 'Pending AI Assessment...'}`;
         async function loadAdminJobs() {
             const tbody = document.getElementById('jobs-table-body');
             const res = await fetch('http://127.0.0.1:5000/api/admin/jobs');
-            const jobs = await res.json();
+            adminJobsData = await res.json(); // Save data globally so we can edit it
             
-            tbody.innerHTML = jobs.map(j => `
+            tbody.innerHTML = adminJobsData.map(j => `
                 <tr>
                     <td>#${j.JobID}</td>
                     <td><b>${j.JobTitle}</b><br><small style="color:var(--primary-color);">${j.CompanyName}</small></td>
@@ -583,13 +585,67 @@ ${app.ClientPanel || 'Pending AI Assessment...'}`;
                         </button>
                     </td>
                     <td>
-                        <button onclick="deleteJob(${j.JobID})" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                        <button onclick="editJob(${j.JobID})" style="background:none; border:none; color:var(--primary-color); cursor:pointer; margin-right: 12px; font-size: 1.1rem;" title="Edit Job"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteJob(${j.JobID})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size: 1.1rem;" title="Delete Job"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        async function addNewJob() {
+        function editJob(id) {
+            const job = adminJobsData.find(j => j.JobID === id);
+            if (!job) return;
+
+            editingJobId = id;
+            
+            // Populate the form with existing data
+            document.getElementById('jCompany').value = job.CompanyName || '';
+            document.getElementById('jTitle').value = job.JobTitle || '';
+            document.getElementById('jAccount').value = job.AccountType || '';
+            document.getElementById('jHours').value = job.WorkingHours || '';
+            document.getElementById('jInterview').value = job.InterviewTime || '';
+            document.getElementById('jSalary').value = job.SalaryPackage || '';
+            document.getElementById('jTarget').value = job.TargetAudience || '';
+            document.getElementById('jLocation').value = job.Location || '';
+            document.getElementById('jTraining').value = job.Training || '';
+            document.getElementById('jOffer').value = job.OfferDetails || '';
+
+            // Change UI to reflect edit mode
+            const submitBtn = document.getElementById('btn-submit-job');
+            submitBtn.innerHTML = `<i class="fas fa-save"></i> Update Job #${id}`;
+            submitBtn.style.background = "#f59e0b"; // Orange to indicate editing
+            
+            // Add Cancel button if it doesn't exist
+            if (!document.getElementById('btn-cancel-edit')) {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.id = 'btn-cancel-edit';
+                cancelBtn.className = 'btn-analyze';
+                cancelBtn.style.background = "var(--bg-input)";
+                cancelBtn.style.color = "var(--text-main)";
+                cancelBtn.style.border = "1px solid var(--border-color)";
+                cancelBtn.style.gridColumn = "span 3";
+                cancelBtn.innerHTML = "Cancel Editing";
+                cancelBtn.onclick = cancelEdit;
+                submitBtn.parentNode.insertBefore(cancelBtn, submitBtn.nextSibling);
+            }
+
+            // Scroll up to the form smoothly
+            document.getElementById('section-jobs').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            editingJobId = null;
+            document.querySelectorAll('.job-form input, .job-form textarea').forEach(el => el.value = '');
+            
+            const submitBtn = document.getElementById('btn-submit-job');
+            submitBtn.innerHTML = `+ Create New Job Posting`;
+            submitBtn.style.background = "var(--primary-color)";
+            
+            const cancelBtn = document.getElementById('btn-cancel-edit');
+            if (cancelBtn) cancelBtn.remove();
+        }
+
+        async function saveJobData() {
             const payload = {
                 companyName: document.getElementById('jCompany').value,
                 jobTitle: document.getElementById('jTitle').value,
@@ -605,13 +661,31 @@ ${app.ClientPanel || 'Pending AI Assessment...'}`;
 
             if(!payload.jobTitle) return alert("Job Title is required!");
 
-            await fetch('http://127.0.0.1:5000/api/admin/jobs', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            document.querySelectorAll('.job-form input, .job-form textarea').forEach(el => el.value = '');
-            loadAdminJobs();
+            const submitBtn = document.getElementById('btn-submit-job');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            try {
+                if (editingJobId) {
+                    // WE ARE EDITING A JOB
+                    await fetch(`http://127.0.0.1:5000/api/admin/jobs/${editingJobId}`, {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    // WE ARE CREATING A NEW JOB
+                    await fetch('http://127.0.0.1:5000/api/admin/jobs', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                }
+                
+                cancelEdit(); // Clears form and resets buttons
+                loadAdminJobs(); // Reloads table data
+            } catch(e) {
+                alert("Failed to save job.");
+                submitBtn.innerHTML = originalText;
+            }
         }
 
         async function toggleJobStatus(id, currentStatus) {
