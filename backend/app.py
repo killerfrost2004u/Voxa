@@ -251,7 +251,7 @@ def send_whatsapp_message(to_number, message_body):
         print(f"❌ Failed to send WhatsApp: {e}")
 
 # --- 1. UPDATED WHATSAPP BOT ENGINE WITH FULL DETAILS ---
-def process_job_offer_manual(candidate_name, whatsapp_number, job_title, decision, custom_job="", job_data=None):
+def process_job_offer_manual(candidate_name, whatsapp_number, job_title, decision, custom_job="", job_data=None, ai_feedback=""):
     # Default fallback data just in case the job was deleted
     if not job_data:
         job_data = {
