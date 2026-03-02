@@ -9,7 +9,7 @@ window.filteredJobs = [];
 window.currentPage = 1;
 const jobsPerPage = 10; 
 
-// --- LOAD JOBS ---
+// --- LOAD JOBS (GLOBAL) ---
 async function loadJobs() {
     try {
         const res = await fetch('http://127.0.0.1:5000/api/jobs');
@@ -18,10 +18,28 @@ async function loadJobs() {
         // Initialize filteredJobs with all fetched jobs
         window.filteredJobs = [...window.allJobs];
         
-        updateJobCount();
-        renderJobs();
+        // --- PAGE SPECIFIC ROUTING ---
+        const path = window.location.pathname;
+
+        if (path.includes('jobs.html')) {
+            updateJobCount();
+            renderJobs();
+        } 
+        else if (path.includes('companies.html')) {
+            processCompanies(window.allJobs);
+            renderCompanies(companies);
+        } 
+        else if (path.includes('salaries.html')) {
+            processSalaries(window.allJobs);
+            renderSalaries(salaryStats);
+        }
+        else if (path.includes('index.html') || path === '/' || path.endsWith('/')) {
+            // Render the top 6 jobs for the homepage
+            renderHomeJobs(window.allJobs);
+        }
+
     } catch (err) {
-        console.error("Failed to load jobs:", err);
+        console.error("Failed to load data:", err);
     }
 }
 
@@ -100,10 +118,10 @@ window.buildPaginationControls = function() {
     pageDiv.appendChild(createButton('right', true, window.currentPage === totalPages, false, window.currentPage + 1));
 }
 
-// Load jobs when the page opens
-if (window.location.pathname.includes('jobs.html')) {
-    document.addEventListener('DOMContentLoaded', loadJobs);
-}
+// --- INITIALIZE SCRIPT ON EVERY PAGE ---
+document.addEventListener('DOMContentLoaded', () => {
+    loadJobs();
+});
 
 // --- DASHBOARD LOGIC ---
 window.loadDashboardData = function() {
@@ -420,3 +438,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+function processSalaries(data) {
+    const roleMap = {};
+    data.forEach(job => {
+        if(!job.title) return; // Safety check
+        let title = job.title.split('(')[0].split('-')[0].trim();
+        if (!roleMap[title]) roleMap[title] = { title: title, total: 0, count: 0, rawSalaries: [] };
+        
+        // Extract a number from the string (e.g. "15k" -> 15000) if salaryNum is missing
+        let parsedSalary = 0;
+        if (job.salaryNum && job.salaryNum > 0) {
+            parsedSalary = job.salaryNum;
+        } else if (job.salary) {
+            const match = job.salary.match(/(\d+)/);
+            if (match) parsedSalary = parseInt(match[0]) * 1000;
+        }
+
+        if (parsedSalary > 0) { 
+            roleMap[title].total += parsedSalary; 
+            roleMap[title].count++; 
+        }
+        roleMap[title].rawSalaries.push(job.salary || "N/A");
+    });
+    
+    salaryStats = Object.values(roleMap).map(r => ({
+        title: r.title,
+        avg: r.count > 0 ? Math.round(r.total / r.count) : 0,
+        samples: r.rawSalaries.length
+    })).sort((a, b) => b.avg - a.avg);
+}
