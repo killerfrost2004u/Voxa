@@ -466,3 +466,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// --- MOBILE HAMBURGER MENU FIX ---
+document.addEventListener('DOMContentLoaded', () => {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    const authButtons = document.querySelector('.auth-buttons');
+
+    if (menuToggle) {
+        menuToggle.addEventListener('click', () => {
+            if (navLinks) navLinks.classList.toggle('show-menu');
+            if (authButtons) authButtons.classList.toggle('show-menu');
+        });
+    }
+});
