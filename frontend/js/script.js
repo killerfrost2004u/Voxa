@@ -3,10 +3,10 @@ let jobs = [];
 let companies = []; 
 let salaryStats = []; 
 
-// --- PAGINATION VARIABLES ---
+// --- PAGINATION VARIABLES (Global Scope) ---
 let allJobs = [];
-let filteredJobs = [];
-let currentPage = 1;
+window.filteredJobs = []; // Make explicitly global so the filter function can write to it
+window.currentPage = 1;   // Make explicitly global so changePage can edit it
 const jobsPerPage = 10; 
 
 // --- LOAD JOBS ---
@@ -15,11 +15,12 @@ async function loadJobs() {
         const res = await fetch('http://127.0.0.1:5000/api/jobs');
         allJobs = await res.json();
         
-        filteredJobs = [...allJobs];
-
+        // By default, filtered jobs is all jobs
+        window.filteredJobs = [...allJobs];
+        
         // Update the top job count text
         const countSpan = document.getElementById('job-count');
-        if(countSpan) countSpan.innerText = `${allJobs.length} Jobs Found`;
+        if(countSpan) countSpan.innerText = `${window.filteredJobs.length} Jobs Found`;
 
         renderJobs();
     } catch (err) {
@@ -28,14 +29,14 @@ async function loadJobs() {
 }
 
 // --- RENDER 10 JOBS PER PAGE (FIXED STYLING) ---
-function renderJobs() {
+window.renderJobs = function() {
     const container = document.getElementById('all-jobs-container');
     if (!container) return; // Failsafe if we aren't on jobs.html
 
-    // 1. Calculate which 10 jobs to show
-    const startIndex = (currentPage - 1) * jobsPerPage;
+    // 1. Calculate which 10 jobs to show from the FILTERED list
+    const startIndex = (window.currentPage - 1) * jobsPerPage;
     const endIndex = startIndex + jobsPerPage;
-    const jobsToShow = allJobs.slice(startIndex, endIndex);
+    const jobsToShow = window.filteredJobs.slice(startIndex, endIndex);
 
     // 2. Clear the container
     container.innerHTML = "";
@@ -52,13 +53,13 @@ function renderJobs() {
 }
 
 // --- RENDER THE PAGE BUTTONS ---
-function renderPaginationControls() {
+window.renderPaginationControls = function() {
     const pageDiv = document.getElementById('pagination-controls');
     if (!pageDiv) return;
 
-    const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+    // Calculate pages based on the FILTERED list
+    const totalPages = Math.ceil(window.filteredJobs.length / jobsPerPage);
     
-    // Hide pagination if there is 1 page or less
     if (totalPages <= 1) {
         pageDiv.innerHTML = '';
         return;
@@ -67,15 +68,15 @@ function renderPaginationControls() {
     let buttonsHTML = '';
 
     // Prev Button
-    if (currentPage > 1) {
-        buttonsHTML += `<button class="page-btn" onclick="changePage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+    if (window.currentPage > 1) {
+        buttonsHTML += `<button class="page-btn" onclick="changePage(${window.currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
     } else {
         buttonsHTML += `<button class="page-btn disabled"><i class="fas fa-chevron-left"></i></button>`;
     }
 
     // Numbered Pages
     for (let i = 1; i <= totalPages; i++) {
-        if (i === currentPage) {
+        if (i === window.currentPage) {
             buttonsHTML += `<button class="page-btn active">${i}</button>`;
         } else {
             buttonsHTML += `<button class="page-btn" onclick="changePage(${i})">${i}</button>`;
@@ -83,8 +84,8 @@ function renderPaginationControls() {
     }
 
     // Next Button
-    if (currentPage < totalPages) {
-        buttonsHTML += `<button class="page-btn" onclick="changePage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+    if (window.currentPage < totalPages) {
+        buttonsHTML += `<button class="page-btn" onclick="changePage(${window.currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
     } else {
         buttonsHTML += `<button class="page-btn disabled"><i class="fas fa-chevron-right"></i></button>`;
     }
@@ -93,9 +94,10 @@ function renderPaginationControls() {
 }
 
 // --- TRIGGER PAGE CHANGE ---
-function changePage(pageNumber) {
-    currentPage = pageNumber;
-    renderJobs();
+// This function MUST be global so HTML buttons can click it
+window.changePage = function(pageNumber) {
+    window.currentPage = pageNumber;
+    window.renderJobs();
     
     // Smoothly scroll back to the top of the job feed
     const feedHeader = document.querySelector('.feed-header');
@@ -110,6 +112,7 @@ if (window.location.pathname.includes('jobs.html')) {
 }
 
 // --- DASHBOARD LOGIC ---
+
 window.loadDashboardData = function() {
     const apps = JSON.parse(localStorage.getItem('my_applications')) || [];
     const saved = JSON.parse(localStorage.getItem('my_saved_jobs')) || [];
