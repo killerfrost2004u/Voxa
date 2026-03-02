@@ -30,6 +30,15 @@ async function loadJobs() {
         else if (path.includes('companies.html')) {
             processCompanies(window.allJobs);
             renderCompanies(companies);
+        }
+        else if (path.includes('company-profile.html')) { // <-- NEW ROUTE
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetCompany = urlParams.get('company');
+            if (targetCompany) {
+                renderCompanyProfile(targetCompany, window.allJobs);
+            } else {
+                document.getElementById('company-profile-header').innerHTML = `<h2 style="text-align:center; color:white;">No Company Selected</h2>`;
+            }
         } 
         else if (path.includes('salaries.html')) {
             processSalaries(window.allJobs);
@@ -231,6 +240,43 @@ function renderCompanies(data) {
         `;
         container.appendChild(card);
     });
+}
+
+// --- SPECIFIC COMPANY PROFILE LOGIC ---
+window.renderCompanyProfile = function(companyName, allJobsArray) {
+    // 1. Find only jobs belonging to this company
+    const companyJobs = allJobsArray.filter(j => j.company === companyName);
+    
+    const headerContainer = document.getElementById('company-profile-header');
+    const jobsContainer = document.getElementById('company-jobs-container');
+    
+    if (!headerContainer || !jobsContainer) return; // Failsafe
+
+    if(companyJobs.length === 0) {
+        headerContainer.innerHTML = `<h2 style="text-align:center; color:white;">Company Not Found</h2>`;
+        return;
+    }
+
+    // 2. Extract company info from their first job listing
+    const companyInfo = { 
+        name: companyName, 
+        logo: companyJobs[0].logo || 'DW', 
+        count: companyJobs.length 
+    };
+
+    // 3. Render the Header
+    headerContainer.innerHTML = `
+        <div class="company-logo-large" style="margin: 0 auto 1rem auto; display:flex;">${companyInfo.logo}</div>
+        <h1 style="text-align:center; color:white; margin-bottom:0.5rem; font-size: 2.5rem;">${companyInfo.name}</h1>
+        <div style="display:flex; justify-content:center; gap:1rem; margin-top:1rem;">
+            <span class="open-jobs-tag" style="margin:0; background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color);">Technology & BPO</span>
+            <span class="open-jobs-tag" style="margin:0;">${companyInfo.count} Active Positions</span>
+        </div>
+    `;
+
+    // 4. Render their specific jobs using your existing card generator!
+    jobsContainer.innerHTML = "";
+    companyJobs.forEach(job => appendJobCard(jobsContainer, job, true));
 }
 
 // ==========================================
