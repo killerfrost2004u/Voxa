@@ -2,93 +2,114 @@ const API_URL = "http://127.0.0.1:5000/api";
 
 // Toggle between Login and Signup views
 function toggleAuth() {
-    const loginBox = document.getElementById('login-box');
-    const signupBox = document.getElementById('signup-box');
-    
-    // Clear messages
-    document.querySelectorAll('.error-msg').forEach(el => el.style.display = 'none');
-    document.querySelectorAll('.success-msg').forEach(el => el.style.display = 'none');
+  const loginBox = document.getElementById("login-box");
+  const signupBox = document.getElementById("signup-box");
 
-    if (loginBox.classList.contains('hidden')) {
-        loginBox.classList.remove('hidden');
-        signupBox.classList.add('hidden');
-    } else {
-        loginBox.classList.add('hidden');
-        signupBox.classList.remove('hidden');
-    }
+  // Clear messages
+  document
+    .querySelectorAll(".error-msg")
+    .forEach((el) => (el.style.display = "none"));
+  document
+    .querySelectorAll(".success-msg")
+    .forEach((el) => (el.style.display = "none"));
+
+  if (loginBox.classList.contains("hidden")) {
+    loginBox.classList.remove("hidden");
+    signupBox.classList.add("hidden");
+  } else {
+    loginBox.classList.add("hidden");
+    signupBox.classList.remove("hidden");
+  }
 }
 
 // Handle Sign Up
-const signupForm = document.getElementById('signup-form');
+const signupForm = document.getElementById("signup-form");
 if (signupForm) {
-    signupForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const fullName = document.getElementById('signup-name').value;
-        const email = document.getElementById('signup-email').value;
-        const password = document.getElementById('signup-password').value;
-        const errorMsg = document.getElementById('signup-error');
-        const successMsg = document.getElementById('signup-success');
+  signupForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fullName = document.getElementById("signup-name").value;
+    const email = document.getElementById("signup-email").value;
+    const password = document.getElementById("signup-password").value;
+    const errorMsg = document.getElementById("signup-error");
+    const successMsg = document.getElementById("signup-success");
 
-        try {
-            const response = await fetch(`${API_URL}/signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fullName, email, password })
-            });
+    try {
+      const response = await fetch(`${API_URL}/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName, email, password }),
+      });
 
-            const data = await response.json();
+      const data = await response.json();
 
-            if (response.ok) {
-                successMsg.textContent = "Account created successfully! Switching to login...";
-                successMsg.style.display = 'block';
-                errorMsg.style.display = 'none';
-                setTimeout(() => {
-                    toggleAuth(); 
-                }, 1500);
-            } else {
-                throw new Error(data.error || "Signup failed");
-            }
-        } catch (err) {
-            errorMsg.textContent = err.message || "Connection failed. Is the backend running?";
-            errorMsg.style.display = 'block';
-            successMsg.style.display = 'none';
-        }
-    });
+      if (response.ok) {
+        successMsg.textContent =
+          "Account created successfully! Switching to login...";
+        successMsg.style.display = "block";
+        errorMsg.style.display = "none";
+        setTimeout(() => {
+          toggleAuth();
+        }, 1500);
+      } else {
+        throw new Error(data.error || "Signup failed");
+      }
+    } catch (err) {
+      errorMsg.textContent =
+        err.message || "Connection failed. Is the backend running?";
+      errorMsg.style.display = "block";
+      successMsg.style.display = "none";
+    }
+  });
 }
 
 // Handle Login
-const loginForm = document.getElementById('login-form');
+const loginForm = document.getElementById("login-form");
 if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-        const errorMsg = document.getElementById('login-error');
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+    const errorMsg = document.getElementById("login-error");
 
-        try {
-            const response = await fetch(`${API_URL}/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
+    try {
+      const response = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-            const data = await response.json();
+      const data = await response.json();
 
-            if (response.ok) {
-                localStorage.setItem('user', JSON.stringify(data.user));
-                
-                // Check if the user is an admin and redirect accordingly
-                if (data.user.isAdmin) {
-                    window.location.href = 'admin.html';
-                } else {
-                    window.location.href = 'dashboard.html';
-                }
-            } else {
-                throw new Error(data.error || "Login failed");
-            }
-        } catch (err) {
-            errorMsg.textContent = err.message || "Connection failed. Is the backend running?";
-            errorMsg.style.display = 'block';
+      // ... (inside the try block after getting result)
+      if (response.ok) {
+        // Save user data to localStorage
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            name: result.name,
+            email: result.email,
+            role: result.role,
+            team: result.team, // This is their Agency Name
+          }),
+        );
+
+        // SMART ROUTING BASED ON ROLE
+        if (result.role === "SuperAdmin" || result.role === "Admin") {
+          window.location.href = "admin.html";
+        } else if (result.role === "Validator") {
+          window.location.href = "validator.html";
+        } else {
+          // Regular candidates go to the dashboard
+          window.location.href = "dashboard.html";
         }
-    });
+      } else {
+        // ... (handle error) else {
+        throw new Error(data.error || "Login failed");
+      }
+    } catch (err) {
+      errorMsg.textContent =
+        err.message || "Connection failed. Is the backend running?";
+      errorMsg.style.display = "block";
+    }
+  });
 }

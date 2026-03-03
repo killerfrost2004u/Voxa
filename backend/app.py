@@ -649,6 +649,53 @@ def update_application_status(id):
         return jsonify({"error": str(e)}), 500
 
 # ==========================================
+# SUPER ADMIN: USER MANAGEMENT
+# ==========================================
+
+@app.route('/api/admin/users', methods=['POST'])
+def create_user():
+    # Only SuperAdmins should ideally hit this, but we'll accept the payload
+    data = request.get_json()
+    
+    full_name = data.get('fullName')
+    email = data.get('email')
+    password = data.get('password')
+    role = data.get('role', 'Recruiter') # Default to Recruiter
+    team_name = data.get('teamName', 'Dark Wolves') # This acts as the Agency Name for Validators
+    
+    # Basic validation
+    if not email or not password or not full_name:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Check if email already exists
+        c.execute("SELECT UserID FROM Users WHERE Email = ?", (email,))
+        if c.fetchone():
+            conn.close()
+            return jsonify({"error": "Email already exists"}), 400
+            
+        # Hash the password for security
+        hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        # Insert the new user
+        # Note: Adjust column names if your Users table uses different names
+        c.execute("""
+            INSERT INTO Users (FullName, Email, PasswordHash, Role, TeamName)
+            VALUES (?, ?, ?, ?, ?)
+        """, (full_name, email, hashed_pw, role, team_name))
+        
+        conn.commit()
+        conn.close()
+        return jsonify({"message": f"User {full_name} created successfully as {role}"}), 201
+        
+    except Exception as e:
+        print(f"Error creating user: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# ==========================================
 # VALIDATOR MULTI-AGENCY ROUTES
 # ==========================================
 
