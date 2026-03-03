@@ -1,3 +1,2 @@
-UPDATE Users 
-SET TeamName = 'Alpha Team', UnitName = 'Ibrahim Yasser Unit' 
-WHERE FullName = 'Sarah Smith';
+ALTER TABLE Jobs ADD RequiresSecondLanguage BIT DEFAULT 0;
+ALTER TABLE JobApplications ADD VoiceRecordPath2 NVARCHAR(255);
