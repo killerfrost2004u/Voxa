@@ -120,10 +120,17 @@
                     <div class="recorder-box hidden" id="ui-upload" style="border:none; padding:0; background:transparent;"><div class="file-upload-area"><i class="fas fa-cloud-upload-alt upload-icon"></i><span class="upload-text">Drag & Drop audio file here</span><span class="upload-subtext">or click to browse (MP3, WAV, OGG)</span><span class="min-req" style="margin:0;">Min Duration: 1 min 30 sec</span><input type="file" id="voice-upload-input" accept="audio/*" onchange="validateFileUpload(this)"></div><div id="upload-status" style="margin-top:15px; font-weight:600; color:#888;">No file selected</div></div>
                 </div>
 
-                <div class="form-group" id="bilingual-group" style="display: none; background: rgba(0, 229, 255, 0.05); padding: 15px; border-radius: 8px; border: 1px dashed var(--primary-color); margin-top: 1.5rem;">
-                    <label>Second Language Audio (Required for this role) <span style="color:var(--primary-color)">*</span></label>
-                    <p style="font-size:0.85rem; color:#aaa; margin-bottom:0.5rem;">Please record and upload a 1-minute introduction in the secondary language.</p>
-                    <input type="file" id="app-voice2" accept="audio/*" style="width:100%; padding:10px; background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px; font-family: inherit;">
+                <div class="form-group" id="bilingual-group" style="display: none; background: rgba(0, 229, 255, 0.05); padding: 20px; border-radius: 8px; border: 1px dashed var(--primary-color); margin-top: 1.5rem; box-shadow: 0 4px 15px rgba(0, 229, 255, 0.1);">
+                    <label style="color: var(--primary-color); font-weight: 700; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-globe"></i> Second Language Audio <span style="color: #ef4444;">*</span>
+                    </label>
+                    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem; line-height: 1.5;">
+                        This role requires bilingual proficiency. Please record and upload a 1-minute introduction in the secondary language required for this campaign.
+                    </p>
+                    
+                    <div style="position: relative; overflow: hidden; display: inline-block; width: 100%;">
+                        <input type="file" id="app-voice2" accept="audio/*" style="width:100%; padding:12px; background:var(--bg-body); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px; font-family: inherit; cursor: pointer;">
+                    </div>
                 </div>
 
                 <div class="form-group"><label>Relevant Experience (Brief Text) <span style="color:var(--primary-color)">*</span></label><textarea id="app-experience" rows="3" required placeholder="Briefly list companies or roles..."></textarea></div>
@@ -218,7 +225,7 @@
                     formData.append('voiceRecord', voiceFile);
                 } else {
                     if (!uploadedFile) throw new Error("Please select a file.");
-                    formData.append('voiceRecord', file1);
+                    formData.append('voiceRecord', uploadedFile);
                 }
 
                 // --- BILINGUAL AUDIO HANDLING ---
@@ -227,7 +234,7 @@
                     if (!file2) {
                         btn.textContent = "Submit Application";
                         btn.disabled = false;
-                        return alert("Please upload your Second Language audio file.");
+                        return alert("This is a bilingual role. Please upload your Second Language audio file.");
                     }
                     formData.append('voiceRecord2', file2);
                 }
@@ -281,19 +288,26 @@
         });
 
         // Initialize
+        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
-            if(params.get('title')) document.getElementById('apply-job-title').textContent = params.get('title');
-
-            if (urlParams.get('bilingual') === '1') {
-            document.getElementById('bilingual-group').style.display = 'block';
+            
+            if(params.get('title')) {
+                document.getElementById('apply-job-title').textContent = params.get('title');
             }
-
+            
             const user = JSON.parse(localStorage.getItem('user'));
-
             if(user) {
                 document.getElementById('app-name').value = user.name || '';
                 document.getElementById('app-email').value = user.email || '';
+            }
+            
+            // FIXED: Using 'params' instead of 'urlParams'
+            if (params.get('bilingual') === '1') {
+                const bilingualGroup = document.getElementById('bilingual-group');
+                if (bilingualGroup) {
+                    bilingualGroup.style.display = 'block';
+                }
             }
         });
     </script>
