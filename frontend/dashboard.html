@@ -1,392 +1,525 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Candidate Dashboard | Voxa</title>
-    <link rel="icon" type="image/png" href="images/voxa-logo.png">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/voxa-logo.png" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        /* Dashboard Specific Styles */
-        body { display: flex; min-height: 100vh; }
-        
+      /* Dashboard Specific Styles */
+      body {
+        display: flex;
+        min-height: 100vh;
+        padding-top: 0 !important; /* CRITICAL: Overrides the 74px global navbar padding */
+      }
+
+      .sidebar {
+        width: 260px;
+        background: var(--bg-card); /* Synced to Voxa theme */
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        padding: 2rem 1.5rem;
+        position: fixed;
+        height: 100%;
+      }
+
+      .main-content {
+        flex: 1;
+        margin-left: 260px;
+        padding: 3rem; /* Added slightly more padding for a cleaner look */
+        background: var(--bg-body);
+      }
+
+      /* The Dashboard Header */
+      .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1.5rem;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        color: var(--text-muted);
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        transition: 0.3s;
+        cursor: pointer;
+      }
+
+      .nav-item:hover,
+      .nav-item.active {
+        background: rgba(0, 229, 255, 0.05); /* Synced to Voxa hover state */
+        color: var(--primary-color);
+        border: 1px solid var(--primary-color);
+      }
+
+      .nav-item i {
+        margin-right: 12px;
+        width: 20px;
+        text-align: center;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem; /* Pushed down slightly from header */
+      }
+
+      .stat-card {
+        background: var(--bg-card); /* Synced */
+        border: 1px solid var(--border-color);
+        padding: 1.5rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .stat-info h3 {
+        font-size: 2rem;
+        color: var(--text-main);
+        margin-bottom: 0.2rem;
+        line-height: 1;
+      }
+      .stat-info p {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin: 0;
+      }
+
+      .stat-icon {
+        width: 50px;
+        height: 50px;
+        background: rgba(0, 229, 255, 0.1); /* Synced */
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 1.5rem;
+        border: 1px solid var(--primary-color);
+      }
+
+      .table-container {
+        background: var(--bg-card); /* Synced */
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        text-align: left;
+        padding: 1rem;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+      }
+      td {
+        padding: 1rem;
+        color: var(--text-main);
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.95rem;
+      }
+
+      .status-badge {
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
+      .user-profile {
+        margin-top: auto;
+        border-top: 1px solid var(--border-color);
+        padding-top: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .avatar {
+        width: 40px;
+        height: 40px;
+        background: var(--primary-color);
+        color: #000; /* Black text for contrast */
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+      }
+
+      /* Tabs Content Visibility */
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+
+      /* Dashboard Mobile View */
+      @media (max-width: 768px) {
+        body {
+          flex-direction: column;
+        }
+
+        /* Hide Sidebar off-screen */
         .sidebar {
-            width: 260px;
-            background: #141414;
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            padding: 2rem 1.5rem;
-            position: fixed;
-            height: 100%;
+          transform: translateX(-100%);
+          z-index: 1000;
+          width: 260px;
+          box-shadow: 4px 0 15px rgba(0, 0, 0, 0.5);
+          transition: transform 0.3s ease;
         }
 
+        /* Slide it in when active class is added */
+        .sidebar.active {
+          transform: translateX(0);
+        }
+
+        /* Main content takes full width */
         .main-content {
-            flex: 1;
-            margin-left: 260px;
-            padding: 2rem;
-            background: var(--bg-body);
+          margin-left: 0;
+          padding: 1rem;
+          padding-top: 80px; /* Crucial: Pushes content below the mobile header */
         }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            padding: 1rem;
-            color: var(--text-muted);
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            transition: 0.3s;
-            cursor: pointer;
-        }
-
-        .nav-item:hover, .nav-item.active {
-            background: #2a1a0a;
-            color: var(--primary-color);
-            border: 1px solid var(--primary-color);
-        }
-
-        .nav-item i { margin-right: 12px; width: 20px; text-align: center; }
 
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+          grid-template-columns: 1fr;
         }
 
-        .stat-card {
-            background: #141414;
-            border: 1px solid var(--border-color);
-            padding: 1.5rem;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        /* Mobile Header for Hamburger Menu */
+        .mobile-dash-header {
+          display: flex !important;
+          justify-content: space-between;
+          align-items: center;
+          background: var(--bg-card);
+          padding: 15px 20px;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          z-index: 999;
+          border-bottom: 1px solid var(--border-color);
         }
 
-        .stat-info h3 { font-size: 2rem; color: var(--text-main); margin-bottom: 0.2rem; }
-        .stat-info p { color: var(--text-muted); font-size: 0.9rem; }
-        
-        .stat-icon {
-            width: 50px; height: 50px;
-            background: #2a1a0a;
-            color: var(--primary-color);
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 10px;
-            font-size: 1.5rem;
-            border: 1px solid var(--primary-color);
+        .dashboard-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 15px;
         }
-
-        .table-container {
-            background: #141414;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            overflow-x: auto;
+        .dashboard-header .btn-primary {
+          width: 100%;
         }
+      }
 
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 1rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); }
-        td { padding: 1rem; color: var(--text-main); border-bottom: 1px solid #222; }
-        
-        .status-badge {
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        .status-applied { background: #333; color: #aaa; }
-        .status-interview { background: #2a1a0a; color: var(--primary-color); border: 1px solid var(--primary-color); }
-        .status-offer { background: #064e3b; color: #34d399; border: 1px solid #34d399; }
-
-        .user-profile {
-            margin-top: auto;
-            border-top: 1px solid var(--border-color);
-            padding-top: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .avatar {
-            width: 40px; height: 40px;
-            background: var(--primary-color);
-            color: #fff;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold;
-        }
-
-        /* Tabs Content Visibility */
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); }
-        .form-group input { width: 100%; padding: 0.8rem; background: #222; border: 1px solid #333; color: white; border-radius: 6px; }
-
-        /* Dashboard Mobile View */
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            
-            /* Hide Sidebar off-screen */
-            .sidebar {
-                transform: translateX(-100%);
-                z-index: 1000;
-                width: 260px;
-                box-shadow: 4px 0 15px rgba(0,0,0,0.5);
-            }
-            
-            /* Slide it in when active class is added */
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            /* Main content takes full width */
-            .main-content {
-                margin-left: 0;
-                padding: 1rem;
-                padding-top: 60px; /* Leave room for mobile header */
-            }
-
-            .stats-grid { grid-template-columns: 1fr; }
-            
-            /* Mobile Header for Hamburger Menu */
-            .mobile-dash-header {
-                display: flex !important;
-                justify-content: space-between;
-                align-items: center;
-                background: #141414;
-                padding: 15px 20px;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                z-index: 999;
-                border-bottom: 1px solid #333;
-            }
-        }
-        
-        /* Hide mobile header on desktop */
-        .mobile-dash-header { display: none; }
+      /* Hide mobile header on desktop */
+      .mobile-dash-header {
+        display: none;
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <aside class="sidebar">
-        <a href="index.html" class="logo" style="display: flex; align-items: center; gap: 10px; font-weight: 700; color: white; text-decoration: none;">
-            <!-- <img src="images/voxa-logo.png" alt="Voxa Logo" style="height: 40px; width: auto; border-radius: 8px;"> -->
-            Voxa
-        </a>
-        
-        <nav>
-            <div class="nav-item active" onclick="switchTab('dashboard', this)">
-                <i class="fas fa-th-large"></i> Dashboard
-            </div>
-            <div class="nav-item" onclick="window.location.href='jobs.html'">
-                <i class="fas fa-briefcase"></i> Browse Jobs
-            </div>
-            <div class="nav-item" onclick="switchTab('applications', this)">
-                <i class="fas fa-file-alt"></i> Applications
-            </div>
-            <div class="nav-item" onclick="switchTab('saved', this)">
-                <i class="fas fa-bookmark"></i> Saved Jobs
-            </div>
-            <div class="nav-item" onclick="switchTab('settings', this)">
-                <i class="fas fa-cog"></i> Settings
-            </div>
-        </nav>
+      <a
+        href="index.html"
+        class="logo"
+        style="
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-weight: 700;
+          color: white;
+          text-decoration: none;
+        ">
+        <!-- <img src="images/voxa-logo.png" alt="Voxa Logo" style="height: 40px; width: auto; border-radius: 8px;"> -->
+        Voxa
+      </a>
 
-        <div class="user-profile">
-            <div class="avatar" id="user-avatar">?</div>
-            <div>
-                <h4 id="user-name" style="color:white; font-size:0.9rem;">Guest</h4>
-                <a onclick="logout()" class="logout-link" style="color: var(--text-muted); cursor: pointer; font-size: 0.8rem;">Logout</a>
-            </div>
+      <nav>
+        <div class="nav-item active" onclick="switchTab('dashboard', this)">
+          <i class="fas fa-th-large"></i> Dashboard
         </div>
+        <div class="nav-item" onclick="window.location.href = 'jobs.html'">
+          <i class="fas fa-briefcase"></i> Browse Jobs
+        </div>
+        <div class="nav-item" onclick="switchTab('applications', this)">
+          <i class="fas fa-file-alt"></i> Applications
+        </div>
+        <div class="nav-item" onclick="switchTab('saved', this)">
+          <i class="fas fa-bookmark"></i> Saved Jobs
+        </div>
+        <div class="nav-item" onclick="switchTab('settings', this)">
+          <i class="fas fa-cog"></i> Settings
+        </div>
+      </nav>
+
+      <div class="user-profile">
+        <div class="avatar" id="user-avatar">?</div>
+        <div>
+          <h4 id="user-name" style="color: white; font-size: 0.9rem">Guest</h4>
+          <a
+            onclick="logout()"
+            class="logout-link"
+            style="color: var(--text-muted); cursor: pointer; font-size: 0.8rem"
+            >Logout</a
+          >
+        </div>
+      </div>
     </aside>
 
     <main class="main-content">
-        <div class="mobile-dash-header">
-            <a href="index.html" class="logo" style="margin:0;">Dark<span>Wolves</span></a>
-            <button onclick="document.querySelector('.sidebar').classList.toggle('active')" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">
-                <i class="fas fa-bars"></i>
-            </button>
+      <div class="mobile-dash-header">
+        <a href="index.html" class="logo" style="margin: 0"
+          >Vo<span>xa</span></a
+        >
+        <button
+          onclick="
+            document.querySelector('.sidebar').classList.toggle('active')
+          "
+          style="
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+          ">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+      <div class="dashboard-header">
+        <div>
+          <h1 style="color: white; margin-bottom: 0.2rem">
+            Welcome back,
+            <span id="header-name" style="color: var(--primary-color)"
+              >Hunter</span
+            >
+          </h1>
+          <p style="color: var(--text-muted); margin: 0">
+            Here is your daily activity report.
+          </p>
         </div>
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
-            <div>
-                <h1 style="color:white;">Welcome back, <span id="header-name" style="color:var(--primary-color);">Hunter</span></h1>
-                <p style="color:var(--text-muted);">Here is your daily activity report.</p>
-            </div>
-            <button class="btn-primary" onclick="window.location.href='jobs.html'">Find New Hunt</button>
-        </header>
+        <button
+          class="btn-primary"
+          onclick="window.location.href = 'jobs.html'">
+          Find New Hunt
+        </button>
+      </div>
 
-        <div id="tab-dashboard" class="tab-content active">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-info">
-                        <h3 id="stat-applied">0</h3>
-                        <p>Applications Sent</p>
-                    </div>
-                    <div class="stat-icon"><i class="fas fa-paper-plane"></i></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-info">
-                        <h3 id="stat-saved">0</h3>
-                        <p>Jobs Saved</p>
-                    </div>
-                    <div class="stat-icon"><i class="fas fa-bookmark"></i></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-info">
-                        <h3>5</h3>
-                        <p>Profile Views</p>
-                    </div>
-                    <div class="stat-icon"><i class="fas fa-eye"></i></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-info">
-                        <h3>85%</h3>
-                        <p>Profile Completion</p>
-                    </div>
-                    <div class="stat-icon"><i class="fas fa-user-circle"></i></div>
-                </div>
+      <div id="tab-dashboard" class="tab-content active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-info">
+              <h3 id="stat-applied">0</h3>
+              <p>Applications Sent</p>
             </div>
-
-            <h3 style="color:white; margin-bottom:1rem;">Recent Applications</h3>
-            <div class="table-container">
-                <table id="dashboard-table">
-                    <thead>
-                        <tr>
-                            <th>Job Title</th>
-                            <th>Company</th>
-                            <th>Date Applied</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        </tbody>
-                </table>
+            <div class="stat-icon"><i class="fas fa-paper-plane"></i></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info">
+              <h3 id="stat-saved">0</h3>
+              <p>Jobs Saved</p>
             </div>
-        </div>
-
-        <div id="tab-applications" class="tab-content">
-            <h2 style="color:white; margin-bottom:1.5rem;">Your Applications</h2>
-            <div class="table-container">
-                <table id="applications-table">
-                    <thead>
-                        <tr>
-                            <th>Job Title</th>
-                            <th>Company</th>
-                            <th>Applied On</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        </tbody>
-                </table>
+            <div class="stat-icon"><i class="fas fa-bookmark"></i></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info">
+              <h3>5</h3>
+              <p>Profile Views</p>
             </div>
+            <div class="stat-icon"><i class="fas fa-eye"></i></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-info">
+              <h3>85%</h3>
+              <p>Profile Completion</p>
+            </div>
+            <div class="stat-icon"><i class="fas fa-user-circle"></i></div>
+          </div>
         </div>
 
-        <div id="tab-saved" class="tab-content">
-            <h2 style="color:white; margin-bottom:1.5rem;">Saved Hunts</h2>
-            <div class="jobs-list" id="saved-jobs-container" style="display:grid; gap:1rem;">
-                </div>
+        <h3 style="color: white; margin-bottom: 1rem">Recent Applications</h3>
+        <div class="table-container">
+          <table id="dashboard-table">
+            <thead>
+              <tr>
+                <th>Job Title</th>
+                <th>Company</th>
+                <th>Date Applied</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
+      </div>
 
-        <div id="tab-settings" class="tab-content">
-            <h2 style="color:white; margin-bottom:1.5rem;">Profile Settings</h2>
-            <div style="background:#141414; padding:2rem; border-radius:12px; border:1px solid var(--border-color); max-width:600px;">
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" id="settings-name">
-                </div>
-                <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" id="settings-email" disabled style="opacity:0.5; cursor:not-allowed;">
-                </div>
-                <div class="form-group">
-                    <label>Job Title</label>
-                    <input type="text" id="settings-title" placeholder="e.g. Software Engineer">
-                </div>
-                <button class="btn-primary" onclick="saveSettings()">Save Changes</button>
-            </div>
+      <div id="tab-applications" class="tab-content">
+        <h2 style="color: white; margin-bottom: 1.5rem">Your Applications</h2>
+        <div class="table-container">
+          <table id="applications-table">
+            <thead>
+              <tr>
+                <th>Job Title</th>
+                <th>Company</th>
+                <th>Applied On</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
+      </div>
 
+      <div id="tab-saved" class="tab-content">
+        <h2 style="color: white; margin-bottom: 1.5rem">Saved Hunts</h2>
+        <div
+          class="jobs-list"
+          id="saved-jobs-container"
+          style="display: grid; gap: 1rem"></div>
+      </div>
+
+      <div id="tab-settings" class="tab-content">
+        <h2 style="color: white; margin-bottom: 1.5rem">Profile Settings</h2>
+        <div
+          style="
+            background: #141414;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            max-width: 600px;
+          ">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="settings-name" />
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input
+              type="email"
+              id="settings-email"
+              disabled
+              style="opacity: 0.5; cursor: not-allowed" />
+          </div>
+          <div class="form-group">
+            <label>Job Title</label>
+            <input
+              type="text"
+              id="settings-title"
+              placeholder="e.g. Software Engineer" />
+          </div>
+          <button class="btn-primary" onclick="saveSettings()">
+            Save Changes
+          </button>
+        </div>
+      </div>
     </main>
 
     <script src="js/script.js"></script>
     <script>
-        // Init Dashboard Logic
-        document.addEventListener('DOMContentLoaded', async () => {
-            const userStr = localStorage.getItem('user');
-            if (!userStr) {
-                window.location.href = 'login.html';
-                return;
+      // Init Dashboard Logic
+      document.addEventListener("DOMContentLoaded", async () => {
+        const userStr = localStorage.getItem("user");
+        if (!userStr) {
+          window.location.href = "login.html";
+          return;
+        }
+        const user = JSON.parse(userStr);
+
+        // Populate User Info
+        document.getElementById("user-name").textContent = user.name;
+        document.getElementById("header-name").textContent =
+          user.name.split(" ")[0];
+        document.getElementById("user-avatar").textContent = user.name
+          .charAt(0)
+          .toUpperCase();
+
+        // Populate Settings Form
+        document.getElementById("settings-name").value = user.name;
+        document.getElementById("settings-email").value =
+          user.email || "hunter@darkwolves.com";
+
+        // --- FETCH DATA FROM BACKEND ---
+        await fetchAndRenderDashboard(user.email);
+
+        // Load Saved Jobs (from local storage for now, or update logic if you add backend for saved jobs)
+        loadSavedJobs();
+      });
+
+      async function fetchAndRenderDashboard(email) {
+        try {
+          // Fetch the logged-in user's applications based on their email
+          const response = await fetch(
+            `http://127.0.0.1:5000/api/dashboard/${email}`,
+          );
+          if (!response.ok) throw new Error("Failed to fetch dashboard data");
+
+          // The backend returns the array directly now
+          const apps = await response.json();
+
+          // Update Total Applications Count
+          document.getElementById("stat-applied").textContent = apps.length;
+
+          // Helper to format the SQL Date nicely (e.g., "Mar 1, 2026")
+          const formatDate = (dateString) => {
+            if (!dateString) return "N/A";
+            return new Date(dateString).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            });
+          };
+
+          // Render Dashboard Table (First 5 Recent Hunts)
+          const dashTableBody = document.querySelector(
+            "#dashboard-table tbody",
+          );
+          dashTableBody.innerHTML = apps.length
+            ? ""
+            : '<tr><td colspan="4" style="text-align:center; color:#666;">No hunts started yet.</td></tr>';
+
+          apps.slice(0, 5).forEach((app) => {
+            // STRICT CANDIDATE STATUS LOGIC
+            let displayStatus = "In Review";
+            let statusColor = "#333";
+            let textColor = "#aaa";
+
+            if (app.Status === "Accepted") {
+              displayStatus = "Accepted";
+              statusColor = "#064e3b";
+              textColor = "#34d399";
+            } else if (app.Status === "Alternative Offered") {
+              displayStatus = "Alternative Offered";
+              statusColor = "#78350f";
+              textColor = "#fbbf24";
+            } else if (app.Status === "Rejected") {
+              displayStatus = "Rejected";
+              statusColor = "#7f1d1d";
+              textColor = "#fca5a5";
             }
-            const user = JSON.parse(userStr);
-            
-            // Populate User Info
-            document.getElementById('user-name').textContent = user.name;
-            document.getElementById('header-name').textContent = user.name.split(' ')[0];
-            document.getElementById('user-avatar').textContent = user.name.charAt(0).toUpperCase();
-            
-            // Populate Settings Form
-            document.getElementById('settings-name').value = user.name;
-            document.getElementById('settings-email').value = user.email || 'hunter@darkwolves.com';
 
-            // --- FETCH DATA FROM BACKEND ---
-            await fetchAndRenderDashboard(user.email);
-            
-            // Load Saved Jobs (from local storage for now, or update logic if you add backend for saved jobs)
-            loadSavedJobs(); 
-        });
+            const finalBadge = `<span class="status-badge" style="background:${statusColor}; color:${textColor}; border: 1px solid ${textColor};">${displayStatus}</span>`;
 
-        async function fetchAndRenderDashboard(email) {
-            try {
-                // Fetch the logged-in user's applications based on their email
-                const response = await fetch(`http://127.0.0.1:5000/api/dashboard/${email}`);
-                if (!response.ok) throw new Error("Failed to fetch dashboard data");
-                
-                // The backend returns the array directly now
-                const apps = await response.json(); 
-
-                // Update Total Applications Count
-                document.getElementById('stat-applied').textContent = apps.length;
-
-                // Helper to format the SQL Date nicely (e.g., "Mar 1, 2026")
-                const formatDate = (dateString) => {
-                    if (!dateString) return 'N/A';
-                    return new Date(dateString).toLocaleDateString('en-US', { 
-                        month: 'short', day: 'numeric', year: 'numeric' 
-                    });
-                };
-
-                // Render Dashboard Table (First 5 Recent Hunts)
-                const dashTableBody = document.querySelector('#dashboard-table tbody');
-                dashTableBody.innerHTML = apps.length ? '' : '<tr><td colspan="4" style="text-align:center; color:#666;">No hunts started yet.</td></tr>';
-                
-                apps.slice(0, 5).forEach(app => {
-                    // STRICT CANDIDATE STATUS LOGIC
-                    let displayStatus = 'In Review';
-                    let statusColor = '#333'; 
-                    let textColor = '#aaa';
-
-                    if (app.Status === 'Accepted') {
-                        displayStatus = 'Accepted';
-                        statusColor = '#064e3b'; textColor = '#34d399';
-                    } else if (app.Status === 'Alternative Offered') {
-                        displayStatus = 'Alternative Offered';
-                        statusColor = '#78350f'; textColor = '#fbbf24';
-                    } else if (app.Status === 'Rejected') {
-                        displayStatus = 'Rejected';
-                        statusColor = '#7f1d1d'; textColor = '#fca5a5';
-                    }
-
-                    const finalBadge = `<span class="status-badge" style="background:${statusColor}; color:${textColor}; border: 1px solid ${textColor};">${displayStatus}</span>`;
-
-                    dashTableBody.innerHTML += `
+            dashTableBody.innerHTML += `
                         <tr>
                             <td style="color:white; font-weight:600;">${app.JobTitle}</td>
                             <td>${app.Company}</td>
@@ -394,12 +527,12 @@
                             <td>${finalBadge}</td>
                         </tr>
                     `;
-                });
+          });
 
-                // Update Header for the Full Applications Table to show "AI Grade" instead of "Action"
-                const appHeader = document.querySelector('#applications-table thead');
-                if(appHeader) {
-                    appHeader.innerHTML = `
+          // Update Header for the Full Applications Table to show "AI Grade" instead of "Action"
+          const appHeader = document.querySelector("#applications-table thead");
+          if (appHeader) {
+            appHeader.innerHTML = `
                         <tr>
                             <th>Job Title</th>
                             <th>Company</th>
@@ -408,38 +541,48 @@
                             <th>AI Grade</th>
                         </tr>
                     `;
-                }
+          }
 
-                // Render Full Applications Table
-                const appTableBody = document.querySelector('#applications-table tbody');
-                appTableBody.innerHTML = apps.length ? '' : '<tr><td colspan="5" style="text-align:center; color:#666;">No applications yet.</td></tr>';
-                
-                apps.forEach(app => {
-                    // STRICT CANDIDATE STATUS LOGIC
-                    let displayStatus = 'In Review';
-                    let statusColor = '#333'; 
-                    let textColor = '#aaa';
+          // Render Full Applications Table
+          const appTableBody = document.querySelector(
+            "#applications-table tbody",
+          );
+          appTableBody.innerHTML = apps.length
+            ? ""
+            : '<tr><td colspan="5" style="text-align:center; color:#666;">No applications yet.</td></tr>';
 
-                    if (app.Status === 'Accepted') {
-                        displayStatus = 'Accepted';
-                        statusColor = '#064e3b'; textColor = '#34d399';
-                    } else if (app.Status === 'Alternative Offered') {
-                        displayStatus = 'Alternative Offered';
-                        statusColor = '#78350f'; textColor = '#fbbf24';
-                    } else if (app.Status === 'Rejected') {
-                        displayStatus = 'Rejected';
-                        statusColor = '#7f1d1d'; textColor = '#fca5a5';
-                    }
+          apps.forEach((app) => {
+            // STRICT CANDIDATE STATUS LOGIC
+            let displayStatus = "In Review";
+            let statusColor = "#333";
+            let textColor = "#aaa";
 
-                    const finalBadge = `<span class="status-badge" style="background:${statusColor}; color:${textColor}; border: 1px solid ${textColor};">${displayStatus}</span>`;
+            if (app.Status === "Accepted") {
+              displayStatus = "Accepted";
+              statusColor = "#064e3b";
+              textColor = "#34d399";
+            } else if (app.Status === "Alternative Offered") {
+              displayStatus = "Alternative Offered";
+              statusColor = "#78350f";
+              textColor = "#fbbf24";
+            } else if (app.Status === "Rejected") {
+              displayStatus = "Rejected";
+              statusColor = "#7f1d1d";
+              textColor = "#fca5a5";
+            }
 
-                    // Only show the AI grade to the candidate IF they have been officially validated by the admin. 
-                    // Otherwise, keep it as a loading hourglass.
-                    const aiGrade = (app.Status === 'Accepted' || app.Status === 'Alternative Offered' || app.Status === 'Rejected') 
-                                    ? app.AI_Rating 
-                                    : '<i class="fas fa-hourglass-half" style="color:#666;"></i>';
+            const finalBadge = `<span class="status-badge" style="background:${statusColor}; color:${textColor}; border: 1px solid ${textColor};">${displayStatus}</span>`;
 
-                    appTableBody.innerHTML += `
+            // Only show the AI grade to the candidate IF they have been officially validated by the admin.
+            // Otherwise, keep it as a loading hourglass.
+            const aiGrade =
+              app.Status === "Accepted" ||
+              app.Status === "Alternative Offered" ||
+              app.Status === "Rejected"
+                ? app.AI_Rating
+                : '<i class="fas fa-hourglass-half" style="color:#666;"></i>';
+
+            appTableBody.innerHTML += `
                         <tr>
                             <td style="color:white; font-weight:600;">${app.JobTitle}</td>
                             <td>${app.Company}</td>
@@ -448,25 +591,27 @@
                             <td style="color:var(--primary-color); font-weight:bold;">${aiGrade}</td>
                         </tr>
                     `;
-                });
-
-            } catch (error) {
-                console.error("Dashboard Load Error:", error);
-                document.querySelector('#dashboard-table tbody').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#ef4444;">Failed to load data. Make sure backend is running.</td></tr>';
-            }
+          });
+        } catch (error) {
+          console.error("Dashboard Load Error:", error);
+          document.querySelector("#dashboard-table tbody").innerHTML =
+            '<tr><td colspan="4" style="text-align:center; color:#ef4444;">Failed to load data. Make sure backend is running.</td></tr>';
         }
+      }
 
-        function loadSavedJobs() {
-            const saved = JSON.parse(localStorage.getItem('my_saved_jobs')) || [];
-            document.getElementById('stat-saved').textContent = saved.length;
-            
-            const container = document.getElementById('saved-jobs-container');
-            container.innerHTML = saved.length ? '' : '<p style="color:#666;">No saved jobs.</p>';
-            
-            saved.forEach(job => {
-                container.innerHTML += `
+      function loadSavedJobs() {
+        const saved = JSON.parse(localStorage.getItem("my_saved_jobs")) || [];
+        document.getElementById("stat-saved").textContent = saved.length;
+
+        const container = document.getElementById("saved-jobs-container");
+        container.innerHTML = saved.length
+          ? ""
+          : '<p style="color:#666;">No saved jobs.</p>';
+
+        saved.forEach((job) => {
+          container.innerHTML += `
                     <div class="job-card-wide">
-                        <div class="logo-box">${job.logo || 'DW'}</div>
+                        <div class="logo-box">${job.logo || "DW"}</div>
                         <div class="job-info">
                             <h3>${job.title}</h3>
                             <div class="company">${job.company}</div>
@@ -477,38 +622,42 @@
                         </div>
                     </div>
                 `;
-            });
-        }
+        });
+      }
 
-        window.removeSavedJob = function(id) {
-            let saved = JSON.parse(localStorage.getItem('my_saved_jobs')) || [];
-            saved = saved.filter(j => j.id !== id);
-            localStorage.setItem('my_saved_jobs', JSON.stringify(saved));
-            loadSavedJobs(); 
-        }
+      window.removeSavedJob = function (id) {
+        let saved = JSON.parse(localStorage.getItem("my_saved_jobs")) || [];
+        saved = saved.filter((j) => j.id !== id);
+        localStorage.setItem("my_saved_jobs", JSON.stringify(saved));
+        loadSavedJobs();
+      };
 
-        function switchTab(tabName, element) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.getElementById(`tab-${tabName}`).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            if(element) element.classList.add('active');
-        }
+      function switchTab(tabName, element) {
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((tab) => tab.classList.remove("active"));
+        document.getElementById(`tab-${tabName}`).classList.add("active");
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((item) => item.classList.remove("active"));
+        if (element) element.classList.add("active");
+      }
 
-        function saveSettings() {
-            const newName = document.getElementById('settings-name').value;
-            const user = JSON.parse(localStorage.getItem('user'));
-            user.name = newName;
-            localStorage.setItem('user', JSON.stringify(user));
-            alert('Profile Updated!');
-            location.reload();
-        }
+      function saveSettings() {
+        const newName = document.getElementById("settings-name").value;
+        const user = JSON.parse(localStorage.getItem("user"));
+        user.name = newName;
+        localStorage.setItem("user", JSON.stringify(user));
+        alert("Profile Updated!");
+        location.reload();
+      }
 
-        function logout() {
-            if(confirm('Leave the pack?')) {
-                localStorage.removeItem('user');
-                window.location.href = 'login.html';
-            }
+      function logout() {
+        if (confirm("Leave the pack?")) {
+          localStorage.removeItem("user");
+          window.location.href = "login.html";
         }
+      }
     </script>
-</body>
+  </body>
 </html>
