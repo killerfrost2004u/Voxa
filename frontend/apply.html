@@ -120,16 +120,22 @@
                     <div class="recorder-box hidden" id="ui-upload" style="border:none; padding:0; background:transparent;"><div class="file-upload-area"><i class="fas fa-cloud-upload-alt upload-icon"></i><span class="upload-text">Drag & Drop audio file here</span><span class="upload-subtext">or click to browse (MP3, WAV, OGG)</span><span class="min-req" style="margin:0;">Min Duration: 1 min 30 sec</span><input type="file" id="voice-upload-input" accept="audio/*" onchange="validateFileUpload(this)"></div><div id="upload-status" style="margin-top:15px; font-weight:600; color:#888;">No file selected</div></div>
                 </div>
 
-                <div class="form-group" id="bilingual-group" style="display: none; background: rgba(0, 229, 255, 0.05); padding: 20px; border-radius: 8px; border: 1px dashed var(--primary-color); margin-top: 1.5rem; box-shadow: 0 4px 15px rgba(0, 229, 255, 0.1);">
-                    <label style="color: var(--primary-color); font-weight: 700; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+                <div class="form-group" id="bilingual-group" style="display: none; margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                    <label style="color: var(--primary-color); font-weight: 700; font-size: 1.05rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
                         <i class="fas fa-globe"></i> Second Language Audio <span style="color: #ef4444;">*</span>
                     </label>
-                    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem; line-height: 1.5;">
-                        This role requires bilingual proficiency. Please record and upload a 1-minute introduction in the secondary language required for this campaign.
+                    <p style="font-size:0.85rem; color:#aaa; margin-bottom:1rem; text-align: center;">
+                        This role requires bilingual proficiency. Please upload a 1-minute introduction in the secondary language.
                     </p>
                     
-                    <div style="position: relative; overflow: hidden; display: inline-block; width: 100%;">
-                        <input type="file" id="app-voice2" accept="audio/*" style="width:100%; padding:12px; background:var(--bg-body); color:var(--text-main); border:1px solid var(--border-color); border-radius:6px; font-family: inherit; cursor: pointer;">
+                    <div class="recorder-box" style="border:none; padding:0; background:transparent;">
+                        <div class="file-upload-area" id="area-voice2">
+                            <i class="fas fa-cloud-upload-alt upload-icon" id="icon-voice2"></i>
+                            <span class="upload-text">Upload 2nd Language Audio</span>
+                            <span class="upload-subtext">Click to browse (MP3, WAV, OGG)</span>
+                            <input type="file" id="app-voice2" accept="audio/*" onchange="validateFile2(this)" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+                        </div>
+                        <div id="upload-status2" style="margin-top:15px; font-weight:600; color:#888;">No file selected</div>
                     </div>
                 </div>
 
@@ -163,6 +169,18 @@
             status.style.color = "#22c55e"; 
             icon.className = "fas fa-check-circle upload-icon"; 
             uploadedFile = file; 
+        }
+
+        function validateFile2(input) {
+            const file = input.files[0];
+            const status = document.getElementById('upload-status2');
+            const icon = document.getElementById('icon-voice2');
+            const area = document.getElementById('area-voice2');
+            if(!file) { status.textContent = "No file selected"; return; }
+            status.textContent = `File Selected: ${file.name}`; 
+            status.style.color = "#22c55e"; 
+            icon.className = "fas fa-check-circle upload-icon"; 
+            area.style.borderColor = "var(--primary-color)";
         }
 
         async function toggleRecording() {
@@ -217,10 +235,12 @@
             try {
                 const formData = new FormData();
                 
+                // MOVED TO TOP: Define params before trying to use it!
+                const params = new URLSearchParams(window.location.search);
+                
                 // 1. SAFE FILE HANDLING
                 if (currentMethod === 'record') {
                     if (!audioBlob) throw new Error("Please record audio.");
-                    // Force creating a fresh file object
                     const voiceFile = new File([audioBlob], "recording.webm", { type: "audio/webm" });
                     formData.append('voiceRecord', voiceFile);
                 } else {
@@ -244,7 +264,6 @@
                 fields.forEach(id => {
                     const el = document.getElementById('app-' + id);
                     if(el) {
-                        // Fix inconsistent naming: frontend 'national-id' -> backend 'nationalId'
                         const key = id === 'national-id' ? 'nationalId' : id;
                         formData.append(key, el.value);
                     }
@@ -256,12 +275,9 @@
                 const mil = document.getElementById('app-military');
                 formData.append('militaryStatus', mil ? mil.value : 'N/A');
 
-                // Hidden
-                const params = new URLSearchParams(window.location.search);
+                // Hidden Data
                 formData.append('title', params.get('title') || 'General');
-                formData.append('company', params.get('company') || 'Dark Wolves');
-
-                // NEW: Capture the Recruiter's Name from the URL
+                formData.append('company', params.get('company') || 'Voxa');
                 formData.append('ref', params.get('ref') || 'Direct/Organic');
 
                 // 3. SEND
@@ -287,7 +303,6 @@
             }
         });
 
-        // Initialize
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
