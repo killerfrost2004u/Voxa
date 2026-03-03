@@ -492,8 +492,11 @@ window.applyForJob = function() {
     const title = document.getElementById('modal-title').textContent;
     const company = document.getElementById('modal-company').textContent;
     const job = window.allJobs.find(j => j.title === title && j.company === company);
+    
     const id = job ? job.id : 0;
-    window.location.href = `apply.html?id=${id}&title=${encodeURIComponent(title)}&company=${encodeURIComponent(company)}`;
+    const isBilingual = job && job.bilingual ? 1 : 0; // Check if it's bilingual
+    
+    window.location.href = `apply.html?id=${id}&title=${encodeURIComponent(title)}&company=${encodeURIComponent(company)}&bilingual=${isBilingual}`;
 }
 
 window.saveJob = function(id, title, company, logo) {

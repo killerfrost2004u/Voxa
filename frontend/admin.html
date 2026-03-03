@@ -169,6 +169,11 @@
                 
                 <textarea id="jOffer" placeholder="Extra OFFER 🎙️ details..." style="grid-column: span 3; resize: vertical; min-height: 60px;"></textarea>
 
+                <select id="jBilingual" style="grid-column: span 3; font-weight: bold; background: rgba(0, 229, 255, 0.05); border: 1px solid var(--primary-color);">
+                    <option value="0">English Only (1 Voice Note Required)</option>
+                    <option value="1">Bilingual Role (2 Voice Notes Required)</option>
+                </select>
+
                 <button id="btn-submit-job" onclick="saveJobData()" class="btn-analyze" style="grid-column: span 3;">+ Create New Job Posting</button>
             </div>
             
@@ -234,9 +239,16 @@
                 
                 tbody.innerHTML = appData.map(app => {
                     const hasAudio = app.VoiceRecordPath && app.VoiceRecordPath !== 'null' && app.VoiceRecordPath !== 'No_File';
-                    const audioContent = hasAudio 
-                        ? `<audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}" class="custom-audio"></audio>` 
+                    const audioContent1 = hasAudio 
+                        ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:2px;">EN Intro:</div><audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}" class="custom-audio"></audio>` 
                         : '<span style="color:var(--text-muted); font-style:italic;">No Audio</span>';
+
+                    const hasAudio2 = app.VoiceRecordPath2 && app.VoiceRecordPath2 !== 'null' && app.VoiceRecordPath2 !== 'No_File';
+                    const audioContent2 = hasAudio2 
+                        ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:8px; margin-bottom:2px;">2nd Language:</div><audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath2}" class="custom-audio"></audio>` 
+                        : '';
+                    
+                    const finalAudioContent = audioContent1 + audioContent2;
 
                     let aiContent;
                     if (app.AI_Rating && app.AI_Rating !== 'null') {
@@ -278,7 +290,7 @@
                         <tr>
                             <td>#${app.ApplicationID}</td>
                             <td><b>${app.FullName}</b><br><small><span style="color: var(--primary-color); font-weight: 600;">${app.Company || 'N/A'}</span> • ${app.JobTitle}</small></td>
-                            <td>${audioContent}</td>
+                            <td>${finalAudioContent}</td>
                             <td>${aiContent}</td>
                             <td>${humanGradeBadge}</td>
                             <td>${statusBadge}</td> 
@@ -588,6 +600,7 @@ ${app.ClientPanel || 'Pending AI Assessment...'}`;
                         <button onclick="editJob(${j.JobID})" style="background:none; border:none; color:var(--primary-color); cursor:pointer; margin-right: 12px; font-size: 1.1rem;" title="Edit Job"><i class="fas fa-edit"></i></button>
                         <button onclick="deleteJob(${j.JobID})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size: 1.1rem;" title="Delete Job"><i class="fas fa-trash"></i></button>
                     </td>
+                    <td><b>${j.JobTitle}</b> <span style="font-size:0.7rem; background:rgba(0, 229, 255, 0.1); color:var(--primary-color); padding:2px 6px; border-radius:4px; margin-left:5px; border:1px solid var(--primary-color); display:${j.RequiresSecondLanguage ? 'inline-block' : 'none'};">Bilingual</span><br><small style="color:var(--primary-color);">${j.CompanyName}</small></td>
                 </tr>
             `).join('');
         }
@@ -609,6 +622,7 @@ ${app.ClientPanel || 'Pending AI Assessment...'}`;
             document.getElementById('jLocation').value = job.Location || '';
             document.getElementById('jTraining').value = job.Training || '';
             document.getElementById('jOffer').value = job.OfferDetails || '';
+            document.getElementById('jBilingual').value = job.RequiresSecondLanguage ? "1" : "0";
 
             // Change UI to reflect edit mode
             const submitBtn = document.getElementById('btn-submit-job');
@@ -656,7 +670,8 @@ ${app.ClientPanel || 'Pending AI Assessment...'}`;
                 targetAudience: document.getElementById('jTarget').value,
                 location: document.getElementById('jLocation').value,
                 training: document.getElementById('jTraining').value,
-                offerDetails: document.getElementById('jOffer').value
+                offerDetails: document.getElementById('jOffer').value,
+                requiresSecondLanguage: document.getElementById('jBilingual').value,
             };
 
             if(!payload.jobTitle) return alert("Job Title is required!");

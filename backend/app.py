@@ -563,6 +563,8 @@ def get_public_jobs():
                 
                 # Keep your old logo logic!
                 "logo": j.get("CompanyName", "DW")[:2].upper()
+                # NEW: Tell the frontend if it needs 2 voice notes
+                "bilingual": bool(j.get("RequiresSecondLanguage", False))
             })
 
         return jsonify(formatted_jobs)
@@ -585,11 +587,11 @@ def handle_admin_jobs():
     if request.method == 'POST':
         d = request.get_json()
         c.execute(
-            """INSERT INTO Jobs (CompanyName, JobTitle, AccountType, WorkingHours, InterviewTime, SalaryPackage, TargetAudience, Location, Training, OfferDetails, Status) 
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            """INSERT INTO Jobs (CompanyName, JobTitle, AccountType, WorkingHours, InterviewTime, SalaryPackage, TargetAudience, Location, Training, OfferDetails, Status, RequiresSecondLanguage) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (d.get('companyName'), d.get('jobTitle'), d.get('accountType'), d.get('workingHours'), 
              d.get('interviewTime'), d.get('salaryPackage'), d.get('targetAudience'), d.get('location'), 
-             d.get('training'), d.get('offerDetails'), d.get('status', 'Active'))
+             d.get('training'), d.get('offerDetails'), d.get('status', 'Active'), int(d.get('requiresSecondLanguage', 0)))
         )
         conn.commit()
         conn.close()
@@ -609,12 +611,12 @@ def update_delete_job(id):
                 """UPDATE Jobs 
                    SET CompanyName=?, JobTitle=?, AccountType=?, WorkingHours=?, 
                        InterviewTime=?, SalaryPackage=?, TargetAudience=?, 
-                       Location=?, Training=?, OfferDetails=?
+                       Location=?, Training=?, OfferDetails=?, RequiresSecondLanguage=?
                    WHERE JobID=?""",
                 (data.get('companyName'), data.get('jobTitle'), data.get('accountType'), 
                  data.get('workingHours'), data.get('interviewTime'), data.get('salaryPackage'), 
                  data.get('targetAudience'), data.get('location'), data.get('training'), 
-                 data.get('offerDetails'), id)
+                 data.get('offerDetails'), int(data.get('requiresSecondLanguage', 0)), id)
             )
         else:
             # It's just a status toggle (Active/On Hold)
@@ -743,6 +745,13 @@ def apply():
         fn = secure_filename(f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{f.filename}")
         f.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
 
+        fn2 = None
+        if 'voiceRecord2' in request.files:
+            f2 = request.files['voiceRecord2']
+            if f2.filename:
+                fn2 = secure_filename(f"VOICE2_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{f2.filename}")
+                f2.save(os.path.join(app.config['UPLOAD_FOLDER'], fn2))
+
         conn = get_db_connection()
         c = conn.cursor()
         d = request.form
@@ -750,8 +759,8 @@ def apply():
             """INSERT INTO JobApplications 
             (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, 
              Gender, GraduationStatus, MilitaryStatus, NationalID, Nationality, Address, 
-             DateOfBirth, FacultyUniversity, VoiceRecordPath, SubmittedAt, RecruiterSource) 
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,GETDATE(),?)""",
+             DateOfBirth, FacultyUniversity, VoiceRecordPath, VoiceRecordPath, VoiceRecordPath2, SubmittedAt, RecruiterSource) 
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,GETDATE(),?)""",
             (d.get('title'), d.get('company'), d.get('name'), d.get('email'), d.get('phone'), d.get('whatsapp'),
              d.get('english'), d.get('experience'), d.get('gender'), d.get('gradStatus'), d.get('militaryStatus'),
              d.get('nationalId'), d.get('nationality'), d.get('address'),
