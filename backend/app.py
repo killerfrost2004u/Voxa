@@ -648,6 +648,77 @@ def update_application_status(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# ==========================================
+# VALIDATOR MULTI-AGENCY ROUTES
+# ==========================================
+
+@app.route('/api/validator/applications', methods=['GET'])
+def get_validator_applications():
+    # This fetches all applications, but joins the specific Agency's grade to it
+    agency = request.args.get('agency', 'Unknown')
+    
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # We use a LEFT JOIN so we see all candidates, but only the grade from THIS specific agency
+        c.execute("""
+            SELECT 
+                a.ApplicationID, a.FullName, a.Phone, a.JobTitle, a.RecruiterSource, 
+                a.AI_Rating, a.AI_Report, a.VoiceRecordPath, a.VoiceRecordPath2,
+                v.HumanGrade AS AgencyGrade, v.ValidatorNotes
+            FROM JobApplications a
+            LEFT JOIN ValidatorGrades v ON a.ApplicationID = v.ApplicationID AND v.AgencyName = ?
+            ORDER BY a.SubmittedAt DESC
+        """, (agency,))
+        
+        cols = [column[0] for column in c.description]
+        data = [dict(zip(cols, row)) for row in c.fetchall()]
+        conn.close()
+        return jsonify(data)
+    except Exception as e:
+        print(f"Validator Fetch Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/validator/grade', methods=['POST'])
+def submit_validator_grade():
+    # This safely inserts or updates a grade for ONE specific agency
+    data = request.get_json()
+    app_id = data.get('applicationId')
+    agency = data.get('agencyName')
+    grade = data.get('grade')
+    notes = data.get('notes', '')
+    
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Check if this agency has already graded this candidate
+        c.execute("SELECT GradeID FROM ValidatorGrades WHERE ApplicationID = ? AND AgencyName = ?", (app_id, agency))
+        existing = c.fetchone()
+        
+        if existing:
+            # Update existing grade
+            c.execute("""
+                UPDATE ValidatorGrades 
+                SET HumanGrade = ?, ValidatorNotes = ?, GradedAt = GETDATE()
+                WHERE ApplicationID = ? AND AgencyName = ?
+            """, (grade, notes, app_id, agency))
+        else:
+            # Insert new grade
+            c.execute("""
+                INSERT INTO ValidatorGrades (ApplicationID, AgencyName, HumanGrade, ValidatorNotes)
+                VALUES (?, ?, ?, ?)
+            """, (app_id, agency, grade, notes))
+            
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Grade saved successfully"})
+    except Exception as e:
+        print(f"Validator Grade Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/whatsapp/reply', methods=['POST'])
 def whatsapp_reply():
     # Get the message the candidate sent

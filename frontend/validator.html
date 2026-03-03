@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agency Validation Portal | Voxa</title>
+    <link rel="icon" type="image/png" href="images/voxa-logo.png" />
+    <link rel="stylesheet" href="css/admin.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="logo">VO<span>XA</span></div>
+      <nav>
+        <div class="nav-item active">
+          <i class="fas fa-check-circle"></i> Validate Candidates
+        </div>
+      </nav>
+      <div
+        style="
+          margin-top: auto;
+          border-top: 1px solid #333;
+          padding-top: 1.5rem;
+          text-align: center;
+        ">
+        <p style="color: var(--text-muted); font-size: 0.8rem">
+          Logged in as Validator
+        </p>
+        <h4 id="agency-name-display" style="color: var(--primary-color)">
+          Agency Name
+        </h4>
+        <a
+          onclick="logout()"
+          style="
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: block;
+            margin-top: 10px;
+          "
+          >Logout</a
+        >
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header>
+        <div>
+          <h1>Validation Queue</h1>
+          <p>Listen to audio and submit your agency's final grade.</p>
+        </div>
+        <input
+          type="text"
+          id="app-search"
+          placeholder="Search Candidates..."
+          oninput="filterTable()"
+          style="
+            padding: 10px;
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            min-width: 250px;
+          " />
+      </header>
+
+      <section class="admin-card">
+        <div class="table-container">
+          <table id="applications-table">
+            <thead>
+              <tr>
+                <th>Candidate Details</th>
+                <th>Job & Recruiter</th>
+                <th>AI Assessment</th>
+                <th>Audio (EN / 2nd)</th>
+                <th>Your Agency Grade</th>
+              </tr>
+            </thead>
+            <tbody id="app-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      let currentAgency = "";
+      let applicationsData = [];
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const userStr = localStorage.getItem("user");
+        if (!userStr) return (window.location.href = "login.html");
+
+        const user = JSON.parse(userStr);
+
+        // SECURITY CHECK: Are they a validator?
+        if (user.role !== "Validator" && user.role !== "SuperAdmin") {
+          alert("Unauthorized Access.");
+          window.location.href = "index.html";
+          return;
+        }
+
+        // The agency name is passed via the user's 'team' or 'unit' data when they log in
+        // For now, we will assume user.agency is set during their login
+        currentAgency = user.agency || user.team || "Unknown Agency";
+        document.getElementById("agency-name-display").textContent =
+          currentAgency;
+
+        loadApplications();
+      });
+
+      async function loadApplications() {
+        try {
+          // Fetch ALL applications, but we will fetch the agency's specific grades alongside them
+          const res = await fetch(
+            `http://127.0.0.1:5000/api/validator/applications?agency=${encodeURIComponent(currentAgency)}`,
+          );
+          applicationsData = await res.json();
+          renderTable(applicationsData);
+        } catch (e) {
+          console.error("Error loading queue.", e);
+        }
+      }
+
+      function renderTable(data) {
+        const tbody = document.getElementById("app-table-body");
+        tbody.innerHTML = data
+          .map((app) => {
+            // Audio Players
+            const hasAudio1 =
+              app.VoiceRecordPath &&
+              app.VoiceRecordPath !== "null" &&
+              app.VoiceRecordPath !== "No_File";
+            const audio1 = hasAudio1
+              ? `<audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}" class="custom-audio" style="width:150px; height:30px;"></audio>`
+              : '<span style="color:#666;">N/A</span>';
+
+            const hasAudio2 =
+              app.VoiceRecordPath2 &&
+              app.VoiceRecordPath2 !== "null" &&
+              app.VoiceRecordPath2 !== "No_File";
+            const audio2 = hasAudio2
+              ? `<audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath2}" class="custom-audio" style="width:150px; height:30px; margin-top:5px;"></audio>`
+              : "";
+
+            // Agency Specific Grade (Pulled from the new database table)
+            const currentGrade = app.AgencyGrade || "Pending";
+            const gradeColor =
+              currentGrade === "Pending"
+                ? "var(--text-muted)"
+                : "var(--primary-color)";
+
+            return `
+                    <tr>
+                        <td>
+                            <b>${app.FullName}</b><br>
+                            <small style="color:var(--text-muted);">${app.Phone}</small>
+                        </td>
+                        <td>
+                            <b>${app.JobTitle}</b><br>
+                            <small style="color:#f59e0b;">Ref: ${app.RecruiterSource}</small>
+                        </td>
+                        <td>
+                            <b style="color:var(--primary-color);">${app.AI_Rating || "In Progress"}</b><br>
+                            <small style="color:var(--text-muted); cursor:pointer;" onclick="alert('${(app.AI_Report || "").replace(/'/g, "\\'")}')">View Report</small>
+                        </td>
+                        <td>${audio1}${audio2}</td>
+                        <td>
+                            <div style="display:flex; flex-direction:column; gap:5px;">
+                                <div style="font-weight:bold; color:${gradeColor}; font-size:1.1rem; cursor:pointer;" onclick="submitAgencyGrade(${app.ApplicationID})">
+                                    ${currentGrade} <i class="fas fa-edit" style="font-size:0.8rem; color:#666;"></i>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+          })
+          .join("");
+      }
+
+      async function submitAgencyGrade(appId) {
+        const grade = prompt(
+          `Enter ${currentAgency}'s validation grade (e.g. C1, B2, Rejected):`,
+        );
+        if (!grade) return;
+
+        const notes = prompt(
+          `Any specific notes for ${currentAgency}'s record? (Optional)`,
+        );
+
+        try {
+          await fetch(`http://127.0.0.1:5000/api/validator/grade`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              applicationId: appId,
+              agencyName: currentAgency,
+              grade: grade,
+              notes: notes || "",
+            }),
+          });
+          loadApplications(); // Refresh the table
+        } catch (e) {
+          alert("Failed to save grade.");
+        }
+      }
+
+      function filterTable() {
+        const q = document.getElementById("app-search").value.toLowerCase();
+        const filtered = applicationsData.filter(
+          (a) =>
+            a.FullName.toLowerCase().includes(q) ||
+            a.JobTitle.toLowerCase().includes(q),
+        );
+        renderTable(filtered);
+      }
+
+      function logout() {
+        localStorage.removeItem("user");
+        window.location.href = "login.html";
+      }
+    </script>
+  </body>
+</html>

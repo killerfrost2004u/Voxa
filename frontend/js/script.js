@@ -398,26 +398,70 @@ window.renderCompanyProfile = function (companyName, allJobsArray) {
 // ==========================================
 
 function extractSalaryNumber(job) {
-  if (job.salaryNum && job.salaryNum > 0) return job.salaryNum;
-
-  if (job.salary) {
-    // Remove commas so "15,000" safely becomes "15000"
-    let cleanStr = job.salary.replace(/,/g, "");
-    const match = cleanStr.match(/(\d+)/);
-
-    if (match) {
-      let num = parseInt(match[0]);
-
-      // SMART FIX:
-      // If the number is small (e.g. 15), assume they meant 15k and multiply by 1000.
-      // If the number is already large (e.g. 15000), leave it alone!
-      if (num > 0 && num < 1000) {
-        return num * 1000;
-      }
-      return num;
+    if (!job.salary) return 0;
+    
+    // 1. CLEAN THE STRING
+    let text = job.salary.toLowerCase().replace(/,/g, '');
+    
+    // SMART FILTER: Remove percentages and timeframes so they don't get confused as salaries!
+    text = text.replace(/\d+%/g, ''); // Removes "10%", "15%"
+    text = text.replace(/\d+\s*(months?|years?|days?)/g, ''); // Removes "6 months", "1 year"
+    
+    // 2. IDENTIFY CURRENCY & TIMEFRAME
+    let isUSD = text.includes('usd') || text.includes('$');
+    let isGBP = text.includes('gbp') || text.includes('£');
+    let isHourly = text.includes('/hr') || text.includes('per hour') || text.includes('an hour');
+    
+    // 3. EXTRACT ALL NUMBERS (Now supports decimals like 24.5k)
+    let regex = /((?:\d+\.)?\d+)\s*(k)?/g;
+    let matches = [...text.matchAll(regex)];
+    let parsedNumbers = [];
+    
+    for (let match of matches) {
+        let num = parseFloat(match[1]);
+        let hasK = match[2] !== undefined; // Detects if 'k' was attached
+        
+        // If it has a 'k' (e.g. 45k) or is a small number (e.g. 15), assume it means thousands.
+        // BUT don't multiply if it's hourly/USD, and don't multiply if they typed a typo like "18500k".
+        if ((hasK || (num >= 3 && num <= 200)) && !isHourly && !isUSD && !isGBP) {
+            if (num < 1000) { 
+                num = num * 1000; 
+            }
+        }
+        
+        // Convert Hourly to Monthly (Assuming 160 hours/month)
+        let monthlyNum = num;
+        if (isHourly) monthlyNum = num * 160;
+        
+        // Convert Foreign Currency to EGP (Adjust rates as needed)
+        if (isUSD) monthlyNum *= 50;
+        if (isGBP) monthlyNum *= 63;
+        
+        // Final Failsafe: Only accept it if the final EGP value is realistic
+        if (monthlyNum >= 3000 && monthlyNum <= 200000) {
+            parsedNumbers.push(monthlyNum);
+        }
     }
-  }
-  return 0;
+    
+    if (parsedNumbers.length === 0) return 0;
+
+    // 4. DETERMINE THE FINAL VALUE
+    // If they used "-" or "to", it's a range. We average it. (e.g., "$250 - $400" or "45-60k")
+    if (text.includes('-') || text.includes(' to ')) {
+        if (parsedNumbers.length >= 2) {
+            return Math.round((parsedNumbers[0] + parsedNumbers[1]) / 2);
+        }
+    }
+    
+    // If it's a format like "10k / 12k", average it.
+    if (text.includes('/') && !isHourly) {
+        if (parsedNumbers.length >= 2) {
+            return Math.round((parsedNumbers[0] + parsedNumbers[1]) / 2);
+        }
+    }
+    
+    // DEFAULT: For things like "12k + 1k KPIs" or "15k Net", just take the very first base number!
+    return Math.round(parsedNumbers[0]);
 }
 
 function processSalaries(data) {
