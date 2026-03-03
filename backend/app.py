@@ -536,7 +536,6 @@ def send_offer(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- 2. NEW JOB MANAGEMENT ROUTES ---
 @app.route('/api/jobs', methods=['GET'])
 def get_public_jobs():
     try:
@@ -547,23 +546,17 @@ def get_public_jobs():
         raw_jobs = [dict(zip(cols, row)) for row in c.fetchall()]
         conn.close()
 
-        # Translate the new SQL columns back to the exact format your frontend expects!
         formatted_jobs = []
         for j in raw_jobs:
             formatted_jobs.append({
                 "id": j.get("JobID"),
                 "title": j.get("JobTitle", "Unknown Title"),
-                "company": j.get("CompanyName", "Dark Wolves"),
+                "company": j.get("CompanyName", "Voxa"),
                 "location": j.get("Location") or "Remote",
                 "salary": j.get("SalaryPackage") or "Competitive",
-                
-                # We combine your new specific fields so they fit into your old UI layout
                 "requirements": f"Account: {j.get('AccountType', 'N/A')} | Hours: {j.get('WorkingHours', 'N/A')} | Target: {j.get('TargetAudience', 'N/A')}",
                 "description": j.get("OfferDetails", ""),
-                
-                # Keep your old logo logic!
-                "logo": j.get("CompanyName", "DW")[:2].upper()
-                # NEW: Tell the frontend if it needs 2 voice notes
+                "logo": j.get("CompanyName", "VX")[:2].upper(), # Fixed the missing comma here!
                 "bilingual": bool(j.get("RequiresSecondLanguage", False))
             })
 
@@ -745,6 +738,7 @@ def apply():
         fn = secure_filename(f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{f.filename}")
         f.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
 
+        # Handle the second file cleanly
         fn2 = None
         if 'voiceRecord2' in request.files:
             f2 = request.files['voiceRecord2']
@@ -755,21 +749,25 @@ def apply():
         conn = get_db_connection()
         c = conn.cursor()
         d = request.form
+        
+        # Fixed the duplicate column crash here!
         c.execute(
             """INSERT INTO JobApplications 
             (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, 
              Gender, GraduationStatus, MilitaryStatus, NationalID, Nationality, Address, 
-             DateOfBirth, FacultyUniversity, VoiceRecordPath, VoiceRecordPath, VoiceRecordPath2, SubmittedAt, RecruiterSource) 
+             DateOfBirth, FacultyUniversity, VoiceRecordPath, VoiceRecordPath2, SubmittedAt, RecruiterSource) 
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,GETDATE(),?)""",
             (d.get('title'), d.get('company'), d.get('name'), d.get('email'), d.get('phone'), d.get('whatsapp'),
              d.get('english'), d.get('experience'), d.get('gender'), d.get('gradStatus'), d.get('militaryStatus'),
              d.get('nationalId'), d.get('nationality'), d.get('address'),
              d.get('dob'), d.get('faculty'), 
-             fn, d.get('ref', 'Direct/Organic')))
+             fn, fn2, d.get('ref', 'Direct/Organic')))
         conn.commit()
         conn.close()
         return jsonify({"message": "OK"}), 201
-    except Exception as e: return jsonify({"error": str(e)}), 500
+    except Exception as e: 
+        print(f"Application Error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/admin/analyze/<int:id>', methods=['POST'])
 def analyze(id):

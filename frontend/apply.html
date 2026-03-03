@@ -113,7 +113,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Voice Introduction (Min 1m 30s) <span style="color:var(--primary-color)">*</span></label>
+                    <label>Voice Introduction (Min 1m.) <span style="color:var(--primary-color)">*</span></label>
                     <p style="font-size:0.85rem; color:#aaa; margin-bottom:0.5rem; text-align: center;">Please introduce yourself and your experience in English.</p>
                     <div class="voice-tabs"><div class="voice-tab active" id="tab-record" onclick="switchVoiceMethod('record')">Record Now</div><div class="voice-tab" id="tab-upload" onclick="switchVoiceMethod('upload')">Upload File</div></div>
                     <div class="recorder-box" id="ui-record"><div class="timer" id="record-timer">00:00</div><div class="min-req">Target: 01:30</div><button type="button" class="rec-btn btn-start" id="btn-record" onclick="toggleRecording()"><i class="fas fa-microphone"></i></button><audio id="audio-playback" controls class="audio-preview"></audio><div id="recording-status" style="margin-top:10px; font-weight:600; color:#888;">Tap mic to start</div></div>
@@ -218,7 +218,7 @@
                     formData.append('voiceRecord', voiceFile);
                 } else {
                     if (!uploadedFile) throw new Error("Please select a file.");
-                    formData.append('voiceRecord', uploadedFile);
+                    formData.append('voiceRecord', file1);
                 }
 
                 // --- BILINGUAL AUDIO HANDLING ---
@@ -284,13 +284,16 @@
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             if(params.get('title')) document.getElementById('apply-job-title').textContent = params.get('title');
+
+            if (urlParams.get('bilingual') === '1') {
+            document.getElementById('bilingual-group').style.display = 'block';
+            }
+
             const user = JSON.parse(localStorage.getItem('user'));
+
             if(user) {
                 document.getElementById('app-name').value = user.name || '';
                 document.getElementById('app-email').value = user.email || '';
-            }
-            if (urlParams.get('bilingual') === '1') {
-            document.getElementById('bilingual-group').style.display = 'block';
             }
         });
     </script>

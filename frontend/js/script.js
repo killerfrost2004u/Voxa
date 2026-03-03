@@ -494,7 +494,7 @@ window.applyForJob = function() {
     const job = window.allJobs.find(j => j.title === title && j.company === company);
     
     const id = job ? job.id : 0;
-    const isBilingual = job && job.bilingual ? 1 : 0; // Check if it's bilingual
+    const isBilingual = job && job.bilingual ? "1" : "0" ; // Check if it's bilingual
     
     window.location.href = `apply.html?id=${id}&title=${encodeURIComponent(title)}&company=${encodeURIComponent(company)}&bilingual=${isBilingual}`;
 }
