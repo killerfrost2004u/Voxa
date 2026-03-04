@@ -257,7 +257,7 @@
         </a>
         <div class="admin-tag">ADMIN PORTAL</div>
       </div>
-      <div
+      <!-- <div
         class="nav-item active"
         onclick="switchAdminTab('applications', this)">
         <i class="fas fa-file-alt"></i> Applications
@@ -267,7 +267,7 @@
       </div>
       <div class="nav-item" onclick="switchAdminTab('users', this)">
         <i class="fas fa-users"></i> User Management
-      </div>
+      </div> -->
     </nav>
 
     <div class="admin-container">
@@ -290,6 +290,9 @@
         </button>
         <button class="tab-btn" onclick="switchTab('jobs')" id="tab-jobs">
           Job Management
+        </button>
+        <button class="tab-btn" onclick="switchTab('users')" id="tab-users">
+          User Management
         </button>
       </div>
 
@@ -385,30 +388,122 @@
           </thead>
           <tbody id="jobs-table-body"></tbody>
         </table>
+        <div
+          id="section-users"
+          class="data-table-container"
+          style="display: none">
+          <h3 style="margin-bottom: 1.5rem; color: var(--primary-color)">
+            Create New Account
+          </h3>
+          <div class="job-form" style="max-width: 800px">
+            <input
+              type="text"
+              id="newUser-name"
+              placeholder="Full Name (e.g. John Doe)"
+              style="grid-column: span 3" />
+
+            <input
+              type="email"
+              id="newUser-email"
+              placeholder="Email Address (Login ID)"
+              style="grid-column: span 3" />
+
+            <input
+              type="password"
+              id="newUser-password"
+              placeholder="Temporary Password"
+              style="grid-column: span 3" />
+
+            <select
+              id="newUser-role"
+              style="
+                grid-column: span 1;
+                background: var(--bg-body);
+                border: 1px solid var(--border-color);
+                color: var(--text-main);
+                padding: 10px;
+                border-radius: 6px;
+              ">
+              <option value="Validator">Validator (Agency Partner)</option>
+              <option value="Recruiter">Recruiter</option>
+              <option value="Leader">Team Leader</option>
+              <option value="UnitManager">Unit Manager</option>
+              <option value="Admin">System Admin</option>
+            </select>
+
+            <input
+              type="text"
+              id="newUser-agency"
+              placeholder="Agency / Team Name (e.g. Superheroes)"
+              style="grid-column: span 2" />
+
+            <button
+              id="btn-create-user"
+              onclick="createNewUser()"
+              class="btn-analyze"
+              style="grid-column: span 3; margin-top: 10px">
+              <i class="fas fa-user-plus"></i> Create Account
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div id="section-users" class="data-table-container" style="display: none;">
-        <h3 style="margin-bottom: 1.5rem; color: var(--primary-color);">Create New Account</h3>
-        <div class="job-form" style="max-width: 800px;">
-            <input type="text" id="newUser-name" placeholder="Full Name (e.g. John Doe)" style="grid-column: span 3;">
-            
-            <input type="email" id="newUser-email" placeholder="Email Address (Login ID)" style="grid-column: span 3;">
-            
-            <input type="password" id="newUser-password" placeholder="Temporary Password" style="grid-column: span 3;">
-            
-            <select id="newUser-role" style="grid-column: span 1; background: var(--bg-body); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; border-radius: 6px;">
-                <option value="Validator">Validator (Agency Partner)</option>
-                <option value="Recruiter">Recruiter</option>
-                <option value="Leader">Team Leader</option>
-                <option value="UnitManager">Unit Manager</option>
-                <option value="Admin">System Admin</option>
-            </select>
-            
-            <input type="text" id="newUser-agency" placeholder="Agency / Team Name (e.g. Superheroes)" style="grid-column: span 2;">
-            
-            <button id="btn-create-user" onclick="createNewUser()" class="btn-analyze" style="grid-column: span 3; margin-top: 10px;">
-                <i class="fas fa-user-plus"></i> Create Account
-            </button>
+      <div
+        id="section-users"
+        class="data-table-container"
+        style="display: none">
+        <h3 style="margin-bottom: 1.5rem; color: var(--primary-color)">
+          Create New Account
+        </h3>
+        <div class="job-form" style="max-width: 800px">
+          <input
+            type="text"
+            id="newUser-name"
+            placeholder="Full Name (e.g. John Doe)"
+            style="grid-column: span 3" />
+
+          <input
+            type="email"
+            id="newUser-email"
+            placeholder="Email Address (Login ID)"
+            style="grid-column: span 3" />
+
+          <input
+            type="password"
+            id="newUser-password"
+            placeholder="Temporary Password"
+            style="grid-column: span 3" />
+
+          <select
+            id="newUser-role"
+            style="
+              grid-column: span 1;
+              background: var(--bg-body);
+              border: 1px solid var(--border-color);
+              color: var(--text-main);
+              padding: 10px;
+              border-radius: 6px;
+            ">
+            <option value="Validator">Validator (Agency Partner)</option>
+            <option value="Recruiter">Recruiter</option>
+            <option value="Leader">Team Leader</option>
+            <option value="UnitManager">Unit Manager</option>
+            <option value="Admin">System Admin</option>
+          </select>
+
+          <input
+            type="text"
+            id="newUser-agency"
+            placeholder="Agency / Team Name (e.g. Superheroes)"
+            style="grid-column: span 2" />
+
+          <button
+            id="btn-create-user"
+            onclick="createNewUser()"
+            class="btn-analyze"
+            style="grid-column: span 3; margin-top: 10px">
+            <i class="fas fa-user-plus"></i> Create Account
+          </button>
         </div>
       </div>
     </div>
@@ -427,7 +522,9 @@
       <div class="modal-card">
         <div class="modal-header">
           <h2 style="color: var(--text-main)">
-            <i class="fas fa-user-check" style="color: var(--primary-color)"></i>
+            <i
+              class="fas fa-user-check"
+              style="color: var(--primary-color)"></i>
             Human Validation
           </h2>
           <button onclick="closeHumanModal()" class="close-btn">&times;</button>
@@ -461,82 +558,149 @@
 
       // --- NEW: UNIFIED TAB SWITCHING ---
       function switchAdminTab(tab, element) {
-          // Update Sidebar
-          document.querySelectorAll('.navbar .nav-item').forEach(el => el.classList.remove('active'));
-          if (element) element.classList.add('active');
-          
-          // Hide all sections
-          document.getElementById('section-apps').style.display = 'none';
-          document.getElementById('section-jobs').style.display = 'none';
-          document.getElementById('section-users').style.display = 'none';
-          
-          // Hide Top Inner Tabs if we are in Users mode
-          const innerTabs = document.querySelector('.admin-tabs');
-          if(innerTabs) innerTabs.style.display = tab === 'users' ? 'none' : 'flex';
+        // Update Sidebar
+        document
+          .querySelectorAll(".navbar .nav-item")
+          .forEach((el) => el.classList.remove("active"));
+        if (element) element.classList.add("active");
 
-          // Show specific
-          if (tab === 'applications') {
-              document.getElementById('section-apps').style.display = 'block';
-              document.getElementById('tab-apps').classList.add('active');
-              document.getElementById('tab-jobs').classList.remove('active');
-              loadApplications();
-          } else if (tab === 'jobs') {
-              document.getElementById('section-jobs').style.display = 'block';
-              document.getElementById('tab-jobs').classList.add('active');
-              document.getElementById('tab-apps').classList.remove('active');
-              loadAdminJobs();
-          } else if (tab === 'users') {
-              document.getElementById('section-users').style.display = 'block';
-          }
+        // Hide all sections
+        document.getElementById("section-apps").style.display = "none";
+        document.getElementById("section-jobs").style.display = "none";
+        document.getElementById("section-users").style.display = "none";
+
+        // Hide Top Inner Tabs if we are in Users mode
+        const innerTabs = document.querySelector(".admin-tabs");
+        if (innerTabs)
+          innerTabs.style.display = tab === "users" ? "none" : "flex";
+
+        // Show specific
+        if (tab === "applications") {
+          document.getElementById("section-apps").style.display = "block";
+          document.getElementById("tab-apps").classList.add("active");
+          document.getElementById("tab-jobs").classList.remove("active");
+          loadApplications();
+        } else if (tab === "jobs") {
+          document.getElementById("section-jobs").style.display = "block";
+          document.getElementById("tab-jobs").classList.add("active");
+          document.getElementById("tab-apps").classList.remove("active");
+          loadAdminJobs();
+        } else if (tab === "users") {
+          document.getElementById("section-users").style.display = "block";
+        }
       }
 
       function switchTab(tab) {
-          // Links internal buttons to the unified function
-          switchAdminTab(tab === 'apps' ? 'applications' : 'jobs');
+        // Hide all sections
+        document.getElementById("section-apps").style.display = "none";
+        document.getElementById("section-jobs").style.display = "none";
+        document.getElementById("section-users").style.display = "none";
+
+        // Remove active class from all buttons
+        document.getElementById("tab-apps").classList.remove("active");
+        document.getElementById("tab-jobs").classList.remove("active");
+        document.getElementById("tab-users").classList.remove("active");
+
+        // Show specific section and set active tab
+        if (tab === "apps") {
+          document.getElementById("section-apps").style.display = "block";
+          document.getElementById("tab-apps").classList.add("active");
+        } else if (tab === "jobs") {
+          document.getElementById("section-jobs").style.display = "block";
+          document.getElementById("tab-jobs").classList.add("active");
+          loadAdminJobs();
+        } else if (tab === "users") {
+          document.getElementById("section-users").style.display = "block";
+          document.getElementById("tab-users").classList.add("active");
+        }
       }
-      
+
       // --- NEW: CREATE USER FUNCTION ---
       async function createNewUser() {
-          const payload = {
-              fullName: document.getElementById('newUser-name').value,
-              email: document.getElementById('newUser-email').value,
-              password: document.getElementById('newUser-password').value,
-              role: document.getElementById('newUser-role').value,
-              teamName: document.getElementById('newUser-agency').value
-          };
+        const payload = {
+          fullName: document.getElementById("newUser-name").value,
+          email: document.getElementById("newUser-email").value,
+          password: document.getElementById("newUser-password").value,
+          role: document.getElementById("newUser-role").value,
+          teamName: document.getElementById("newUser-agency").value,
+        };
 
-          if (!payload.email || !payload.password || !payload.fullName) {
-              return alert("Please fill in Name, Email, and Password.");
+        if (!payload.email || !payload.password || !payload.fullName) {
+          return alert("Please fill in Name, Email, and Password.");
+        }
+
+        const btn = document.getElementById("btn-create-user");
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+
+        try {
+          const res = await fetch("http://127.0.0.1:5000/api/admin/users", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            alert(data.message);
+            document.getElementById("newUser-name").value = "";
+            document.getElementById("newUser-email").value = "";
+            document.getElementById("newUser-password").value = "";
+            document.getElementById("newUser-agency").value = "";
+          } else {
+            alert("Error: " + data.error);
           }
+        } catch (e) {
+          console.error(e);
+          alert("Failed to connect to server.");
+        } finally {
+          btn.innerHTML = originalText;
+        }
+      }
 
-          const btn = document.getElementById('btn-create-user');
-          const originalText = btn.innerHTML;
-          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+      // --- NEW: CREATE USER FUNCTION ---
+      async function createNewUser() {
+        const payload = {
+          fullName: document.getElementById("newUser-name").value,
+          email: document.getElementById("newUser-email").value,
+          password: document.getElementById("newUser-password").value,
+          role: document.getElementById("newUser-role").value,
+          teamName: document.getElementById("newUser-agency").value,
+        };
 
-          try {
-              const res = await fetch('http://127.0.0.1:5000/api/admin/users', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(payload)
-              });
+        if (!payload.email || !payload.password || !payload.fullName) {
+          return alert("Please fill in Name, Email, and Password.");
+        }
 
-              const data = await res.json();
-              
-              if (res.ok) {
-                  alert(data.message);
-                  document.getElementById('newUser-name').value = '';
-                  document.getElementById('newUser-email').value = '';
-                  document.getElementById('newUser-password').value = '';
-                  document.getElementById('newUser-agency').value = '';
-              } else {
-                  alert("Error: " + data.error);
-              }
-          } catch (e) {
-              console.error(e);
-              alert("Failed to connect to server.");
-          } finally {
-              btn.innerHTML = originalText;
+        const btn = document.getElementById("btn-create-user");
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+
+        try {
+          const res = await fetch("http://127.0.0.1:5000/api/admin/users", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            alert(data.message);
+            document.getElementById("newUser-name").value = "";
+            document.getElementById("newUser-email").value = "";
+            document.getElementById("newUser-password").value = "";
+            document.getElementById("newUser-agency").value = "";
+          } else {
+            alert("Error: " + data.error);
           }
+        } catch (e) {
+          console.error(e);
+          alert("Failed to connect to server.");
+        } finally {
+          btn.innerHTML = originalText;
+        }
       }
 
       async function loadApplications() {
