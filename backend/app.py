@@ -34,7 +34,6 @@ if not GEMINI_API_KEY:
 
 genai.configure(api_key=GEMINI_API_KEY)
 
-
 SERVER_NAME = r'localhost\SQLEXPRESS'
 SHEET_ID = "1oYDMBIXMCrIdfDbf-EFhuPal0NYo5jphkkX3AWYonjU"
 SHEET_NAME = "Wolves Master sheet 2"
@@ -95,7 +94,6 @@ def run_gemini_audio_analysis(file_path):
         # 3. Use the fast Flash model
         model = genai.GenerativeModel('gemini-2.5-flash')
 
-        
         # 3. Apply the Ultimate HR Prompt (Strictly Calibrated to the Recruiter's Ear)
         prompt = """
         You are an expert CEFR English Examiner and Technical Recruiter. Listen to the candidate's audio natively.
@@ -196,7 +194,6 @@ def ai_worker(app_id, file_path):
             conn = get_db_connection()
             if conn:
                 c = conn.cursor()
-                # Update the SQL execution to save the 3 new columns!
                 c.execute(
                     """UPDATE JobApplications 
                        SET Transcription=?, AI_Rating=?, AI_Summary=?, SpeechRate=0,
@@ -208,7 +205,7 @@ def ai_worker(app_id, file_path):
                 )
                 conn.commit()
                 conn.close()
-                # --- NEW: Trigger WhatsApp Bot ---
+                
                 # Fetch the candidate's details from the database
                 conn2 = get_db_connection()
                 c2 = conn2.cursor()
@@ -217,260 +214,14 @@ def ai_worker(app_id, file_path):
                 conn2.close()
             
                 if candidate_data and candidate_data[1]:
-                    c_name = candidate_data[0].split()[0] # Get first name
+                    c_name = candidate_data[0].split()[0]
                     c_whatsapp = candidate_data[1]
                     c_job = candidate_data[2]
-                
-                    # print(f"🤖 AI Finished. Handing over to WhatsApp Bot for {c_name}...")
-                    # process_job_offer(app_id, ai_data['overall_level'], c_name, c_whatsapp, c_job)
         else:
             print("❌ AI returned no response.")
 
     except Exception as e:
         print(f"❌ Worker Error: {e}")
-
-
-# --- WHATSAPP BOT ENGINE ---
-# def send_whatsapp_message(to_number, message_body):
-    # try:
-    #     # Format number for Twilio (e.g., +201234567890 -> whatsapp:+201234567890)
-    #     # Assuming the user inputted their number with the country code
-    #     if not to_number.startswith('+'):
-    #         to_number = '+' + to_number
-            
-    #     formatted_number = f"whatsapp:{to_number}"
-        
-    #     client = Client(os.getenv("TWILIO_ACCOUNT_SID"), os.getenv("TWILIO_AUTH_TOKEN"))
-    #     message = client.messages.create(
-    #         from_=os.getenv("TWILIO_WHATSAPP_NUMBER"),
-    #         body=message_body,
-    #         to=formatted_number
-    #     )
-    #     print(f"📱 WhatsApp sent to {to_number}! Message SID: {message.sid}")
-    # except Exception as e:
-    #     print(f"❌ Failed to send WhatsApp: {e}")
-
-# --- 1. UPDATED WHATSAPP BOT ENGINE WITH FULL DETAILS ---
-# def process_job_offer_manual(candidate_name, whatsapp_number, job_title, decision, custom_job="", job_data=None, ai_feedback=""):
-    # Default fallback data just in case the job was deleted
-#     if not job_data:
-#         job_data = {
-#             "CompanyName": "Dark Wolves", "AccountType": "TBD", "WorkingHours": "Standard US Hours", 
-#             "SalaryPackage": "Competitive", "Location": "Remote", "Training": "Paid Training provided", "OfferDetails": "Welcome to the team."
-#         }
-
-#     if decision == 'accept_original':
-#         msg = f"""🎉 *OFFICIAL JOB OFFER: {job_data['CompanyName']}* 🎉
-
-# Hello {candidate_name}! 
-# Congratulations! We have reviewed your AI Voice Analysis and you passed our English requirement. We are thrilled to officially offer you the position of *{job_title}*!
-
-# 📋 *Offer Details:*
-# • *Role:* {job_title}
-# • *Account Type:* {job_data['AccountType']}
-# • *Location:* {job_data['Location']}
-# • *Working Hours:* {job_data['WorkingHours']}
-# • *Salary Package:* {job_data['SalaryPackage']}
-# • *Training:* {job_data['Training']}
-
-# 🐺 *Extra Offer Notes:* {job_data['OfferDetails']}
-
-# 🚀 *Next Steps:*
-# To secure your spot, please reply to this message with exactly *"ACCEPT"*. Once received, our HR team will reach out with the contract.
-
-# If you are no longer interested, please reply *"DECLINE"*."""
-
-#     elif decision == 'offer_alternative':
-#         msg = f"""🐺 *APPLICATION UPDATE: Dark Wolves* 🐺
-
-# Hello {candidate_name},
-# Thank you for applying! While your English profile is fantastic, that specific campaign requires a different dialect profile. However, we were incredibly impressed by you and would love to officially offer you a position as a *{custom_job}* instead!
-
-# Please reply *"ACCEPT"* to begin onboarding for this new role, or *"DECLINE"* if you are passing on this offer."""
-
-#     elif decision == 'reject':
-#         msg = f"""Hello {candidate_name},
-
-# Thank you for submitting your voice introduction for the {job_title} role. 
-
-# After reviewing your AI proficiency report, we have decided to move forward with other candidates whose English profiles more closely align with our current client campaign requirements. 
-
-# 🐺 *AI Feedback Tip:* {ai_feedback}
-
-# We keep all applications on file and wish you the best in your career!"""
-#     else:
-#         return False
-
-#     send_whatsapp_message(whatsapp_number, msg)
-#     return True
-
-# --- GOOGLE SHEETS AUTO-EXPORT (ENTERPRISE ROUTING) ---
-# def export_to_google_sheet(app_id):
-    # try:
-    #     conn = get_db_connection()
-    #     c = conn.cursor()
-        
-    #     # 1. Fetch Candidate Data + Job Company + Recruiter's Hierarchy Data
-    #     # We use a SQL JOIN to automatically find the Recruiter's Leader and Unit Manager!
-    #     c.execute("""
-    #         SELECT 
-    #             a.FullName, a.Email, a.Phone, a.DateOfBirth, a.GraduationStatus, 
-    #             a.FacultyUniversity, a.MilitaryStatus, a.Nationality, a.NationalID, 
-    #             a.ClientPanel, a.Company, a.RecruiterSource,
-    #             u.TeamName, u.UnitName
-    #         FROM JobApplications a
-    #         LEFT JOIN Users u ON a.RecruiterSource = u.FullName
-    #         WHERE a.ApplicationID=?
-    #     """, (app_id,))
-        
-    #     app_data = c.fetchone()
-    #     conn.close()
-
-    #     if not app_data: return
-
-    #     # Unpack the data cleanly
-    #     name, email, phone, dob_val, grad, faculty, military, nationality, nid, panel, company, recruiter, leader, unit_manager = app_data
-
-    #     # 2. Format Data & Fallbacks
-    #     if not recruiter or recruiter == 'Direct/Organic': 
-    #         recruiter = "Direct"
-    #     leader = leader or "Unassigned Leader"
-    #     unit_manager = unit_manager or "Ibrahim Yasser" # Defaults to you if empty!
-
-    #     # Calculate Age
-    #     age = "N/A"
-    #     if dob_val:
-    #         dob = datetime.datetime.strptime(str(dob_val), '%Y-%m-%d')
-    #         age = int((datetime.datetime.now() - dob).days / 365.25)
-            
-    #     # Format the Date exactly like "Monday 2/3"
-    #     today = datetime.datetime.now()
-    #     formatted_date = f"{today.strftime('%A')} {today.day}/{today.month}"
-
-    #     # 3. Connect to Google Sheets
-    #     scopes = ['https://www.googleapis.com/auth/spreadsheets']
-    #     creds = Credentials.from_service_account_file('credentials.json', scopes=scopes)
-    #     client = gspread.authorize(creds)
-        
-    #     # Open your master file
-    #     sheet_file = client.open_by_key(SHEET_ID)
-        
-    #     # 4. DYNAMIC TAB ROUTING
-    #     # Try to open the tab matching the Company Name (e.g., 'CNX')
-    #     try:
-    #         worksheet = sheet_file.worksheet(company)
-    #     except gspread.exceptions.WorksheetNotFound:
-    #         print(f"⚠️ Tab for '{company}' not found! Falling back to Sheet1.")
-    #         worksheet = sheet_file.sheet1
-        
-    #     # 5. Construct the massive row
-    #     row_data = [
-    #         formatted_date, # E.g., Monday 2/3
-    #         name,           
-    #         email,          
-    #         phone,          
-    #         age,            
-    #         grad,           
-    #         faculty,        
-    #         military,       
-    #         str(dob_val) if dob_val else 'N/A', 
-    #         nationality,    
-    #         nid,            
-    #         panel,          # The AI written pitch
-    #         recruiter,      # The ?ref= referral name
-    #         leader,         # Auto-mapped from Users DB
-    #         unit_manager    # Auto-mapped from Users DB
-    #     ]
-        
-    #     # Append it to the very bottom of that specific company's tab
-    #     worksheet.append_row(row_data)
-    #     print(f"✅ Successfully exported {name} to Google Sheets -> Tab: {company}")
-        
-    # except Exception as e:
-    #     print(f"❌ Google Sheets Export Failed: {e}")
-    # try:
-    #     conn = get_db_connection()
-    #     c = conn.cursor()
-    #     # FIX: Changed (id,) to (app_id,)
-    #     c.execute("SELECT FullName, Email, Phone, DateOfBirth, GraduationStatus, FacultyUniversity, MilitaryStatus, Nationality, NationalID, ClientPanel FROM JobApplications WHERE ApplicationID=?", (app_id,))
-    #     app_data = c.fetchone()
-    #     conn.close()
-
-    #     if not app_data: return
-
-    #     # Calculate Age
-    #     age = "N/A"
-    #     if app_data[3]:
-    #         dob = datetime.datetime.strptime(str(app_data[3]), '%Y-%m-%d')
-    #         age = int((datetime.datetime.now() - dob).days / 365.25)
-
-    #     # Connect to Google Sheets
-    #     scopes = ['https://www.googleapis.com/auth/spreadsheets']
-    #     creds = Credentials.from_service_account_file('credentials.json', scopes=scopes)
-    #     client = gspread.authorize(creds)
-        
-    #     # Open your exact sheet
-    #     sheet = client.open_by_key(SHEET_ID).sheet1
-        
-    #     # Append the row exactly how your CEO wants it
-    #     row_data = [
-    #         app_data[0], # Name
-    #         app_data[1], # Email
-    #         app_data[2], # Phone
-    #         age,         # Calculated Age
-    #         app_data[4], # Grad Status
-    #         app_data[5], # Faculty
-    #         app_data[6], # Military
-    #         str(app_data[3]), # DOB
-    #         app_data[7], # Nationality
-    #         app_data[8], # National ID
-    #         app_data[9]  # AI Client Panel
-    #     ]
-    #     sheet.append_row(row_data)
-    #     print(f"✅ Successfully exported {app_data[0]} to Google Sheets!")
-    # except Exception as e:
-    #     print(f"❌ Google Sheets Export Failed: {e}")
-    # try:
-    #     conn = get_db_connection()
-    #     c = conn.cursor()
-    #     c.execute("SELECT FullName, Email, Phone, DateOfBirth, GraduationStatus, FacultyUniversity, MilitaryStatus, Nationality, NationalID, ClientPanel FROM JobApplications WHERE ApplicationID=?", (id,))
-    #     app_data = c.fetchone()
-    #     conn.close()
-
-    #     if not app_data: return
-
-    #     # Calculate Age
-    #     age = "N/A"
-    #     if app_data[3]:
-    #         dob = datetime.datetime.strptime(str(app_data[3]), '%Y-%m-%d')
-    #         age = int((datetime.datetime.now() - dob).days / 365.25)
-
-    #     # Connect to Google Sheets
-    #     scopes = ['https://www.googleapis.com/auth/spreadsheets']
-    #     creds = Credentials.from_service_account_file('credentials.json', scopes=scopes)
-    #     client = gspread.authorize(creds)
-        
-    #     # Open your exact sheet
-    #     sheet = client.open_by_key(SHEET_ID).sheet1
-        
-    #     # Append the row exactly how your CEO wants it
-    #     row_data = [
-    #         app_data[0], # Name
-    #         app_data[1], # Email
-    #         app_data[2], # Phone
-    #         age,         # Calculated Age
-    #         app_data[4], # Grad Status
-    #         app_data[5], # Faculty
-    #         app_data[6], # Military
-    #         str(app_data[3]), # DOB
-    #         app_data[7], # Nationality
-    #         app_data[8], # National ID
-    #         app_data[9]  # AI Client Panel
-    #     ]
-    #     sheet.append_row(row_data)
-    #     print(f"✅ Successfully exported {app_data[0]} to Google Sheets!")
-    # except Exception as e:
-    #     print(f"❌ Google Sheets Export Failed: {e}")
 
 # --- WHATSAPP BOT ENGINE (MOCKED FOR BUDGET) ---
 def send_whatsapp_message(to_number, message_body):
@@ -480,8 +231,6 @@ def send_whatsapp_message(to_number, message_body):
 
 def process_job_offer_manual(candidate_name, whatsapp_number, job_title, decision, custom_job="", job_data=None, ai_feedback=""):
     print(f"🛑 [BUDGET MODE] Processing {decision} for {candidate_name}...")
-    
-    # Just simulate a successful message generation
     msg = f"Simulated {decision} message for {candidate_name}."
     send_whatsapp_message(whatsapp_number, msg)
     return True
@@ -503,7 +252,6 @@ def send_offer(id):
         conn = get_db_connection()
         c = conn.cursor()
         
-        # 1. Get Candidate Data AND the AI Feedback
         c.execute("SELECT FullName, WhatsApp, JobTitle, ConstructiveFeedback FROM JobApplications WHERE ApplicationID=?", (id,))
         app_row = c.fetchone()
         
@@ -514,9 +262,8 @@ def send_offer(id):
         c_name = app_row[0].split()[0]
         c_whatsapp = app_row[1]
         c_job = app_row[2]
-        ai_feedback = app_row[3] or "Keep practicing your pronunciation!" # Catch the feedback here
+        ai_feedback = app_row[3] or "Keep practicing your pronunciation!" 
 
-        # 2. Fetch Job Details
         c.execute("SELECT CompanyName, AccountType, WorkingHours, SalaryPackage, Location, Training, OfferDetails FROM Jobs WHERE JobTitle=?", (c_job,))
         job_row = c.fetchone()
         
@@ -528,7 +275,6 @@ def send_offer(id):
             }
         conn.close()
 
-        # 3. Send message (Pass the ai_feedback into the function)
         success = process_job_offer_manual(c_name, c_whatsapp, c_job, decision, custom_job, job_data, ai_feedback)
         if success:
             return jsonify({"message": "WhatsApp message sent successfully!"}), 200
@@ -551,12 +297,12 @@ def get_public_jobs():
             formatted_jobs.append({
                 "id": j.get("JobID"),
                 "title": j.get("JobTitle", "Unknown Title"),
-                "company": j.get("CompanyName", "Voxa"),
+                "company": j.get("CompanyName", "Dark Wolves"),
                 "location": j.get("Location") or "Remote",
                 "salary": j.get("SalaryPackage") or "Competitive",
                 "requirements": f"Account: {j.get('AccountType', 'N/A')} | Hours: {j.get('WorkingHours', 'N/A')} | Target: {j.get('TargetAudience', 'N/A')}",
                 "description": j.get("OfferDetails", ""),
-                "logo": j.get("CompanyName", "VX")[:2].upper(), # Fixed the missing comma here!
+                "logo": j.get("CompanyName", "DW")[:2].upper(),
                 "bilingual": bool(j.get("RequiresSecondLanguage", False))
             })
 
@@ -597,9 +343,7 @@ def update_delete_job(id):
     if request.method == 'PUT':
         data = request.get_json()
         
-        # SMART UPDATE: Check if this is a full job edit, or just a status toggle
         if 'jobTitle' in data:
-            # It's a full form edit
             c.execute(
                 """UPDATE Jobs 
                    SET CompanyName=?, JobTitle=?, AccountType=?, WorkingHours=?, 
@@ -612,7 +356,6 @@ def update_delete_job(id):
                  data.get('offerDetails'), int(data.get('requiresSecondLanguage', 0)), id)
             )
         else:
-            # It's just a status toggle (Active/On Hold)
             c.execute("UPDATE Jobs SET Status=? WHERE JobID=?", (data.get('status'), id))
             
         conn.commit()
@@ -640,7 +383,6 @@ def update_application_status(id):
         conn.commit()
         conn.close()
         
-        # --- NEW: IF ACCEPTED, EXPORT TO SHEET AUTOMATICALLY ---
         if new_status == 'Accepted':
             threading.Thread(target=export_to_google_sheet, args=(id,)).start()
         
@@ -648,22 +390,31 @@ def update_application_status(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ==========================================
-# SUPER ADMIN: USER MANAGEMENT
-# ==========================================
+@app.route('/api/whatsapp/reply', methods=['POST'])
+def whatsapp_reply():
+    incoming_msg = request.values.get('Body', '').strip().lower()
+    resp = MessagingResponse()
+    msg = resp.message()
 
+    if 'accept' in incoming_msg:
+        msg.body("🐺 Awesome! Welcome to the pack. Our HR team will reach out shortly with your contract and onboarding details.")
+    elif 'decline' in incoming_msg:
+        msg.body("Understood. Thank you for your time, and we wish you the best of luck in your career!")
+    else:
+        msg.body("I didn't quite catch that. Please reply with 'ACCEPT' or 'DECLINE'.")
+
+    return str(resp)
+
+# --- USER MANAGEMENT ROUTES ---
 @app.route('/api/admin/users', methods=['POST'])
 def create_user():
-    # Only SuperAdmins should ideally hit this, but we'll accept the payload
     data = request.get_json()
-    
     full_name = data.get('fullName')
     email = data.get('email')
     password = data.get('password')
-    role = data.get('role', 'Recruiter') # Default to Recruiter
-    team_name = data.get('teamName', 'Dark Wolves') # This acts as the Agency Name for Validators
+    role = data.get('role', 'Recruiter')
+    team_name = data.get('teamName', 'Dark Wolves') 
     
-    # Basic validation
     if not email or not password or not full_name:
         return jsonify({"error": "Missing required fields"}), 400
 
@@ -671,17 +422,13 @@ def create_user():
         conn = get_db_connection()
         c = conn.cursor()
         
-        # Check if email already exists
         c.execute("SELECT UserID FROM Users WHERE Email = ?", (email,))
         if c.fetchone():
             conn.close()
             return jsonify({"error": "Email already exists"}), 400
             
-        # Hash the password for security
         hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
-        # Insert the new user
-        # Note: Adjust column names if your Users table uses different names
         c.execute("""
             INSERT INTO Users (FullName, Email, PasswordHash, Role, TeamName)
             VALUES (?, ?, ?, ?, ?)
@@ -694,98 +441,6 @@ def create_user():
     except Exception as e:
         print(f"Error creating user: {e}")
         return jsonify({"error": str(e)}), 500
-
-# ==========================================
-# VALIDATOR MULTI-AGENCY ROUTES
-# ==========================================
-
-@app.route('/api/validator/applications', methods=['GET'])
-def get_validator_applications():
-    # This fetches all applications, but joins the specific Agency's grade to it
-    agency = request.args.get('agency', 'Unknown')
-    
-    try:
-        conn = get_db_connection()
-        c = conn.cursor()
-        
-        # We use a LEFT JOIN so we see all candidates, but only the grade from THIS specific agency
-        c.execute("""
-            SELECT 
-                a.ApplicationID, a.FullName, a.Phone, a.JobTitle, a.RecruiterSource, 
-                a.AI_Rating, a.AI_Report, a.VoiceRecordPath, a.VoiceRecordPath2,
-                v.HumanGrade AS AgencyGrade, v.ValidatorNotes
-            FROM JobApplications a
-            LEFT JOIN ValidatorGrades v ON a.ApplicationID = v.ApplicationID AND v.AgencyName = ?
-            ORDER BY a.SubmittedAt DESC
-        """, (agency,))
-        
-        cols = [column[0] for column in c.description]
-        data = [dict(zip(cols, row)) for row in c.fetchall()]
-        conn.close()
-        return jsonify(data)
-    except Exception as e:
-        print(f"Validator Fetch Error: {e}")
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/api/validator/grade', methods=['POST'])
-def submit_validator_grade():
-    # This safely inserts or updates a grade for ONE specific agency
-    data = request.get_json()
-    app_id = data.get('applicationId')
-    agency = data.get('agencyName')
-    grade = data.get('grade')
-    notes = data.get('notes', '')
-    
-    try:
-        conn = get_db_connection()
-        c = conn.cursor()
-        
-        # Check if this agency has already graded this candidate
-        c.execute("SELECT GradeID FROM ValidatorGrades WHERE ApplicationID = ? AND AgencyName = ?", (app_id, agency))
-        existing = c.fetchone()
-        
-        if existing:
-            # Update existing grade
-            c.execute("""
-                UPDATE ValidatorGrades 
-                SET HumanGrade = ?, ValidatorNotes = ?, GradedAt = GETDATE()
-                WHERE ApplicationID = ? AND AgencyName = ?
-            """, (grade, notes, app_id, agency))
-        else:
-            # Insert new grade
-            c.execute("""
-                INSERT INTO ValidatorGrades (ApplicationID, AgencyName, HumanGrade, ValidatorNotes)
-                VALUES (?, ?, ?, ?)
-            """, (app_id, agency, grade, notes))
-            
-        conn.commit()
-        conn.close()
-        return jsonify({"message": "Grade saved successfully"})
-    except Exception as e:
-        print(f"Validator Grade Error: {e}")
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/whatsapp/reply', methods=['POST'])
-def whatsapp_reply():
-    # Get the message the candidate sent
-    incoming_msg = request.values.get('Body', '').strip().lower()
-    sender_number = request.values.get('From', '')
-
-    # Create a Twilio response object
-    resp = MessagingResponse()
-    msg = resp.message()
-
-    if 'accept' in incoming_msg:
-        # Here you could write an SQL command to update their status in the DB to "Accepted"
-        msg.body("🐺 Awesome! Welcome to the pack. Our HR team will reach out shortly with your contract and onboarding details.")
-    elif 'decline' in incoming_msg:
-        # Here you could update their status to "Declined"
-        msg.body("Understood. Thank you for your time, and we wish you the best of luck in your career!")
-    else:
-        msg.body("I didn't quite catch that. Please reply with 'ACCEPT' or 'DECLINE'.")
-
-    return str(resp)
 
 @app.route('/api/signup', methods=['POST'])
 def signup():
@@ -802,7 +457,7 @@ def signup():
             if c.fetchone(): return jsonify({"error": "Email already exists"}), 400
 
             hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-            c.execute("INSERT INTO Users (FullName, Email, PasswordHash) VALUES (?, ?, ?)", (full_name, email, hashed_pw))
+            c.execute("INSERT INTO Users (FullName, Email, PasswordHash, Role, TeamName) VALUES (?, ?, ?, 'Candidate', 'None')", (full_name, email, hashed_pw))
             conn.commit()
             conn.close()
             return jsonify({"message": "Signup successful"}), 201
@@ -820,16 +475,27 @@ def login():
         conn = get_db_connection()
         if conn:
             c = conn.cursor()
-            c.execute("SELECT FullName, Email, PasswordHash, IsAdmin FROM Users WHERE Email=?", (email,))
+            # MODIFIED: Now pulls Role and TeamName to power the Smart Routing
+            c.execute("SELECT FullName, Email, PasswordHash, Role, TeamName FROM Users WHERE Email=?", (email,))
             user_row = c.fetchone()
             conn.close()
 
             if user_row:
                 stored_hash = user_row[2]
                 if bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8')):
+                    
+                    role = user_row[3] if len(user_row) > 3 else 'Candidate'
+                    team = user_row[4] if len(user_row) > 4 else ''
+                    
                     return jsonify({
                         "message": "Login successful", 
-                        "user": {"name": user_row[0], "email": user_row[1], "isAdmin": bool(user_row[3])}
+                        "user": {
+                            "name": user_row[0], 
+                            "email": user_row[1], 
+                            "role": role,
+                            "team": team,
+                            "isAdmin": role in ['Admin', 'SuperAdmin']
+                        }
                     }), 200
             
             return jsonify({"error": "Invalid email or password"}), 401
@@ -856,7 +522,6 @@ def apply():
         fn = secure_filename(f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}_{f.filename}")
         f.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
 
-        # Handle the second file cleanly
         fn2 = None
         if 'voiceRecord2' in request.files:
             f2 = request.files['voiceRecord2']
@@ -867,8 +532,6 @@ def apply():
         conn = get_db_connection()
         c = conn.cursor()
         d = request.form
-        
-        # Fixed the duplicate column crash here!
         c.execute(
             """INSERT INTO JobApplications 
             (JobTitle, Company, FullName, Email, Phone, WhatsApp, EnglishLevel, Experience, 
@@ -883,9 +546,7 @@ def apply():
         conn.commit()
         conn.close()
         return jsonify({"message": "OK"}), 201
-    except Exception as e: 
-        print(f"Application Error: {e}")
-        return jsonify({"error": str(e)}), 500
+    except Exception as e: return jsonify({"error": str(e)}), 500
 
 @app.route('/api/admin/analyze/<int:id>', methods=['POST'])
 def analyze(id):
@@ -904,14 +565,12 @@ def analyze(id):
 @app.route('/api/admin/applications', methods=['GET'])
 def apps():
     try:
-        # Get the email of the person requesting the data
         user_email = request.args.get('email')
         if not user_email: return jsonify([])
 
         conn = get_db_connection()
         c = conn.cursor()
         
-        # Find out who this user is and what their role is
         c.execute("SELECT FullName, Role, TeamName, UnitName FROM Users WHERE Email=?", (user_email,))
         user_data = c.fetchone()
         
@@ -921,13 +580,10 @@ def apps():
             
         u_name, u_role, u_team, u_unit = user_data
 
-        # FILTER DATA BASED ON HIERARCHY
-        if u_role in ['Admin', 'CEO']:
-            # CEO/Admin sees everyone
+        if u_role in ['Admin', 'SuperAdmin', 'CEO']:
             c.execute("SELECT * FROM JobApplications ORDER BY SubmittedAt DESC")
             
         elif u_role == 'UnitManager':
-            # Sees everyone whose Recruiter belongs to their Unit
             c.execute("""
                 SELECT a.* FROM JobApplications a
                 LEFT JOIN Users u ON a.RecruiterSource = u.FullName
@@ -935,7 +591,6 @@ def apps():
             """, (u_unit,))
             
         elif u_role == 'Leader':
-            # Sees everyone whose Recruiter belongs to their Team
             c.execute("""
                 SELECT a.* FROM JobApplications a
                 LEFT JOIN Users u ON a.RecruiterSource = u.FullName
@@ -943,7 +598,6 @@ def apps():
             """, (u_team,))
             
         else:
-            # Standard Recruiter only sees candidates who used their specific ?ref=Name link
             c.execute("SELECT * FROM JobApplications WHERE RecruiterSource = ? ORDER BY SubmittedAt DESC", (u_name,))
 
         cols = [x[0] for x in c.description]

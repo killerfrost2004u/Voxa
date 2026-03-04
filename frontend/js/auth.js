@@ -80,30 +80,29 @@ if (loginForm) {
 
       const data = await response.json();
 
-      // ... (inside the try block after getting result)
       if (response.ok) {
-        // Save user data to localStorage
+        // FIXED: Replaced 'result' with 'data.user'
         localStorage.setItem(
           "user",
           JSON.stringify({
-            name: result.name,
-            email: result.email,
-            role: result.role,
-            team: result.team, // This is their Agency Name
+            name: data.user.name,
+            email: data.user.email,
+            role: data.user.role,
+            team: data.user.team, // This is their Agency Name
+            isAdmin: data.user.isAdmin // Preserves your admin checks
           }),
         );
 
         // SMART ROUTING BASED ON ROLE
-        if (result.role === "SuperAdmin" || result.role === "Admin") {
+        if (data.user.role === "SuperAdmin" || data.user.role === "Admin") {
           window.location.href = "admin.html";
-        } else if (result.role === "Validator") {
+        } else if (data.user.role === "Validator") {
           window.location.href = "validator.html";
         } else {
-          // Regular candidates go to the dashboard
+          // Regular candidates or recruiters go to the dashboard
           window.location.href = "dashboard.html";
         }
       } else {
-        // ... (handle error) else {
         throw new Error(data.error || "Login failed");
       }
     } catch (err) {
