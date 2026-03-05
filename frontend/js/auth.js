@@ -30,8 +30,19 @@ if (signupForm) {
     const fullName = document.getElementById("signup-name").value;
     const email = document.getElementById("signup-email").value;
     const password = document.getElementById("signup-password").value;
+
+    const termsChecked = document.getElementById("legal-checkbox").checked;
+    
     const errorMsg = document.getElementById("signup-error");
     const successMsg = document.getElementById("signup-success");
+
+    if (!termsChecked) {
+      errorMsg.textContent =
+        "You must agree to the Terms of Service and Privacy Policy.";
+      errorMsg.style.display = "block";
+      successMsg.style.display = "none";
+      return; // Stop the signup process immediately
+    }
 
     try {
       const response = await fetch(`${API_URL}/signup`, {
@@ -89,7 +100,7 @@ if (loginForm) {
             email: data.user.email,
             role: data.user.role,
             team: data.user.team, // This is their Agency Name
-            isAdmin: data.user.isAdmin // Preserves your admin checks
+            isAdmin: data.user.isAdmin, // Preserves your admin checks
           }),
         );
 

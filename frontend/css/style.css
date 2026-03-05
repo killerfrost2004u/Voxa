@@ -747,20 +747,26 @@ select {
 /* =========================================
    5. FORMS & MODALS
    ========================================= */
-.apply-container form,
-.contact-container form,
-.main-form,
-.auth-box {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  padding: 2.5rem;
-  border-radius: 12px;
-  max-width: 700px;
-  margin: 2rem auto;
-  box-sizing: border-box;
+.apply-container form, .contact-container form, .main-form { 
+    background: var(--bg-card); 
+    border: 1px solid var(--border-color); 
+    padding: 2.5rem; 
+    border-radius: 12px; 
+    max-width: 700px; 
+    margin: 2rem auto; 
+    box-sizing: border-box; 
 }
-.auth-box {
-  max-width: 400px;
+
+/* Removed .auth-box from the shared block above and gave it its own specific rules */
+.auth-box { 
+    background: var(--bg-card); 
+    border: 1px solid var(--border-color); 
+    padding: 2.5rem; 
+    border-radius: 12px; 
+    max-width: 400px; 
+    width: 100%;
+    margin: 0 auto; 
+    box-shadow: var(--shadow);
 }
 .auth-container {
   display: flex;
