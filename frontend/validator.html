@@ -15,7 +15,7 @@
   </head>
   <body>
     <aside class="sidebar">
-      <div class="logo">VO<span>XA</span></div>
+      <a href="index.html" style="text-decoration: none;"><div class="logo">VO<span>XA</span></div></a>
       <nav>
         <div class="nav-item active">
           <i class="fas fa-check-circle"></i> Validate Candidates
@@ -87,6 +87,151 @@
       </section>
     </main>
 
+    <div
+      id="validation-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        backdrop-filter: blur(5px);
+      ">
+      <div
+        style="
+          background: var(--bg-card);
+          padding: 2rem;
+          border-radius: 12px;
+          width: 90%;
+          max-width: 400px;
+          border: 1px solid var(--border-color);
+          box-shadow: var(--shadow);
+        ">
+        <h2
+          style="color: var(--text-main); margin-top: 0; margin-bottom: 0.5rem">
+          <i
+            class="fas fa-clipboard-check"
+            style="color: var(--primary-color)"></i>
+          Submit Validation
+        </h2>
+        <p
+          style="
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+          ">
+          Provide your agency's final grade and internal notes.
+        </p>
+
+        <input type="hidden" id="val-app-id" />
+
+        <label
+          style="
+            display: block;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+          "
+          >Final Grade <span style="color: var(--primary-color)">*</span></label
+        >
+        <select
+          id="val-grade"
+          style="
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            margin-bottom: 1rem;
+            outline: none;
+            font-family: inherit;
+            font-size: 1rem;
+          ">
+          <option value="A1">A1 (Beginner)</option>
+          <option value="A2">A2 (Pre-Int)</option>
+          <option value="B1">B1 (Intermediate)</option>
+          <option value="B1+">B1+ (Strong Int)</option>
+          <option value="B2">B2 (Upper Int)</option>
+          <option value="B2+">B2+ (Advanced Int)</option>
+          <option value="C1">C1 (Advanced)</option>
+          <option value="C1+">C1+ (Fluent)</option>
+          <option value="C2">C2 (Mastery)</option>
+          <option value="Rejected" style="color: #ef4444; font-weight: bold">
+            Failed / Rejected
+          </option>
+        </select>
+
+        <label
+          style="
+            display: block;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+          "
+          >Notes for Super Admin</label
+        >
+        <textarea
+          id="val-notes"
+          placeholder="Write feedback regarding accent, shift availability, or interview notes..."
+          style="
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            margin-bottom: 1.5rem;
+            outline: none;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+            box-sizing: border-box;
+          "></textarea>
+
+        <div style="display: flex; gap: 10px">
+          <button
+            onclick="closeValModal()"
+            style="
+              flex: 1;
+              padding: 12px;
+              background: var(--bg-input);
+              border: 1px solid var(--border-color);
+              color: var(--text-main);
+              border-radius: 6px;
+              cursor: pointer;
+              font-weight: bold;
+              transition: 0.2s;
+            ">
+            Cancel
+          </button>
+          <button
+            id="btn-save-grade"
+            onclick="saveAgencyGrade()"
+            style="
+              flex: 1;
+              padding: 12px;
+              background: var(--primary-color);
+              border: none;
+              color: #000;
+              border-radius: 6px;
+              cursor: pointer;
+              font-weight: bold;
+              transition: 0.2s;
+            ">
+            Save Grade
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script>
       let currentAgency = "";
       let applicationsData = [];
@@ -97,7 +242,6 @@
 
         const user = JSON.parse(userStr);
 
-        // SECURITY CHECK
         if (
           user.role !== "Validator" &&
           user.role !== "SuperAdmin" &&
@@ -117,7 +261,6 @@
 
       async function loadApplications() {
         try {
-          // Fetch ALL applications, joining the specific agency's grades
           const res = await fetch(
             `http://127.0.0.1:5000/api/validator/applications?agency=${encodeURIComponent(currentAgency)}`,
           );
@@ -140,7 +283,6 @@
 
         tbody.innerHTML = data
           .map((app) => {
-            // Process Audio Elements
             const hasAudio1 =
               app.VoiceRecordPath &&
               app.VoiceRecordPath !== "null" &&
@@ -157,24 +299,28 @@
               ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:10px; margin-bottom:4px;">Secondary Audio:</div><audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath2}" class="custom-audio"></audio>`
               : "";
 
-            // Process AI Grade
             const aiGradeHTML =
               app.AI_Rating && app.AI_Rating !== "null"
                 ? `<span style="background:rgba(0, 229, 255, 0.1); color:var(--primary-color); padding:4px 8px; border-radius:6px; font-weight:bold; font-size:0.9rem; border: 1px solid var(--primary-color);">${app.AI_Rating}</span>`
                 : `<span style="color:var(--text-muted); font-style:italic;">Pending Analysis</span>`;
 
-            // Determine Current Agency Grade Status
-            const currentGrade = app.AgencyGrade || "Pending";
-            const isGraded = currentGrade !== "Pending";
+            // SMART BUTTON LOGIC
+            const currentGrade = app.AgencyGrade || null;
+            const isGraded = currentGrade !== null;
 
-            // Style the grade button based on status
             const gradeBtnStyle = isGraded
               ? `background: rgba(0, 229, 255, 0.1); color: var(--primary-color); border: 1px solid var(--primary-color);`
-              : `background: var(--bg-input); color: var(--text-main); border: 1px dashed var(--border-color);`;
+              : `background: var(--bg-input); color: var(--primary-color); border: 1px dashed var(--primary-color);`;
 
-            const gradeIcon = isGraded
-              ? `<i class="fas fa-edit" style="margin-left:8px; font-size:0.8rem; opacity:0.7;"></i>`
-              : ``;
+            // If it's graded, show the Grade (e.g. "C1"). If it's NOT graded, show "+ Add Validation"
+            const btnText = isGraded
+              ? `${currentGrade} <i class="fas fa-edit" style="margin-left:8px; font-size:0.8rem; opacity:0.7;"></i>`
+              : `<i class="fas fa-plus-circle"></i> Add Validation`;
+
+            // Safely format the notes so they don't break the HTML string
+            const safeNotes = app.ValidatorNotes
+              ? app.ValidatorNotes.replace(/'/g, "\\'").replace(/"/g, "&quot;")
+              : "";
 
             return `
                     <tr>
@@ -193,10 +339,10 @@
                         </td>
                         <td>${audio1}${audio2}</td>
                         <td>
-                            <button onclick="submitAgencyGrade(${app.ApplicationID})" style="padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.95rem; width: 100%; max-width: 150px; ${gradeBtnStyle}">
-                                ${currentGrade} ${gradeIcon}
+                            <button onclick="openValModal(${app.ApplicationID}, '${currentGrade || ""}', '${safeNotes}')" style="padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.95rem; width: 100%; max-width: 160px; ${gradeBtnStyle}">
+                                ${btnText}
                             </button>
-                            ${app.ValidatorNotes ? `<div style="font-size:0.8rem; color:var(--text-muted); margin-top:8px; max-width:150px; font-style:italic;">"${app.ValidatorNotes}"</div>` : ""}
+                            ${app.ValidatorNotes ? `<div style="font-size:0.85rem; color:var(--text-muted); margin-top:8px; max-width:180px; font-style:italic;">"Notes: ${app.ValidatorNotes}"</div>` : ""}
                         </td>
                     </tr>
                 `;
@@ -204,30 +350,62 @@
           .join("");
       }
 
-      async function submitAgencyGrade(appId) {
-        const grade = prompt(
-          `Enter ${currentAgency}'s validation grade (e.g. C1, B2, Rejected):`,
-        );
-        if (!grade) return;
+      // --- NEW MODAL LOGIC ---
+      function openValModal(appId, currentGrade, currentNotes) {
+        document.getElementById("val-app-id").value = appId;
 
-        const notes = prompt(
-          `Any specific internal notes for ${currentAgency}? (Optional)`,
-        );
+        // Set dropdown value (default to B2 if no grade exists)
+        const gradeSelect = document.getElementById("val-grade");
+        if (currentGrade && currentGrade !== "null") {
+          gradeSelect.value = currentGrade;
+        } else {
+          gradeSelect.value = "B2";
+        }
+
+        // Set notes
+        document.getElementById("val-notes").value =
+          currentNotes && currentNotes !== "null" ? currentNotes : "";
+
+        // Show modal
+        document.getElementById("validation-modal").style.display = "flex";
+      }
+
+      function closeValModal() {
+        document.getElementById("validation-modal").style.display = "none";
+      }
+
+      async function saveAgencyGrade() {
+        const appId = document.getElementById("val-app-id").value;
+        const grade = document.getElementById("val-grade").value;
+        const notes = document.getElementById("val-notes").value;
+        const btn = document.getElementById("btn-save-grade");
+
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        btn.disabled = true;
 
         try {
-          await fetch(`http://127.0.0.1:5000/api/validator/grade`, {
+          const res = await fetch(`http://127.0.0.1:5000/api/validator/grade`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               applicationId: appId,
               agencyName: currentAgency,
               grade: grade,
-              notes: notes || "",
+              notes: notes,
             }),
           });
-          loadApplications(); // Refresh the UI immediately
+
+          if (res.ok) {
+            closeValModal();
+            loadApplications(); // Refresh the table so they see the updated grade
+          } else {
+            alert("Failed to save grade to the server.");
+          }
         } catch (e) {
-          alert("Failed to save grade to the server.");
+          alert("Failed to connect to the server.");
+        } finally {
+          btn.innerHTML = "Save Grade";
+          btn.disabled = false;
         }
       }
 
