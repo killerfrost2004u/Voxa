@@ -282,6 +282,31 @@ def send_offer(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/admin/all-agency-grades', methods=['GET'])
+def get_all_agency_grades():
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Perform an INNER JOIN to get the candidate's name along with the external agency's grade
+        c.execute("""
+            SELECT 
+                a.FullName, a.Email, a.JobTitle, 
+                v.AgencyName, v.HumanGrade, v.ValidatorNotes, 
+                FORMAT(v.GradedAt, 'MMM dd, yyyy') as GradedAt
+            FROM ValidatorGrades v
+            INNER JOIN JobApplications a ON v.ApplicationID = a.ApplicationID
+            ORDER BY v.GradedAt DESC
+        """)
+        
+        cols = [column[0] for column in c.description]
+        data = [dict(zip(cols, row)) for row in c.fetchall()]
+        conn.close()
+        return jsonify(data)
+    except Exception as e:
+        print(f"Error fetching all agency grades: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/jobs', methods=['GET'])
 def get_public_jobs():
     try:

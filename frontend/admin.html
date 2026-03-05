@@ -316,6 +316,9 @@
         <button class="tab-btn" onclick="switchTab('users')" id="tab-users">
           <i class="fas fa-users"></i> User Management
         </button>
+        <button class="tab-btn" onclick="switchTab('agency')" id="tab-agency">
+          <i class="fas fa-building"></i> Agency Feedback
+        </button>
       </div>
 
       <div id="section-apps" class="data-table-container">
@@ -480,6 +483,24 @@
             </button>
           </div>
         </div>
+      </div>
+      <div
+        id="section-agency"
+        class="data-table-container"
+        style="display: none">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th width="180">Candidate</th>
+              <th width="180">Job Title</th>
+              <th width="150">Agency Name</th>
+              <th width="150">Agency Grade</th>
+              <th>Validator Notes</th>
+              <th width="150">Date Graded</th>
+            </tr>
+          </thead>
+          <tbody id="agency-feedback-body"></tbody>
+        </table>
       </div>
     </div>
 
@@ -918,11 +939,13 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
         document.getElementById("section-apps").style.display = "none";
         document.getElementById("section-jobs").style.display = "none";
         document.getElementById("section-users").style.display = "none";
+        document.getElementById("section-agency").style.display = "none";
 
         // Remove active class from all buttons
         document.getElementById("tab-apps").classList.remove("active");
         document.getElementById("tab-jobs").classList.remove("active");
         document.getElementById("tab-users").classList.remove("active");
+        document.getElementById("tab-agency").classList.remove("active");
 
         // Show specific section and set active tab
         if (tab === "apps") {
@@ -936,6 +959,48 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
         } else if (tab === "users") {
           document.getElementById("section-users").style.display = "block";
           document.getElementById("tab-users").classList.add("active");
+        } else if (tab === "agency") {
+          document.getElementById("section-agency").style.display = "block";
+          document.getElementById("tab-agency").classList.add("active");
+          loadAgencyFeedback(); // Fetch the new data
+        }
+      }
+
+      async function loadAgencyFeedback() {
+        const tbody = document.getElementById("agency-feedback-body");
+        tbody.innerHTML =
+          '<tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Loading feedback...</td></tr>';
+
+        try {
+          // We'll create this backend route next!
+          const res = await fetch(
+            "http://127.0.0.1:5000/api/admin/all-agency-grades",
+          );
+          const data = await res.json();
+
+          if (data.length === 0) {
+            tbody.innerHTML =
+              '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No external agency feedback submitted yet.</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = data
+            .map(
+              (row) => `
+                    <tr>
+                        <td><b>${row.FullName}</b><br><small style="color:var(--text-muted);">${row.Email}</small></td>
+                        <td>${row.JobTitle}</td>
+                        <td><span style="background:rgba(0, 229, 255, 0.1); color:var(--primary-color); padding:4px 8px; border-radius:4px; font-weight:bold; font-size:0.8rem; border:1px solid var(--primary-color);">${row.AgencyName}</span></td>
+                        <td><b style="font-size: 1.1rem; color: var(--text-main);">${row.HumanGrade}</b></td>
+                        <td style="font-style: italic; color: var(--text-muted);">"${row.ValidatorNotes || "No notes provided"}"</td>
+                        <td style="font-size: 0.85rem; color: var(--text-muted);">${row.GradedAt}</td>
+                    </tr>
+                `,
+            )
+            .join("");
+        } catch (err) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" style="text-align:center; color:#ef4444;">Failed to load data.</td></tr>';
         }
       }
 
