@@ -50,6 +50,8 @@
         margin-bottom: 20px;
         border-bottom: 2px solid var(--border-color);
         padding-bottom: 10px;
+        overflow-x: auto;
+        white-space: nowrap;
       }
       .tab-btn {
         background: none;
@@ -232,12 +234,30 @@
           flex-wrap: wrap !important;
           white-space: normal !important;
         }
+
+        /* Responsive Grid Override for Forms */
+        .job-form {
+          grid-template-columns: 1fr;
+        }
+        .job-form input,
+        .job-form select,
+        .job-form textarea,
+        .job-form button {
+          grid-column: span 1 !important;
+        }
       }
     </style>
   </head>
   <body>
     <nav class="navbar">
-      <div class="container">
+      <div
+        class="container"
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 100%;
+        ">
         <a
           href="index.html"
           class="logo"
@@ -255,26 +275,28 @@
             style="height: 40px; width: auto; border-radius: 8px" />
           Voxa
         </a>
-        <div class="admin-tag">ADMIN PORTAL</div>
+
+        <div
+          class="admin-tag"
+          style="
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--primary-color);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border: 1px solid var(--primary-color);
+          ">
+          <i class="fas fa-shield-alt"></i> SUPER ADMIN
+        </div>
       </div>
-      <!-- <div
-        class="nav-item active"
-        onclick="switchAdminTab('applications', this)">
-        <i class="fas fa-file-alt"></i> Applications
-      </div>
-      <div class="nav-item" onclick="switchAdminTab('jobs', this)">
-        <i class="fas fa-briefcase"></i> Job Management
-      </div>
-      <div class="nav-item" onclick="switchAdminTab('users', this)">
-        <i class="fas fa-users"></i> User Management
-      </div> -->
     </nav>
 
     <div class="admin-container">
       <div class="admin-header">
         <div>
           <h1>Admin Portal</h1>
-          <p>Manage applications, active job postings, and team members.</p>
+          <p>Manage applications, active job postings, and user accounts.</p>
         </div>
         <button class="refresh-btn" onclick="loadData()">
           <i class="fas fa-sync-alt"></i> Refresh Data
@@ -286,13 +308,13 @@
           class="tab-btn active"
           onclick="switchTab('apps')"
           id="tab-apps">
-          Applications
+          <i class="fas fa-file-alt"></i> Applications
         </button>
         <button class="tab-btn" onclick="switchTab('jobs')" id="tab-jobs">
-          Job Management
+          <i class="fas fa-briefcase"></i> Job Management
         </button>
         <button class="tab-btn" onclick="switchTab('users')" id="tab-users">
-          User Management
+          <i class="fas fa-users"></i> User Management
         </button>
       </div>
 
@@ -351,18 +373,13 @@
             id="jBilingual"
             style="
               grid-column: span 3;
-              margin-bottom: 10px;
-              padding: 10px;
-              background: rgba(0, 229, 255, 0.05);
-              color: var(--primary-color);
-              border: 1px solid var(--primary-color);
-              border-radius: 5px;
-              outline: none;
               font-weight: bold;
+              background: rgba(0, 229, 255, 0.05);
+              border: 1px solid var(--primary-color);
             ">
-            <option value="0">🇺🇸 English Only (Requires 1 Voice Note)</option>
+            <option value="0">🇺🇸 English Only (1 Voice Note Required)</option>
             <option value="1">
-              🌍 Bilingual Role (Requires 2 Voice Notes)
+              🌍 Bilingual Role (2 Voice Notes Required)
             </option>
           </select>
 
@@ -388,41 +405,54 @@
           </thead>
           <tbody id="jobs-table-body"></tbody>
         </table>
-        <div
-          id="section-users"
-          class="data-table-container"
-          style="display: none">
-          <h3 style="margin-bottom: 1.5rem; color: var(--primary-color)">
-            Create New Account
+      </div>
+
+      <div
+        id="section-users"
+        class="data-table-container"
+        style="display: none; padding: 2rem">
+        <div style="max-width: 800px; margin: 0 auto">
+          <h3
+            style="
+              margin-bottom: 1.5rem;
+              color: var(--primary-color);
+              font-size: 1.3rem;
+            ">
+            <i class="fas fa-user-plus"></i> Create New Account
           </h3>
-          <div class="job-form" style="max-width: 800px">
+
+          <div
+            class="job-form"
+            style="grid-template-columns: 1fr 1fr; margin-bottom: 0">
             <input
               type="text"
               id="newUser-name"
               placeholder="Full Name (e.g. John Doe)"
-              style="grid-column: span 3" />
+              style="grid-column: 1 / -1" />
 
             <input
               type="email"
               id="newUser-email"
               placeholder="Email Address (Login ID)"
-              style="grid-column: span 3" />
+              style="grid-column: 1 / -1" />
 
             <input
               type="password"
               id="newUser-password"
               placeholder="Temporary Password"
-              style="grid-column: span 3" />
+              style="grid-column: 1 / -1" />
 
             <select
               id="newUser-role"
               style="
-                grid-column: span 1;
-                background: var(--bg-body);
+                background: var(--bg-input);
                 border: 1px solid var(--border-color);
                 color: var(--text-main);
                 padding: 10px;
-                border-radius: 6px;
+                border-radius: 5px;
+                width: 100%;
+                outline: none;
+                font-family: inherit;
               ">
               <option value="Validator">Validator (Agency Partner)</option>
               <option value="Recruiter">Recruiter</option>
@@ -434,76 +464,21 @@
             <input
               type="text"
               id="newUser-agency"
-              placeholder="Agency / Team Name (e.g. Superheroes)"
-              style="grid-column: span 2" />
+              placeholder="Agency / Team Name (e.g. Superheroes)" />
 
             <button
               id="btn-create-user"
               onclick="createNewUser()"
               class="btn-analyze"
-              style="grid-column: span 3; margin-top: 10px">
-              <i class="fas fa-user-plus"></i> Create Account
+              style="
+                grid-column: 1 / -1;
+                margin-top: 10px;
+                padding: 12px;
+                font-size: 1rem;
+              ">
+              <i class="fas fa-check-circle"></i> Create Account
             </button>
           </div>
-        </div>
-      </div>
-
-      <div
-        id="section-users"
-        class="data-table-container"
-        style="display: none">
-        <h3 style="margin-bottom: 1.5rem; color: var(--primary-color)">
-          Create New Account
-        </h3>
-        <div class="job-form" style="max-width: 800px">
-          <input
-            type="text"
-            id="newUser-name"
-            placeholder="Full Name (e.g. John Doe)"
-            style="grid-column: span 3" />
-
-          <input
-            type="email"
-            id="newUser-email"
-            placeholder="Email Address (Login ID)"
-            style="grid-column: span 3" />
-
-          <input
-            type="password"
-            id="newUser-password"
-            placeholder="Temporary Password"
-            style="grid-column: span 3" />
-
-          <select
-            id="newUser-role"
-            style="
-              grid-column: span 1;
-              background: var(--bg-body);
-              border: 1px solid var(--border-color);
-              color: var(--text-main);
-              padding: 10px;
-              border-radius: 6px;
-            ">
-            <option value="Validator">Validator (Agency Partner)</option>
-            <option value="Recruiter">Recruiter</option>
-            <option value="Leader">Team Leader</option>
-            <option value="UnitManager">Unit Manager</option>
-            <option value="Admin">System Admin</option>
-          </select>
-
-          <input
-            type="text"
-            id="newUser-agency"
-            placeholder="Agency / Team Name (e.g. Superheroes)"
-            style="grid-column: span 2" />
-
-          <button
-            id="btn-create-user"
-            onclick="createNewUser()"
-            class="btn-analyze"
-            style="grid-column: span 3; margin-top: 10px">
-            <i class="fas fa-user-plus"></i> Create Account
-          </button>
         </div>
       </div>
     </div>
@@ -554,153 +529,6 @@
         const diff = Date.now() - dob.getTime();
         const ageDate = new Date(diff);
         return Math.abs(ageDate.getUTCFullYear() - 1970);
-      }
-
-      // --- NEW: UNIFIED TAB SWITCHING ---
-      function switchAdminTab(tab, element) {
-        // Update Sidebar
-        document
-          .querySelectorAll(".navbar .nav-item")
-          .forEach((el) => el.classList.remove("active"));
-        if (element) element.classList.add("active");
-
-        // Hide all sections
-        document.getElementById("section-apps").style.display = "none";
-        document.getElementById("section-jobs").style.display = "none";
-        document.getElementById("section-users").style.display = "none";
-
-        // Hide Top Inner Tabs if we are in Users mode
-        const innerTabs = document.querySelector(".admin-tabs");
-        if (innerTabs)
-          innerTabs.style.display = tab === "users" ? "none" : "flex";
-
-        // Show specific
-        if (tab === "applications") {
-          document.getElementById("section-apps").style.display = "block";
-          document.getElementById("tab-apps").classList.add("active");
-          document.getElementById("tab-jobs").classList.remove("active");
-          loadApplications();
-        } else if (tab === "jobs") {
-          document.getElementById("section-jobs").style.display = "block";
-          document.getElementById("tab-jobs").classList.add("active");
-          document.getElementById("tab-apps").classList.remove("active");
-          loadAdminJobs();
-        } else if (tab === "users") {
-          document.getElementById("section-users").style.display = "block";
-        }
-      }
-
-      function switchTab(tab) {
-        // Hide all sections
-        document.getElementById("section-apps").style.display = "none";
-        document.getElementById("section-jobs").style.display = "none";
-        document.getElementById("section-users").style.display = "none";
-
-        // Remove active class from all buttons
-        document.getElementById("tab-apps").classList.remove("active");
-        document.getElementById("tab-jobs").classList.remove("active");
-        document.getElementById("tab-users").classList.remove("active");
-
-        // Show specific section and set active tab
-        if (tab === "apps") {
-          document.getElementById("section-apps").style.display = "block";
-          document.getElementById("tab-apps").classList.add("active");
-        } else if (tab === "jobs") {
-          document.getElementById("section-jobs").style.display = "block";
-          document.getElementById("tab-jobs").classList.add("active");
-          loadAdminJobs();
-        } else if (tab === "users") {
-          document.getElementById("section-users").style.display = "block";
-          document.getElementById("tab-users").classList.add("active");
-        }
-      }
-
-      // --- NEW: CREATE USER FUNCTION ---
-      async function createNewUser() {
-        const payload = {
-          fullName: document.getElementById("newUser-name").value,
-          email: document.getElementById("newUser-email").value,
-          password: document.getElementById("newUser-password").value,
-          role: document.getElementById("newUser-role").value,
-          teamName: document.getElementById("newUser-agency").value,
-        };
-
-        if (!payload.email || !payload.password || !payload.fullName) {
-          return alert("Please fill in Name, Email, and Password.");
-        }
-
-        const btn = document.getElementById("btn-create-user");
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
-
-        try {
-          const res = await fetch("http://127.0.0.1:5000/api/admin/users", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-
-          const data = await res.json();
-
-          if (res.ok) {
-            alert(data.message);
-            document.getElementById("newUser-name").value = "";
-            document.getElementById("newUser-email").value = "";
-            document.getElementById("newUser-password").value = "";
-            document.getElementById("newUser-agency").value = "";
-          } else {
-            alert("Error: " + data.error);
-          }
-        } catch (e) {
-          console.error(e);
-          alert("Failed to connect to server.");
-        } finally {
-          btn.innerHTML = originalText;
-        }
-      }
-
-      // --- NEW: CREATE USER FUNCTION ---
-      async function createNewUser() {
-        const payload = {
-          fullName: document.getElementById("newUser-name").value,
-          email: document.getElementById("newUser-email").value,
-          password: document.getElementById("newUser-password").value,
-          role: document.getElementById("newUser-role").value,
-          teamName: document.getElementById("newUser-agency").value,
-        };
-
-        if (!payload.email || !payload.password || !payload.fullName) {
-          return alert("Please fill in Name, Email, and Password.");
-        }
-
-        const btn = document.getElementById("btn-create-user");
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
-
-        try {
-          const res = await fetch("http://127.0.0.1:5000/api/admin/users", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-
-          const data = await res.json();
-
-          if (res.ok) {
-            alert(data.message);
-            document.getElementById("newUser-name").value = "";
-            document.getElementById("newUser-email").value = "";
-            document.getElementById("newUser-password").value = "";
-            document.getElementById("newUser-agency").value = "";
-          } else {
-            alert("Error: " + data.error);
-          }
-        } catch (e) {
-          console.error(e);
-          alert("Failed to connect to server.");
-        } finally {
-          btn.innerHTML = originalText;
-        }
       }
 
       async function loadApplications() {
@@ -1085,6 +913,32 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
         }
       }
 
+      function switchTab(tab) {
+        // Hide all sections
+        document.getElementById("section-apps").style.display = "none";
+        document.getElementById("section-jobs").style.display = "none";
+        document.getElementById("section-users").style.display = "none";
+
+        // Remove active class from all buttons
+        document.getElementById("tab-apps").classList.remove("active");
+        document.getElementById("tab-jobs").classList.remove("active");
+        document.getElementById("tab-users").classList.remove("active");
+
+        // Show specific section and set active tab
+        if (tab === "apps") {
+          document.getElementById("section-apps").style.display = "block";
+          document.getElementById("tab-apps").classList.add("active");
+          loadApplications();
+        } else if (tab === "jobs") {
+          document.getElementById("section-jobs").style.display = "block";
+          document.getElementById("tab-jobs").classList.add("active");
+          loadAdminJobs();
+        } else if (tab === "users") {
+          document.getElementById("section-users").style.display = "block";
+          document.getElementById("tab-users").classList.add("active");
+        }
+      }
+
       function loadData() {
         checkAuthAndLoad();
         if (document.getElementById("section-jobs").style.display === "block")
@@ -1094,14 +948,14 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
       async function loadAdminJobs() {
         const tbody = document.getElementById("jobs-table-body");
         const res = await fetch("http://127.0.0.1:5000/api/admin/jobs");
-        adminJobsData = await res.json(); // Save data globally so we can edit it
+        adminJobsData = await res.json();
 
         tbody.innerHTML = adminJobsData
           .map(
             (j) => `
                 <tr>
                     <td>#${j.JobID}</td>
-                    <td><b>${j.JobTitle}</b><br><small style="color:var(--primary-color);">${j.CompanyName}</small></td>
+                    <td><b>${j.JobTitle}</b> <span style="font-size:0.7rem; background:rgba(0, 229, 255, 0.1); color:var(--primary-color); padding:2px 6px; border-radius:4px; margin-left:5px; border:1px solid var(--primary-color); display:${j.RequiresSecondLanguage ? "inline-block" : "none"};">Bilingual</span><br><small style="color:var(--primary-color);">${j.CompanyName}</small></td>
                     <td>${j.AccountType}<br><small style="color:var(--text-muted);">${j.WorkingHours}</small></td>
                     <td>${j.SalaryPackage}</td>
                     <td>
@@ -1114,7 +968,6 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
                         <button onclick="editJob(${j.JobID})" style="background:none; border:none; color:var(--primary-color); cursor:pointer; margin-right: 12px; font-size: 1.1rem;" title="Edit Job"><i class="fas fa-edit"></i></button>
                         <button onclick="deleteJob(${j.JobID})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size: 1.1rem;" title="Delete Job"><i class="fas fa-trash"></i></button>
                     </td>
-                    <td><b>${j.JobTitle}</b> <span style="font-size:0.7rem; background:rgba(0, 229, 255, 0.1); color:var(--primary-color); padding:2px 6px; border-radius:4px; margin-left:5px; border:1px solid var(--primary-color); display:${j.RequiresSecondLanguage ? "inline-block" : "none"};">Bilingual</span><br><small style="color:var(--primary-color);">${j.CompanyName}</small></td>
                 </tr>
             `,
           )
@@ -1127,7 +980,6 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
 
         editingJobId = id;
 
-        // Populate the form with existing data
         document.getElementById("jCompany").value = job.CompanyName || "";
         document.getElementById("jTitle").value = job.JobTitle || "";
         document.getElementById("jAccount").value = job.AccountType || "";
@@ -1142,12 +994,10 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
           ? "1"
           : "0";
 
-        // Change UI to reflect edit mode
         const submitBtn = document.getElementById("btn-submit-job");
         submitBtn.innerHTML = `<i class="fas fa-save"></i> Update Job #${id}`;
-        submitBtn.style.background = "#f59e0b"; // Orange to indicate editing
+        submitBtn.style.background = "#f59e0b";
 
-        // Add Cancel button if it doesn't exist
         if (!document.getElementById("btn-cancel-edit")) {
           const cancelBtn = document.createElement("button");
           cancelBtn.id = "btn-cancel-edit";
@@ -1161,7 +1011,6 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
           submitBtn.parentNode.insertBefore(cancelBtn, submitBtn.nextSibling);
         }
 
-        // Scroll up to the form smoothly
         document
           .getElementById("section-jobs")
           .scrollIntoView({ behavior: "smooth" });
@@ -1205,7 +1054,6 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
 
         try {
           if (editingJobId) {
-            // WE ARE EDITING A JOB
             await fetch(
               `http://127.0.0.1:5000/api/admin/jobs/${editingJobId}`,
               {
@@ -1215,7 +1063,6 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
               },
             );
           } else {
-            // WE ARE CREATING A NEW JOB
             await fetch("http://127.0.0.1:5000/api/admin/jobs", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -1223,8 +1070,8 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
             });
           }
 
-          cancelEdit(); // Clears form and resets buttons
-          loadAdminJobs(); // Reloads table data
+          cancelEdit();
+          loadAdminJobs();
         } catch (e) {
           alert("Failed to save job.");
           submitBtn.innerHTML = originalText;
@@ -1247,6 +1094,50 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
             method: "DELETE",
           });
           loadAdminJobs();
+        }
+      }
+
+      // --- NEW: CREATE USER FUNCTION ---
+      async function createNewUser() {
+        const payload = {
+          fullName: document.getElementById("newUser-name").value,
+          email: document.getElementById("newUser-email").value,
+          password: document.getElementById("newUser-password").value,
+          role: document.getElementById("newUser-role").value,
+          teamName: document.getElementById("newUser-agency").value,
+        };
+
+        if (!payload.email || !payload.password || !payload.fullName) {
+          return alert("Please fill in Name, Email, and Password.");
+        }
+
+        const btn = document.getElementById("btn-create-user");
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+
+        try {
+          const res = await fetch("http://127.0.0.1:5000/api/admin/users", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            alert(data.message);
+            document.getElementById("newUser-name").value = "";
+            document.getElementById("newUser-email").value = "";
+            document.getElementById("newUser-password").value = "";
+            document.getElementById("newUser-agency").value = "";
+          } else {
+            alert("Error: " + data.error);
+          }
+        } catch (e) {
+          console.error(e);
+          alert("Failed to connect to server.");
+        } finally {
+          btn.innerHTML = originalText;
         }
       }
     </script>
