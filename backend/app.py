@@ -282,31 +282,6 @@ def send_offer(id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/admin/all-agency-grades', methods=['GET'])
-def get_all_agency_grades():
-    try:
-        conn = get_db_connection()
-        c = conn.cursor()
-        
-        # Perform an INNER JOIN to get the candidate's name along with the external agency's grade
-        c.execute("""
-            SELECT 
-                a.FullName, a.Email, a.JobTitle, 
-                v.AgencyName, v.HumanGrade, v.ValidatorNotes, 
-                FORMAT(v.GradedAt, 'MMM dd, yyyy') as GradedAt
-            FROM ValidatorGrades v
-            INNER JOIN JobApplications a ON v.ApplicationID = a.ApplicationID
-            ORDER BY v.GradedAt DESC
-        """)
-        
-        cols = [column[0] for column in c.description]
-        data = [dict(zip(cols, row)) for row in c.fetchall()]
-        conn.close()
-        return jsonify(data)
-    except Exception as e:
-        print(f"Error fetching all agency grades: {e}")
-        return jsonify({"error": str(e)}), 500
-
 @app.route('/api/jobs', methods=['GET'])
 def get_public_jobs():
     try:
@@ -632,6 +607,102 @@ def apps():
     except Exception as e:
         print(f"Error loading apps: {e}")
         return jsonify([])
+
+# ==========================================
+# VALIDATOR MULTI-AGENCY ROUTES
+# ==========================================
+
+@app.route('/api/validator/applications', methods=['GET'])
+def get_validator_applications():
+    # Fetches all applications for the Validator, joining their specific Agency's grades
+    agency = request.args.get('agency', 'Unknown')
+    
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        c.execute("""
+            SELECT 
+                a.ApplicationID, a.FullName, a.Email, a.Phone, a.JobTitle, a.RecruiterSource, 
+                a.AI_Rating, a.AI_Summary, a.VoiceRecordPath, a.VoiceRecordPath2,
+                v.HumanGrade AS AgencyGrade, v.ValidatorNotes
+            FROM JobApplications a
+            LEFT JOIN ValidatorGrades v ON a.ApplicationID = v.ApplicationID AND v.AgencyName = ?
+            ORDER BY a.SubmittedAt DESC
+        """, (agency,))
+        
+        cols = [column[0] for column in c.description]
+        data = [dict(zip(cols, row)) for row in c.fetchall()]
+        conn.close()
+        return jsonify(data)
+    except Exception as e:
+        print(f"Validator Fetch Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/validator/grade', methods=['POST'])
+def submit_validator_grade():
+    # Safely inserts or updates a grade for ONE specific agency without touching others
+    data = request.get_json()
+    app_id = data.get('applicationId')
+    agency = data.get('agencyName')
+    grade = data.get('grade')
+    notes = data.get('notes', '')
+    
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Check if this agency has already graded this candidate
+        c.execute("SELECT GradeID FROM ValidatorGrades WHERE ApplicationID = ? AND AgencyName = ?", (app_id, agency))
+        existing = c.fetchone()
+        
+        if existing:
+            # Update existing grade
+            c.execute("""
+                UPDATE ValidatorGrades 
+                SET HumanGrade = ?, ValidatorNotes = ?, GradedAt = GETDATE()
+                WHERE ApplicationID = ? AND AgencyName = ?
+            """, (grade, notes, app_id, agency))
+        else:
+            # Insert new grade
+            c.execute("""
+                INSERT INTO ValidatorGrades (ApplicationID, AgencyName, HumanGrade, ValidatorNotes)
+                VALUES (?, ?, ?, ?)
+            """, (app_id, agency, grade, notes))
+            
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Grade saved successfully"})
+    except Exception as e:
+        print(f"Validator Grade Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/admin/all-agency-grades', methods=['GET'])
+def get_all_agency_grades():
+    # For the SuperAdmin Dashboard to see everyone's feedback
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        c.execute("""
+            SELECT 
+                a.FullName, a.Email, a.JobTitle, 
+                v.AgencyName, v.HumanGrade, v.ValidatorNotes, 
+                FORMAT(v.GradedAt, 'MMM dd, yyyy') as GradedAt
+            FROM ValidatorGrades v
+            INNER JOIN JobApplications a ON v.ApplicationID = a.ApplicationID
+            ORDER BY v.GradedAt DESC
+        """)
+        
+        cols = [column[0] for column in c.description]
+        data = [dict(zip(cols, row)) for row in c.fetchall()]
+        conn.close()
+        return jsonify(data)
+    except Exception as e:
+        print(f"Error fetching all agency grades: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/uploads/<fn>')
 def file(fn): return send_from_directory(app.config['UPLOAD_FOLDER'], fn)
