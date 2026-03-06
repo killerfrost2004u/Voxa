@@ -623,7 +623,7 @@ def get_validator_applications():
         
         c.execute("""
             SELECT 
-                a.ApplicationID, a.FullName, a.Email, a.Phone, a.JobTitle, a.RecruiterSource, 
+                a.ApplicationID, a.FullName, a.Email, a.Phone, a.JobTitle, a.Company, a.RecruiterSource, 
                 a.AI_Rating, a.AI_Summary, a.VoiceRecordPath, a.VoiceRecordPath2,
                 v.HumanGrade AS AgencyGrade, v.ValidatorNotes
             FROM JobApplications a

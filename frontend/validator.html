@@ -15,7 +15,9 @@
   </head>
   <body>
     <aside class="sidebar">
-      <a href="index.html" style="text-decoration: none;"><div class="logo">VO<span>XA</span></div></a>
+      <a href="index.html" style="text-decoration: none"
+        ><div class="logo">VO<span>XA</span></div></a
+      >
       <nav>
         <div class="nav-item active">
           <i class="fas fa-check-circle"></i> Validate Candidates
@@ -76,7 +78,7 @@
               <tr>
                 <th>Candidate Details</th>
                 <th>Job Profile</th>
-                <th>AI Assessment</th>
+                <!-- <th>AI Assessment</th> -->
                 <th>Voice Recordings</th>
                 <th>Your Agency Grade</th>
               </tr>
@@ -330,12 +332,14 @@
                             <div style="color:var(--text-muted); font-size:0.85rem;"><i class="fas fa-phone" style="width:16px;"></i> ${app.Phone}</div>
                         </td>
                         <td>
-                            <div style="font-weight:600;">${app.JobTitle}</div>
-                            <div style="color:#f59e0b; font-size:0.85rem; margin-top:4px;"><i class="fas fa-briefcase" style="width:16px;"></i> Ref: ${app.RecruiterSource || "Direct"}</div>
-                        </td>
-                        <td>
-                            <div style="margin-bottom: 8px;">${aiGradeHTML}</div>
-                            ${app.AI_Summary && app.AI_Summary !== "null" ? `<div style="font-size:0.8rem; color:var(--text-muted); max-width:250px; line-height:1.4;">${app.AI_Summary.substring(0, 60)}...</div>` : ""}
+                            <div style="font-weight:600;">
+                                <span style="color: var(--primary-color); font-weight: 700;">${app.Company || "N/A"}</span> 
+                                <span style="color: var(--text-muted); margin: 0 4px;">•</span> 
+                                ${app.JobTitle}
+                            </div>
+                            <div style="color:#f59e0b; font-size:0.85rem; margin-top:4px;">
+                                <i class="fas fa-briefcase" style="width:16px;"></i> Ref: ${app.RecruiterSource || "Direct"}
+                            </div>
                         </td>
                         <td>${audio1}${audio2}</td>
                         <td>
