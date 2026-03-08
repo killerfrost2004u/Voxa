@@ -2,16 +2,16 @@ import os
 import re
 import threading
 import json
-import psycopg2 # NEW: Postgres Connector
+import psycopg2 
 import time
 import datetime
-import urllib.parse
 import bcrypt
-from flask import Flask, jsonify, request, send_from_directory
+import boto3 # NEW: AWS/Cloudflare SDK
+from botocore.client import Config
+from flask import Flask, jsonify, request, send_from_directory, redirect
 from flask_cors import CORS
 import google.generativeai as genai
 from dotenv import load_dotenv
-from twilio.twiml.messaging_response import MessagingResponse
 
 # --- CONFIGURATION ---
 load_dotenv()
@@ -25,8 +25,23 @@ genai.configure(api_key=GEMINI_API_KEY)
 # NEW: Your Live Neon Cloud Database URL
 DATABASE_URL = "postgresql://neondb_owner:npg_ZWb5lX1Hhgre@ep-empty-shape-aln50nml-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require"
 
+# --- CLOUDFLARE R2 SETUP ---
+R2_ACCESS_KEY = os.getenv("R2_ACCESS_KEY")
+R2_SECRET_KEY = os.getenv("R2_SECRET_KEY")
+R2_ENDPOINT = os.getenv("R2_ENDPOINT")
+R2_PUBLIC_URL = os.getenv("R2_PUBLIC_URL")
+R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME", "voxa-audio")
+
+s3_client = boto3.client(
+    's3',
+    endpoint_url=R2_ENDPOINT,
+    aws_access_key_id=R2_ACCESS_KEY,
+    aws_secret_access_key=R2_SECRET_KEY,
+    config=Config(signature_version='s3v4')
+)
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'temp_downloads') # Changed from uploads to temp_downloads
 
 if not os.path.exists(UPLOAD_FOLDER): 
     os.makedirs(UPLOAD_FOLDER)
@@ -35,7 +50,7 @@ app = Flask(__name__)
 CORS(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-print("✅ System Ready. Connected to Neon Cloud Postgres.")
+print("✅ System Ready. Connected to Neon Cloud Postgres & Cloudflare R2.")
 
 def get_db_connection():
     for attempt in range(5):
@@ -127,10 +142,19 @@ def run_gemini_audio_analysis(file_path):
         return None
 
 # --- WORKER ---
-def ai_worker(app_id, file_path):
+def ai_worker(app_id, file_name):
+    # 1. Download from Cloudflare to a temporary local folder
+    print(f"☁️ Downloading {file_name} from Cloudflare R2 for AI analysis...")
+    local_path = os.path.join(app.config['UPLOAD_FOLDER'], file_name)
+    try:
+        s3_client.download_file(R2_BUCKET_NAME, file_name, local_path)
+    except Exception as e:
+        print(f"❌ Failed to download from R2: {e}")
+        return
+
     print(f"🤖 Processing App #{app_id} with Gemini API...")
     try:
-        ai_response = run_gemini_audio_analysis(file_path)
+        ai_response = run_gemini_audio_analysis(local_path)
 
         if ai_response:
             match = re.search(r'\{.*\}', ai_response, re.DOTALL)
@@ -164,6 +188,12 @@ def ai_worker(app_id, file_path):
                 conn.close()
     except Exception as e:
         print(f"❌ Worker Error: {e}")
+    finally:
+        # 2. Delete the temporary local file to save server space!
+        if os.path.exists(local_path):
+            os.remove(local_path)
+            print(f"🧹 Cleaned up temporary file: {file_name}")
+    
 
 # --- ROUTES ---
 @app.route('/api/admin/send-offer/<int:id>', methods=['POST'])
@@ -348,13 +378,15 @@ def apply():
     try:
         f = request.files['voiceRecord']
         fn = f"VOICE_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.ogg"
-        f.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
+
+        # Stream audio directly into Cloudflare Bucket
+        s3_client.upload_fileobj(f, R2_BUCKET_NAME, fn, ExtraArgs={'ContentType': 'audio/ogg'})
 
         fn2 = None
         if 'voiceRecord2' in request.files:
             f2 = request.files['voiceRecord2']
             fn2 = f"VOICE2_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.ogg"
-            f2.save(os.path.join(app.config['UPLOAD_FOLDER'], fn2))
+            s3_client.upload_fileobj(f2, R2_BUCKET_NAME, fn2, ExtraArgs={'ContentType': 'audio/ogg'})
 
         conn = get_db_connection()
         c = conn.cursor()
@@ -372,7 +404,9 @@ def apply():
         conn.commit()
         conn.close()
         return jsonify({"message": "OK"}), 201
-    except Exception as e: return jsonify({"error": str(e)}), 500
+    except Exception as e: 
+        print(f"Upload Error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/admin/analyze/<int:id>', methods=['POST'])
 def analyze(id):
@@ -383,7 +417,8 @@ def analyze(id):
         r = c.fetchone()
         conn.close()
         if r:
-            threading.Thread(target=ai_worker, args=(id, os.path.join(app.config['UPLOAD_FOLDER'], r[0]))).start()
+            # Pass the filename directly to the worker
+            threading.Thread(target=ai_worker, args=(id, r[0])).start()
             return jsonify({"message": "Started"})
         return jsonify({"error": "404"}), 404
     except Exception as e: return jsonify({"error": str(e)}), 500
@@ -473,6 +508,6 @@ def get_all_agency_grades():
     except Exception as e: return jsonify({"error": str(e)}), 500
 
 @app.route('/uploads/<fn>')
-def file(fn): return send_from_directory(app.config['UPLOAD_FOLDER'], fn)
+def file(fn): return redirect(f"{R2_PUBLIC_URL}/{fn}")
 
 if __name__ == '__main__': app.run(debug=True, port=5000, use_reloader=False)
