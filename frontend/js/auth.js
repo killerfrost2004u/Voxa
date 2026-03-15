@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:5000/api";
+const API_URL = "https://voxa-pi-three.vercel.app/api";
 
 // Toggle between Login and Signup views
 function toggleAuth() {
