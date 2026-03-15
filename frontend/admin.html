@@ -319,6 +319,9 @@
         <button class="tab-btn" onclick="switchTab('agency')" id="tab-agency">
           <i class="fas fa-building"></i> Agency Feedback
         </button>
+        <button onclick="showSection('staff-management')" class="nav-btn">
+          👥 Staff Management
+        </button>
       </div>
 
       <div id="section-apps" class="data-table-container">
@@ -1012,7 +1015,9 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
 
       async function loadAdminJobs() {
         const tbody = document.getElementById("jobs-table-body");
-        const res = await fetch("https://voxa-pi-three.vercel.app/api/admin/jobs");
+        const res = await fetch(
+          "https://voxa-pi-three.vercel.app/api/admin/jobs",
+        );
         adminJobsData = await res.json();
 
         tbody.innerHTML = adminJobsData
@@ -1181,11 +1186,14 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
 
         try {
-          const res = await fetch("https://voxa-pi-three.vercel.app/api/admin/users", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
+          const res = await fetch(
+            "https://voxa-pi-three.vercel.app/api/admin/users",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            },
+          );
 
           const data = await res.json();
 

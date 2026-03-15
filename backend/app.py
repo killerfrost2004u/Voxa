@@ -511,6 +511,84 @@ def get_all_agency_grades():
         return jsonify(data)
     except Exception as e: return jsonify({"error": str(e)}), 500
 
+@app.route('/api/admin/staff', methods=['POST'])
+def create_staff():
+    data = request.json
+    
+    # 1. Who is trying to create this user? (This should come from their login session/token)
+    creator_role = data.get('creator_role')     # e.g., 'CEO', 'UnitManager', 'SuperAdmin'
+    creator_agency = data.get('creator_agency') # e.g., 'Dark Wolves'
+    creator_unit = data.get('creator_unit')     # e.g., 'Unit A'
+    
+    # 2. Who are they trying to create?
+    name = data.get('name')
+    email = data.get('email')
+    password = data.get('password')
+    target_role = data.get('role') # CEO, UnitManager, Leader, Recruiter
+    target_agency = data.get('agency') 
+    target_unit = data.get('unit') 
+    target_team = data.get('team') 
+    
+    if not all([name, email, password, target_role, target_agency]):
+        return jsonify({"error": "Missing required fields!"}), 400
+
+    # ==========================================
+    # 🛡️ THE STRICT PERMISSION FIREWALL 🛡️
+    # ==========================================
+    
+    if creator_role == 'SuperAdmin':
+        # You are God. You can do anything.
+        pass 
+        
+    elif creator_role == 'CEO':
+        if target_agency != creator_agency:
+            return jsonify({"error": "CEOs can only create staff within their own agency."}), 403
+        if target_role in ['SuperAdmin', 'CEO']:
+            return jsonify({"error": "CEOs cannot create other CEOs or SuperAdmins."}), 403
+            
+    elif creator_role == 'UnitManager':
+        if target_agency != creator_agency or target_unit != creator_unit:
+            return jsonify({"error": "Unit Managers can only manage staff in their exact Unit."}), 403
+        if target_role not in ['Leader', 'Recruiter']:
+            return jsonify({"error": "Unit Managers can only create Leaders and Recruiters."}), 403
+            
+    elif creator_role == 'Leader':
+        if target_agency != creator_agency or target_unit != creator_unit or target_team != data.get('creator_team'):
+            return jsonify({"error": "Leaders can only manage staff in their exact Team."}), 403
+        if target_role != 'Recruiter':
+            return jsonify({"error": "Leaders can only create Recruiters."}), 403
+            
+    else:
+        return jsonify({"error": "You do not have permission to manage staff."}), 403
+
+    # ==========================================
+    
+    # Securely hash the temporary password
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # Check if email already exists
+        cur.execute('SELECT id FROM "Users" WHERE Email = %s', (email,))
+        if cur.fetchone():
+            return jsonify({"error": "Email already exists!"}), 400
+            
+        # Insert the new staff member into the matrix hierarchy
+        cur.execute("""
+            INSERT INTO "Users" (Name, Email, Password, Role, "AgencyName", "UnitName", TeamName)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (name, email, hashed_password, target_role, target_agency, target_unit, target_team))
+        
+        conn.commit()
+        return jsonify({"message": f"{target_role} {name} successfully created in {target_agency}!"}), 201
+    except Exception as e:
+        print(f"❌ Database Error: {e}")
+        return jsonify({"error": "Failed to create staff member."}), 500
+    finally:
+        cur.close()
+        conn.close()
+
 @app.route('/uploads/<fn>')
 def file(fn): return redirect(f"{R2_PUBLIC_URL}/{fn}")
 
