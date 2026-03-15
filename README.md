@@ -1,4 +1,4 @@
-# 🐺 Voxa (Dark Wolves HR) - AI-Powered Recruitment & Voice Analysis
+# 🐺 Voxa (HR) - AI-Powered Recruitment & Voice Analysis
 
 Voxa is an end-to-end automated recruitment platform designed to revolutionize how companies screen candidates for communication-heavy roles. Instead of reading traditional CVs, Voxa allows candidates to apply using **Voice Notes**, which are then processed by a native multimodal AI to act as an expert technical recruiter.
 
