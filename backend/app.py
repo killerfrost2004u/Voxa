@@ -12,6 +12,7 @@ from flask import Flask, jsonify, request, send_from_directory, redirect
 from flask_cors import CORS
 import google.generativeai as genai
 from dotenv import load_dotenv
+import tempfile
 
 # --- CONFIGURATION ---
 load_dotenv()
@@ -43,8 +44,7 @@ s3_client = boto3.client(
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'temp_downloads') # Changed from uploads to temp_downloads
 
-if not os.path.exists(UPLOAD_FOLDER): 
-    os.makedirs(UPLOAD_FOLDER)
+UPLOAD_FOLDER = tempfile.gettempdir()
 
 app = Flask(__name__)
 CORS(app)
