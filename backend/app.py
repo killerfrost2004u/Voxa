@@ -165,7 +165,6 @@ def ai_worker(app_id, file_name):
                 json_str = match.group().replace('```json', '').replace('```', '').strip()
             else:
                 json_str = '{"overall_level": "B1", "overall_score": 60, "summary": "Format failed."}'
-
             ai_data = json.loads(json_str)
             
             overall_grade = f"{ai_data['overall_level']} ({ai_data['overall_score']})"
@@ -189,6 +188,8 @@ def ai_worker(app_id, file_name):
                 )
                 conn.commit()
                 conn.close()
+        else:
+            print(f"❌ Gemini returned nothing for App #{app_id}. Database was NOT updated.")
     except Exception as e:
         print(f"❌ Worker Error: {e}")
     finally:
