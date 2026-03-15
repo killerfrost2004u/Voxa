@@ -129,12 +129,15 @@ def run_gemini_audio_analysis(file_path):
                 return response.text
             except Exception as e:
                 error_msg = str(e)
+                print(f"❌ Gemini API Error (Attempt {attempt+1}): {error_msg}") # THIS WILL REVEAL THE BUG
                 if "429" in error_msg or "Quota" in error_msg:
+                    print("⏳ Rate limit hit. Waiting 30s...")
                     time.sleep(30) 
                 else:
                     break 
 
         audio_file.delete()
+        print("❌ All AI attempts failed.")
         return None
 
     except Exception as e:
