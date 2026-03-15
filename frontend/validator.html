@@ -264,7 +264,7 @@
       async function loadApplications() {
         try {
           const res = await fetch(
-            `http://127.0.0.1:5000/api/validator/applications?agency=${encodeURIComponent(currentAgency)}`,
+            `https://voxa-pi-three.vercel.app/api/validator/applications?agency=${encodeURIComponent(currentAgency)}`,
           );
           applicationsData = await res.json();
           renderTable(applicationsData);
@@ -290,7 +290,7 @@
               app.VoiceRecordPath !== "null" &&
               app.VoiceRecordPath !== "No_File";
             const audio1 = hasAudio1
-              ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Primary Audio:</div><audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath}" class="custom-audio"></audio>`
+              ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">Primary Audio:</div><audio controls src="https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath}" class="custom-audio"></audio>`
               : '<span style="color:#666; font-style:italic;">No Audio 1</span>';
 
             const hasAudio2 =
@@ -298,7 +298,7 @@
               app.VoiceRecordPath2 !== "null" &&
               app.VoiceRecordPath2 !== "No_File";
             const audio2 = hasAudio2
-              ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:10px; margin-bottom:4px;">Secondary Audio:</div><audio controls src="http://127.0.0.1:5000/uploads/${app.VoiceRecordPath2}" class="custom-audio"></audio>`
+              ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:10px; margin-bottom:4px;">Secondary Audio:</div><audio controls src="https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath2}" class="custom-audio"></audio>`
               : "";
 
             const aiGradeHTML =
@@ -388,7 +388,7 @@
         btn.disabled = true;
 
         try {
-          const res = await fetch(`http://127.0.0.1:5000/api/validator/grade`, {
+          const res = await fetch(`https://voxa-pi-three.vercel.app/api/validator/grade`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

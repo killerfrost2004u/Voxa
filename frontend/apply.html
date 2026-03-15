@@ -323,7 +323,7 @@
                 formData.append('ref', params.get('ref') || 'Direct/Organic');
 
                 // 3. SEND
-                const res = await fetch('http://127.0.0.1:5000/api/apply', { 
+                const res = await fetch('https://voxa-pi-three.vercel.app/api/apply', { 
                     method: 'POST', 
                     body: formData 
                 });
