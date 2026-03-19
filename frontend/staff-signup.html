@@ -1,123 +1,176 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Staff Registration | Voxa</title>
-    <link rel="icon" type="image/png" href="images/voxa-logo.png">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/auth.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
+    <link rel="icon" type="image/png" href="images/voxa-logo.png" />
+
+    <link rel="stylesheet" href="css/style.css" />
+
+    <link rel="stylesheet" href="css/auth.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  </head>
+  <body>
     <div class="auth-container">
-        <div class="auth-card">
-            <div class="logo-container" style="text-align: center; margin-bottom: 20px;">
-                <img src="images/voxa-logo.png" alt="Voxa Logo" style="height: 60px; border-radius: 12px;">
-                <h2 style="color: var(--text-main); margin-top: 10px;">Corporate Staff Portal</h2>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">Register your staff account. Requires manager approval.</p>
-            </div>
-
-            <form id="staffSignupForm" onsubmit="handleStaffSignup(event)">
-                <div class="input-group">
-                    <label>Full Name</label>
-                    <input type="text" id="sName" placeholder="John Doe" required>
-                </div>
-
-                <div class="input-group">
-                    <label>Work Email</label>
-                    <input type="email" id="sEmail" placeholder="john@agency.com" required>
-                </div>
-
-                <div class="input-group">
-                    <label>Password</label>
-                    <input type="password" id="sPassword" placeholder="Create a secure password" required>
-                </div>
-
-                <div class="input-group">
-                    <label>Agency Name</label>
-                    <input type="text" id="sAgency" placeholder="e.g. Dark Wolves" required>
-                </div>
-
-                <div class="input-group">
-                    <label>Requested Role</label>
-                    <select id="sRole" required style="width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; outline: none;">
-                        <option value="UnitManager">Unit Manager</option>
-                        <option value="Leader">Team Leader</option>
-                        <option value="Recruiter" selected>Recruiter</option>
-                        <option value="Validator">Validator (QA)</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>Unit Name (If applicable)</label>
-                    <input type="text" id="sUnit" placeholder="e.g. Unit A (Optional)">
-                </div>
-
-                <div class="input-group">
-                    <label>Team Name (If applicable)</label>
-                    <input type="text" id="sTeam" placeholder="e.g. Night Shift Team (Optional)">
-                </div>
-
-                <button type="submit" class="auth-btn" id="submitBtn">Request Account Access</button>
-            </form>
-
-            <div id="messageBox" style="margin-top: 15px; text-align: center; font-weight: bold; font-size: 0.9rem;"></div>
-            
-            <p class="auth-switch" style="margin-top: 20px;">
-                Already approved? <a href="login.html">Sign in here</a>
-            </p>
+      <div class="auth-card">
+        <div
+          class="logo-container"
+          style="text-align: center; margin-bottom: 20px">
+          <img
+            src="images/voxa-logo.png"
+            alt="Voxa Logo"
+            style="height: 60px; border-radius: 12px" />
+          <h2 style="color: var(--text-main); margin-top: 10px">
+            Corporate Staff Portal
+          </h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem">
+            Register your staff account. Requires manager approval.
+          </p>
         </div>
+
+        <form id="staffSignupForm" onsubmit="handleStaffSignup(event)">
+          <div class="input-group">
+            <label>Full Name</label>
+            <input type="text" id="sName" placeholder="John Doe" required />
+          </div>
+
+          <div class="input-group">
+            <label>Work Email</label>
+            <input
+              type="email"
+              id="sEmail"
+              placeholder="john@agency.com"
+              required />
+          </div>
+
+          <div class="input-group">
+            <label>Password</label>
+            <input
+              type="password"
+              id="sPassword"
+              placeholder="Create a secure password"
+              required />
+          </div>
+
+          <div class="input-group">
+            <label>Agency Name</label>
+            <input
+              type="text"
+              id="sAgency"
+              placeholder="e.g. Dark Wolves"
+              required />
+          </div>
+
+          <div class="input-group">
+            <label>Requested Role</label>
+            <select
+              id="sRole"
+              required
+              style="
+                width: 100%;
+                padding: 12px;
+                background: var(--bg-input);
+                border: 1px solid var(--border-color);
+                color: var(--text-main);
+                border-radius: 6px;
+                outline: none;
+              ">
+              <option value="UnitManager">Unit Manager</option>
+              <option value="Leader">Team Leader</option>
+              <option value="Recruiter" selected>Recruiter</option>
+              <option value="Validator">Validator (QA)</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label>Unit Name (If applicable)</label>
+            <input
+              type="text"
+              id="sUnit"
+              placeholder="e.g. Unit A (Optional)" />
+          </div>
+
+          <div class="input-group">
+            <label>Team Name (If applicable)</label>
+            <input
+              type="text"
+              id="sTeam"
+              placeholder="e.g. Night Shift Team (Optional)" />
+          </div>
+
+          <button type="submit" class="auth-btn" id="submitBtn">
+            Request Account Access
+          </button>
+        </form>
+
+        <div
+          id="messageBox"
+          style="
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+          "></div>
+
+        <p class="auth-switch" style="margin-top: 20px">
+          Already approved? <a href="login.html">Sign in here</a>
+        </p>
+      </div>
     </div>
 
     <script>
-        async function handleStaffSignup(e) {
-            e.preventDefault();
-            
-            const btn = document.getElementById("submitBtn");
-            const msgBox = document.getElementById("messageBox");
-            const originalText = btn.innerHTML;
-            
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-            btn.disabled = true;
+      async function handleStaffSignup(e) {
+        e.preventDefault();
 
-            const payload = {
-                fullName: document.getElementById('sName').value,
-                email: document.getElementById('sEmail').value,
-                password: document.getElementById('sPassword').value,
-                agency: document.getElementById('sAgency').value,
-                role: document.getElementById('sRole').value,
-                unit: document.getElementById('sUnit').value || null,
-                team: document.getElementById('sTeam').value || null
-            };
+        const btn = document.getElementById("submitBtn");
+        const msgBox = document.getElementById("messageBox");
+        const originalText = btn.innerHTML;
 
-            try {
-                // IMPORTANT: Replace this URL with your live Vercel URL
-                const response = await fetch("https://voxa-pi-three.vercel.app/", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        btn.disabled = true;
 
-                const data = await response.json();
+        const payload = {
+          fullName: document.getElementById("sName").value,
+          email: document.getElementById("sEmail").value,
+          password: document.getElementById("sPassword").value,
+          agency: document.getElementById("sAgency").value,
+          role: document.getElementById("sRole").value,
+          unit: document.getElementById("sUnit").value || null,
+          team: document.getElementById("sTeam").value || null,
+        };
 
-                if (response.ok) {
-                    msgBox.style.color = "#10b981"; // Green
-                    msgBox.innerHTML = `✅ ${data.message}`;
-                    document.getElementById('staffSignupForm').reset();
-                } else {
-                    msgBox.style.color = "#ef4444"; // Red
-                    msgBox.innerHTML = `❌ ${data.error}`;
-                }
-            } catch (err) {
-                msgBox.style.color = "#ef4444";
-                msgBox.innerHTML = `❌ Failed to connect to server.`;
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
+        try {
+          // IMPORTANT: Replace this URL with your live Vercel URL
+          const response = await fetch("https://voxa-pi-three.vercel.app/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            msgBox.style.color = "#10b981"; // Green
+            msgBox.innerHTML = `✅ ${data.message}`;
+            document.getElementById("staffSignupForm").reset();
+          } else {
+            msgBox.style.color = "#ef4444"; // Red
+            msgBox.innerHTML = `❌ ${data.error}`;
+          }
+        } catch (err) {
+          msgBox.style.color = "#ef4444";
+          msgBox.innerHTML = `❌ Failed to connect to server.`;
+        } finally {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
         }
+      }
     </script>
-</body>
+  </body>
 </html>
