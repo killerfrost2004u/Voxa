@@ -5,124 +5,226 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Staff Registration | Voxa</title>
     <link rel="icon" type="image/png" href="images/voxa-logo.png" />
-
     <link rel="stylesheet" href="css/style.css" />
-
     <link rel="stylesheet" href="css/auth.css" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet" />
   </head>
   <body>
-    <div class="container">
-      <div class="auth-page-wrapper">
-        <div
-          class="logo-container"
-          style="text-align: center; margin-bottom: 20px">
+    <nav class="navbar">
+      <div class="container">
+        <a
+          href="index.html"
+          class="logo"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+          ">
           <img
             src="images/voxa-logo.png"
             alt="Voxa Logo"
-            style="height: 60px; border-radius: 12px" />
-          <h2 style="color: var(--text-main); margin-top: 10px">
-            Corporate Staff Portal
-          </h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem">
-            Register your staff account. Requires manager approval.
+            style="height: 35px; border-radius: 8px" />
+          VOXA
+        </a>
+        <div class="nav-links">
+          <a href="jobs.html">Find Jobs</a>
+          <a href="salaries.html">Salaries</a>
+          <a href="companies.html">Companies</a>
+        </div>
+        <div class="nav-auth">
+          <a href="login.html" class="btn-outline">Login</a>
+        </div>
+      </div>
+    </nav>
+
+    <div
+      class="container"
+      style="
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        margin-top: 40px;
+        margin-bottom: 40px;
+      ">
+      <div class="auth-page-wrapper">
+        <div class="auth-card">
+          <div class="auth-header">
+            <h2>Corporate Staff Portal</h2>
+            <p>Register your staff account. Requires manager approval.</p>
+          </div>
+
+          <form id="staffSignupForm" onsubmit="handleStaffSignup(event)">
+            <div class="input-group">
+              <label>Full Name</label>
+              <div class="input-with-icon">
+                <i class="fas fa-user"></i>
+                <input type="text" id="sName" placeholder="John Doe" required />
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label>Work Email</label>
+              <div class="input-with-icon">
+                <i class="fas fa-envelope"></i>
+                <input
+                  type="email"
+                  id="sEmail"
+                  placeholder="john@agency.com"
+                  required />
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label>Password</label>
+              <div class="input-with-icon">
+                <i class="fas fa-lock"></i>
+                <input
+                  type="password"
+                  id="sPassword"
+                  placeholder="Create a secure password"
+                  required />
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label>Agency Name</label>
+              <div class="input-with-icon">
+                <i class="fas fa-building"></i>
+                <input
+                  type="text"
+                  id="sAgency"
+                  placeholder="e.g. Dark Wolves"
+                  required />
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label>Requested Role</label>
+              <div class="input-with-icon">
+                <i class="fas fa-user-tag"></i>
+                <select
+                  id="sRole"
+                  required
+                  style="
+                    width: 100%;
+                    padding: 12px 12px 12px 40px;
+                    background: var(--bg-input);
+                    border: 1px solid var(--border-color);
+                    color: var(--text-main);
+                    border-radius: 6px;
+                    outline: none;
+                    font-family: inherit;
+                    appearance: none;
+                  ">
+                  <option value="UnitManager">Unit Manager</option>
+                  <option value="Leader">Team Leader</option>
+                  <option value="Recruiter" selected>Recruiter</option>
+                  <option value="Validator">Validator (QA)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label>Unit Name (Optional)</label>
+              <div class="input-with-icon">
+                <i class="fas fa-sitemap"></i>
+                <input type="text" id="sUnit" placeholder="e.g. Unit A" />
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label>Team Name (Optional)</label>
+              <div class="input-with-icon">
+                <i class="fas fa-users"></i>
+                <input
+                  type="text"
+                  id="sTeam"
+                  placeholder="e.g. Night Shift Team" />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              class="btn-primary"
+              id="submitBtn"
+              style="width: 100%; margin-top: 15px">
+              Request Account Access
+            </button>
+          </form>
+
+          <div
+            id="messageBox"
+            style="
+              margin-top: 15px;
+              text-align: center;
+              font-weight: bold;
+              font-size: 0.9rem;
+            "></div>
+
+          <div class="auth-divider"><span>OR</span></div>
+
+          <p class="auth-switch">
+            Already approved? <a href="login.html">Sign in here</a>
           </p>
         </div>
 
-        <form id="staffSignupForm" onsubmit="handleStaffSignup(event)">
-          <div class="input-group">
-            <label>Full Name</label>
-            <input type="text" id="sName" placeholder="John Doe" required />
-          </div>
-
-          <div class="input-group">
-            <label>Work Email</label>
-            <input
-              type="email"
-              id="sEmail"
-              placeholder="john@agency.com"
-              required />
-          </div>
-
-          <div class="input-group">
-            <label>Password</label>
-            <input
-              type="password"
-              id="sPassword"
-              placeholder="Create a secure password"
-              required />
-          </div>
-
-          <div class="input-group">
-            <label>Agency Name</label>
-            <input
-              type="text"
-              id="sAgency"
-              placeholder="e.g. Dark Wolves"
-              required />
-          </div>
-
-          <div class="input-group">
-            <label>Requested Role</label>
-            <select
-              id="sRole"
-              required
-              style="
-                width: 100%;
-                padding: 12px;
-                background: var(--bg-input);
-                border: 1px solid var(--border-color);
-                color: var(--text-main);
-                border-radius: 6px;
-                outline: none;
-              ">
-              <option value="UnitManager">Unit Manager</option>
-              <option value="Leader">Team Leader</option>
-              <option value="Recruiter" selected>Recruiter</option>
-              <option value="Validator">Validator (QA)</option>
-            </select>
-          </div>
-
-          <div class="input-group">
-            <label>Unit Name (If applicable)</label>
-            <input
-              type="text"
-              id="sUnit"
-              placeholder="e.g. Unit A (Optional)" />
-          </div>
-
-          <div class="input-group">
-            <label>Team Name (If applicable)</label>
-            <input
-              type="text"
-              id="sTeam"
-              placeholder="e.g. Night Shift Team (Optional)" />
-          </div>
-
-          <button type="submit" class="auth-btn" id="submitBtn">
-            Request Account Access
-          </button>
-        </form>
-
-        <div
-          id="messageBox"
-          style="
-            margin-top: 15px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 0.9rem;
-          "></div>
-
-        <p class="auth-switch" style="margin-top: 20px">
-          Already approved? <a href="login.html">Sign in here</a>
-        </p>
+        <div class="auth-illustration">
+          <img
+            src="images/illustration-of-wolf-head-logo-icon-concept-orange-color-for-e-sport-team-badge-or-company-branding-vector.jpg"
+            alt="Voxa Wolf Logo" />
+          <h3>Join the Corporate Network</h3>
+          <p>
+            Manage candidates, coordinate with teams, and access top-tier
+            bilingual talent efficiently.
+          </p>
+        </div>
       </div>
     </div>
+
+    <footer class="footer">
+      <div class="container footer-grid">
+        <div class="footer-col brand-col">
+          <img
+            src="images/voxa-logo.png"
+            alt="Voxa"
+            style="height: 40px; margin-bottom: 1rem; border-radius: 8px" />
+          <p
+            style="
+              color: var(--text-muted);
+              font-size: 0.9rem;
+              margin-bottom: 1rem;
+            ">
+            Connecting top bilingual talent with global BPO leaders through
+            AI-driven insights.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h4>Platform</h4>
+          <a href="jobs.html">Browse Jobs</a>
+          <a href="companies.html">Top Companies</a>
+          <a href="salaries.html">Salary Insights</a>
+        </div>
+        <div class="footer-col">
+          <h4>Support</h4>
+          <a href="contact.html">Contact Us</a>
+          <a href="about.html">About Voxa</a>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Service</a>
+        </div>
+      </div>
+      <div class="footer-bottom">&copy; 2026 Voxa AI. All rights reserved.</div>
+    </footer>
 
     <script>
       async function handleStaffSignup(e) {
@@ -146,7 +248,7 @@
         };
 
         try {
-          // IMPORTANT: Replace this URL with your live Vercel URL
+          // Perfect Fetch URL!
           const response = await fetch(
             "https://voxa-pi-three.vercel.app/api/staff-signup",
             {
