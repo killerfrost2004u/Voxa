@@ -379,6 +379,47 @@ def create_user():
         if 'cur' in locals(): cur.close()
         if 'conn' in locals(): conn.close()
 
+@app.route('/api/staff-signup', methods=['POST'])
+def staff_signup():
+    data = request.get_json()
+    
+    name = data.get('fullName')
+    email = data.get('email')
+    password = data.get('password')
+    role = data.get('role')
+    agency = data.get('agency')
+    unit = data.get('unit')
+    team = data.get('team')
+    
+    if not all([name, email, password, role, agency]):
+        return jsonify({"error": "Missing required fields!"}), 400
+
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Check if email already exists
+        cur.execute('SELECT "UserID" FROM "Users" WHERE "Email" = %s', (email,))
+        if cur.fetchone():
+            return jsonify({"error": "Email already exists!"}), 400
+            
+        # Insert the user. Notice we explicitly set Status to 'Pending'!
+        cur.execute("""
+            INSERT INTO "Users" ("FullName", "Email", "PasswordHash", "Role", "AgencyName", "UnitName", "TeamName", "Status")
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 'Pending')
+        """, (name, email, hashed_password, role, agency, unit, team))
+        
+        conn.commit()
+        return jsonify({"message": "Registration successful! Your account is pending approval from your manager."}), 201
+    except Exception as e:
+        print(f"❌ Staff Signup Error: {e}")
+        return jsonify({"error": "Failed to register account."}), 500
+    finally:
+        if 'cur' in locals(): cur.close()
+        if 'conn' in locals(): conn.close()
+
 @app.route('/api/signup', methods=['POST'])
 def signup():
     try:
