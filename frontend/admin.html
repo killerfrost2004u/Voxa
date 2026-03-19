@@ -435,13 +435,11 @@
               id="newUser-name"
               placeholder="Full Name (e.g. John Doe)"
               style="grid-column: 1 / -1" />
-
             <input
               type="email"
               id="newUser-email"
               placeholder="Email Address (Login ID)"
               style="grid-column: 1 / -1" />
-
             <input
               type="password"
               id="newUser-password"
@@ -459,18 +457,29 @@
                 width: 100%;
                 outline: none;
                 font-family: inherit;
+                grid-column: 1 / -1;
               ">
-              <option value="Validator">Validator (Agency Partner)</option>
-              <option value="Recruiter">Recruiter</option>
-              <option value="Leader">Team Leader</option>
+              <option value="CEO">CEO / Agency Owner</option>
               <option value="UnitManager">Unit Manager</option>
+              <option value="Leader">Team Leader</option>
+              <option value="Recruiter">Recruiter</option>
+              <option value="Validator">Validator (Agency Partner)</option>
               <option value="Admin">System Admin</option>
             </select>
 
             <input
               type="text"
               id="newUser-agency"
-              placeholder="Agency / Team Name (e.g. Superheroes)" />
+              placeholder="Agency Name (e.g. Dark Wolves)" />
+            <input
+              type="text"
+              id="newUser-unit"
+              placeholder="Unit Name (e.g. Unit A - Leave blank if N/A)" />
+            <input
+              type="text"
+              id="newUser-team"
+              placeholder="Team Name (Leave blank if N/A)"
+              style="grid-column: 1 / -1" />
 
             <button
               id="btn-create-user"
