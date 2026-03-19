@@ -1178,16 +1178,31 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
 
       // --- NEW: CREATE USER FUNCTION ---
       async function createNewUser() {
+        const currentUser = JSON.parse(localStorage.getItem("user"));
+
         const payload = {
           fullName: document.getElementById("newUser-name").value,
           email: document.getElementById("newUser-email").value,
           password: document.getElementById("newUser-password").value,
-          role: document.getElementById("newUser-role").value,
-          teamName: document.getElementById("newUser-agency").value,
+          target_role: document.getElementById("newUser-role").value,
+          target_agency: document.getElementById("newUser-agency").value,
+          target_unit: document.getElementById("newUser-unit").value || null,
+          target_team: document.getElementById("newUser-team").value || null,
+
+          // Security details: Who is trying to create this user?
+          creator_role: currentUser.isAdmin ? "SuperAdmin" : currentUser.role,
+          creator_agency: currentUser.agencyName,
+          creator_unit: currentUser.unitName,
+          creator_team: currentUser.teamName,
         };
 
-        if (!payload.email || !payload.password || !payload.fullName) {
-          return alert("Please fill in Name, Email, and Password.");
+        if (
+          !payload.email ||
+          !payload.password ||
+          !payload.fullName ||
+          !payload.target_agency
+        ) {
+          return alert("Please fill in Name, Email, Password, and Agency.");
         }
 
         const btn = document.getElementById("btn-create-user");
@@ -1195,6 +1210,7 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
 
         try {
+          // Note: Make sure to use your live Vercel URL here!
           const res = await fetch(
             "https://voxa-pi-three.vercel.app/api/admin/users",
             {
@@ -1207,13 +1223,12 @@ ${app.ClientPanel || "Pending AI Assessment..."}`;
           const data = await res.json();
 
           if (res.ok) {
-            alert(data.message);
+            alert("✅ " + data.message);
             document.getElementById("newUser-name").value = "";
             document.getElementById("newUser-email").value = "";
             document.getElementById("newUser-password").value = "";
-            document.getElementById("newUser-agency").value = "";
           } else {
-            alert("Error: " + data.error);
+            alert("❌ Error: " + data.error);
           }
         } catch (e) {
           console.error(e);
