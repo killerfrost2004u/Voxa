@@ -6,13 +6,99 @@
     <title>Staff Registration | Voxa</title>
     <link rel="icon" type="image/png" href="images/voxa-logo.png" />
     <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/auth.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet" />
+
+    <style>
+      .signup-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 140px);
+        padding: 40px 20px;
+        background: var(--bg-main, #0b0f19);
+      }
+      .signup-card {
+        background: var(--bg-card, #161b22);
+        padding: 40px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color, #2d3548);
+        width: 100%;
+        max-width: 450px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+      .signup-card h2 {
+        text-align: center;
+        margin-bottom: 8px;
+        color: white;
+        font-size: 1.8rem;
+      }
+      .signup-card p.subtitle {
+        text-align: center;
+        color: var(--text-muted, #8b949e);
+        margin-bottom: 30px;
+        font-size: 0.95rem;
+      }
+      .form-group {
+        margin-bottom: 18px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--text-main, #c9d1d9);
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 12px 15px;
+        background: var(--bg-input, #010409);
+        border: 1px solid var(--border-color, #30363d);
+        border-radius: 8px;
+        color: white;
+        font-family: inherit;
+        font-size: 1rem;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .form-group input:focus,
+      .form-group select:focus {
+        border-color: var(--primary-color, #f59e0b);
+      }
+      .btn-submit {
+        width: 100%;
+        padding: 14px;
+        background: var(--primary-color, #f59e0b);
+        color: #000;
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: 0.3s;
+        margin-top: 15px;
+      }
+      .btn-submit:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+      }
+      .switch-text {
+        text-align: center;
+        margin-top: 25px;
+        color: var(--text-muted, #8b949e);
+        font-size: 0.9rem;
+      }
+      .switch-text a {
+        color: var(--primary-color, #f59e0b);
+        text-decoration: none;
+        font-weight: 600;
+      }
+    </style>
   </head>
   <body>
     <nav class="navbar">
@@ -31,40 +117,46 @@
           <img
             src="images/voxa-logo.png"
             alt="Voxa Logo"
-            style="height: 40px; width: auto; border-radius: 8px" />
-          Voxa
+            style="height: 35px; border-radius: 8px" />
+          VOXA
         </a>
-        <ul class="nav-links">
-          <li><a href="index.html">Home</a></li>
-          <li><a href="about.html">About Us</a></li>
-          <li><a href="jobs.html">Find Jobs</a></li>
-          <li><a href="companies.html">Companies</a></li>
-          <li><a href="salaries.html">Salaries</a></li>
-          <li><a href="contact.html">Contact Us</a></li>
-        </ul>
-        <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+        <div class="nav-links">
+          <a href="jobs.html">Find Jobs</a>
+          <a href="salaries.html">Salaries</a>
+          <a href="companies.html">Companies</a>
+        </div>
+        <div class="nav-auth">
+          <a href="login.html" class="btn-outline">Login</a>
+        </div>
       </div>
     </nav>
 
-    <div class="auth-page-wrapper">
-      <div class="auth-box">
-        <div class="auth-header">
-          <h2>Corporate Staff Portal</h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem">
-            Register your staff account. Requires manager approval.
-          </p>
-        </div>
+    <div class="signup-wrapper">
+      <div class="signup-card">
+        <h2>Corporate Staff</h2>
+        <p class="subtitle">
+          Register your account. Requires manager approval.
+        </p>
 
-        <div id="messageBox" class="success-msg" style="display: none"></div>
-        <div id="errorBox" class="error-msg" style="display: none"></div>
+        <div
+          id="messageBox"
+          style="
+            display: none;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+          "></div>
 
-        <form
-          id="staffSignupForm"
-          class="auth-form"
-          onsubmit="handleStaffSignup(event)">
+        <form id="staffSignupForm" onsubmit="handleStaffSignup(event)">
           <div class="form-group">
             <label>Full Name</label>
-            <input type="text" id="sName" placeholder="John Doe" required />
+            <input
+              type="text"
+              id="sName"
+              placeholder="e.g. John Doe"
+              required />
           </div>
 
           <div class="form-group">
@@ -96,21 +188,7 @@
 
           <div class="form-group">
             <label>Requested Role</label>
-            <select
-              id="sRole"
-              required
-              style="
-                width: 100%;
-                padding: 0.8rem 1rem;
-                background: var(--bg-input);
-                border: 1px solid var(--border-color);
-                border-radius: 6px;
-                color: var(--text-main);
-                font-size: 1rem;
-                outline: none;
-                appearance: none;
-                font-family: inherit;
-              ">
+            <select id="sRole" required>
               <option value="UnitManager">Unit Manager</option>
               <option value="Leader">Team Leader</option>
               <option value="Recruiter" selected>Recruiter</option>
@@ -128,37 +206,24 @@
             <input type="text" id="sTeam" placeholder="e.g. Night Shift Team" />
           </div>
 
-          <button
-            type="submit"
-            class="btn-primary"
-            id="submitBtn"
-            style="
-              width: 100%;
-              margin-top: 10px;
-              padding: 12px;
-              font-size: 1.05rem;
-            ">
+          <button type="submit" class="btn-submit" id="submitBtn">
             Request Account Access
           </button>
 
-          <p class="toggle-text">
+          <p class="switch-text">
             Already approved? <a href="login.html">Sign in here</a>
           </p>
         </form>
       </div>
     </div>
 
-    <footer>
-      <div class="container">
-        <div class="footer-col">
-          <h4
-            style="display: flex; align-items: center; gap: 10px; color: white">
-            <img
-              src="images/voxa-logo.png"
-              alt="Voxa Logo"
-              style="height: 30px; width: auto; border-radius: 4px" />
-            Voxa
-          </h4>
+    <footer class="footer">
+      <div class="container footer-grid">
+        <div class="footer-col brand-col">
+          <img
+            src="images/voxa-logo.png"
+            alt="Voxa"
+            style="height: 40px; margin-bottom: 1rem; border-radius: 8px" />
           <p
             style="
               color: var(--text-muted);
@@ -175,20 +240,8 @@
           <a href="companies.html">Top Companies</a>
           <a href="salaries.html">Salary Insights</a>
         </div>
-        <div class="footer-col">
-          <h4>Support</h4>
-          <a href="contact.html">Contact Us</a>
-          <a href="about.html">About Voxa</a>
-        </div>
-        <div class="footer-col">
-          <h4>Legal</h4>
-          <a href="privacy.html">Privacy Policy</a>
-          <a href="terms.html">Terms of Service</a>
-        </div>
       </div>
-      <div class="footer-bottom">
-        &copy; 2026 Voxa Recruitment. All rights reserved.
-      </div>
+      <div class="footer-bottom">&copy; 2026 Voxa AI. All rights reserved.</div>
     </footer>
 
     <script>
@@ -197,13 +250,11 @@
 
         const btn = document.getElementById("submitBtn");
         const msgBox = document.getElementById("messageBox");
-        const errBox = document.getElementById("errorBox");
         const originalText = btn.innerHTML;
 
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
         btn.disabled = true;
         msgBox.style.display = "none";
-        errBox.style.display = "none";
 
         const payload = {
           fullName: document.getElementById("sName").value,
@@ -227,17 +278,25 @@
 
           const data = await response.json();
 
+          msgBox.style.display = "block";
           if (response.ok) {
-            msgBox.style.display = "block";
+            msgBox.style.backgroundColor = "rgba(16, 185, 129, 0.2)";
+            msgBox.style.color = "#10b981";
+            msgBox.style.border = "1px solid #10b981";
             msgBox.innerHTML = `✅ ${data.message}`;
             document.getElementById("staffSignupForm").reset();
           } else {
-            errBox.style.display = "block";
-            errBox.innerHTML = `❌ ${data.error}`;
+            msgBox.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
+            msgBox.style.color = "#ef4444";
+            msgBox.style.border = "1px solid #ef4444";
+            msgBox.innerHTML = `❌ ${data.error}`;
           }
         } catch (err) {
-          errBox.style.display = "block";
-          errBox.innerHTML = `❌ Failed to connect to server.`;
+          msgBox.style.display = "block";
+          msgBox.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
+          msgBox.style.color = "#ef4444";
+          msgBox.style.border = "1px solid #ef4444";
+          msgBox.innerHTML = `❌ Failed to connect to server.`;
         } finally {
           btn.innerHTML = originalText;
           btn.disabled = false;
