@@ -715,4 +715,75 @@ def get_structure():
         print(f"❌ Structure Fetch Error: {e}")
         return jsonify({}), 500
 
+@app.route('/api/team-stats', methods=['GET'])
+def get_team_stats():
+    role = request.args.get('role')
+    agency = request.args.get('agency')
+    unit = request.args.get('unit')
+    team = request.args.get('team')
+
+    if not agency:
+        return jsonify({"error": "Agency is required"}), 400
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # Build the dynamic Matrix Query for stats
+        base_query = 'SELECT "RecruiterSource", COUNT(*) as count FROM "JobApplications" WHERE "AgencyName" = %s'
+        params = [agency]
+
+        if role == 'UnitManager':
+            base_query += ' AND "UnitName" = %s'
+            params.append(unit)
+        elif role == 'Leader':
+            base_query += ' AND "UnitName" = %s AND "TeamName" = %s'
+            params.extend([unit, team])
+
+        # Filter out empty recruiters and group them
+        base_query += ' AND "RecruiterSource" IS NOT NULL GROUP BY "RecruiterSource" ORDER BY count DESC'
+        
+        cur.execute(base_query, tuple(params))
+        stats = cur.fetchall()
+        
+        # Convert to a clean list
+        result = [{"recruiter": row[0], "count": row[1]} for row in stats]
+        return jsonify(result), 200
+    except Exception as e:
+        print(f"❌ Stats Error: {e}")
+        return jsonify({"error": "Failed to fetch stats"}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+@app.route('/api/schedule-interview', methods=['POST'])
+def schedule_interview():
+    data = request.json
+    app_id = data.get('application_id')
+    date = data.get('date')
+    time = data.get('time')
+    link = data.get('link')
+    
+    if not all([app_id, date, time]):
+        return jsonify({"error": "Missing required fields"}), 400
+        
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # Update the candidate's row with the interview slot
+        # Note: Replace "id" with your actual primary key column name if it differs (e.g., "ApplicationID")
+        cur.execute("""
+            UPDATE "JobApplications"
+            SET "InterviewDate" = %s, "InterviewTime" = %s, "InterviewLink" = %s
+            WHERE "id" = %s 
+        """, (date, time, link, app_id))
+        
+        conn.commit()
+        return jsonify({"message": "Interview slot locked in!"}), 200
+    except Exception as e:
+        print(f"❌ Schedule Error: {e}")
+        return jsonify({"error": "Failed to schedule interview"}), 500
+    finally:
+        cur.close()
+        conn.close()
+
 if __name__ == '__main__': app.run(debug=True, port=5000, use_reloader=False)

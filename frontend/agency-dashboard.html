@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agency Workspace | Voxa</title>
+    <link rel="icon" type="image/png" href="images/voxa-logo.png" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+      .dashboard-header {
+        background: var(--bg-card);
+        padding: 20px 30px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      /* Custom Leaderboard Styling */
+      .leaderboard-card {
+        background: var(--bg-card);
+        padding: 25px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 30px;
+      }
+      .leader-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+      .leader-name {
+        width: 150px;
+        color: var(--text-main);
+        font-weight: 500;
+        font-size: 0.95rem;
+      }
+      .leader-bar-container {
+        flex-grow: 1;
+        background: var(--bg-input);
+        height: 20px;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+      }
+      .leader-bar {
+        height: 100%;
+        background: var(--primary-color);
+        width: 0%;
+        transition: width 1s ease-out;
+      }
+      .leader-score {
+        margin-left: 15px;
+        font-weight: bold;
+        color: var(--primary-color);
+        width: 40px;
+        text-align: right;
+      }
+
+      /* Custom Modal Styling */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      .modal-card {
+        background: var(--bg-card);
+        padding: 30px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 400px;
+        border: 1px solid var(--border-color);
+      }
+      .modal-card input,
+      .modal-card select {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        margin-bottom: 15px;
+        background: var(--bg-input);
+        color: white;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+      }
+      .btn-schedule {
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        width: 100%;
+      }
+      .btn-cancel {
+        background: transparent;
+        color: var(--text-muted);
+        border: none;
+        width: 100%;
+        margin-top: 10px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body style="background: var(--bg-main); color: var(--text-main)">
+    <div class="dashboard-header">
+      <div>
+        <h2 id="welcomeMsg">Workspace</h2>
+        <p
+          id="roleBadge"
+          style="color: var(--primary-color); font-weight: 600"></p>
+      </div>
+      <button onclick="logout()" class="btn-outline" style="padding: 8px 15px">
+        Logout
+      </button>
+    </div>
+
+    <div class="container">
+      <div class="leaderboard-card">
+        <h3
+          style="
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+          ">
+          <i class="fas fa-trophy" style="color: var(--primary-color)"></i>
+          Performance Leaderboard
+        </h3>
+        <div id="leaderboardContent">
+          <p style="color: var(--text-muted)">Loading analytics...</p>
+        </div>
+      </div>
+
+      <div class="leaderboard-card">
+        <h3 style="margin-bottom: 20px">👥 Candidate Pipeline</h3>
+        <div style="overflow-x: auto">
+          <table
+            style="width: 100%; text-align: left; border-collapse: collapse">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border-color)">
+                <th style="padding: 10px">Name</th>
+                <th style="padding: 10px">Recruiter</th>
+                <th style="padding: 10px">Status</th>
+                <th style="padding: 10px">Interview Slot</th>
+                <th style="padding: 10px">Action</th>
+              </tr>
+            </thead>
+            <tbody id="candidateTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="scheduleModal">
+      <div class="modal-card">
+        <h3 style="margin-bottom: 15px">📅 Schedule Interview</h3>
+        <input type="hidden" id="modalAppId" />
+
+        <label>Date</label>
+        <input type="date" id="modalDate" required />
+
+        <label>Time Slot</label>
+        <select id="modalTime" required>
+          <option value="10:00 AM - 10:30 AM">10:00 AM - 10:30 AM</option>
+          <option value="11:00 AM - 11:30 AM">11:00 AM - 11:30 AM</option>
+          <option value="2:00 PM - 2:30 PM">2:00 PM - 2:30 PM</option>
+          <option value="4:00 PM - 4:30 PM">4:00 PM - 4:30 PM</option>
+          <option value="7:00 PM - 9:00 PM">
+            7:00 PM - 9:00 PM (Night Slot)
+          </option>
+        </select>
+
+        <label>Meeting Link (Optional)</label>
+        <input
+          type="url"
+          id="modalLink"
+          placeholder="https://zoom.us/j/123..." />
+
+        <button onclick="submitSchedule()" class="btn-schedule">
+          Confirm Slot
+        </button>
+        <button onclick="closeModal()" class="btn-cancel">Cancel</button>
+      </div>
+    </div>
+
+    <script>
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      // Security check
+      if (!user || user.role === "Candidate") {
+        window.location.href = "login.html";
+      }
+
+      document.getElementById("welcomeMsg").innerText =
+        `Welcome back, ${user.fullName}`;
+
+      let roleString = `${user.role} | ${user.agencyName}`;
+      if (user.unitName) roleString += ` | ${user.unitName}`;
+      if (user.teamName) roleString += ` | ${user.teamName}`;
+      document.getElementById("roleBadge").innerText = roleString;
+
+      window.onload = async () => {
+        await fetchLeaderboard();
+        await fetchCandidates();
+      };
+
+      // 1. Load the Bar Chart Leaderboard
+      async function fetchLeaderboard() {
+        try {
+          const url = `https://voxa-pi-three.vercel.app/api/team-stats?role=${user.role}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`;
+          const res = await fetch(url);
+          const stats = await res.json();
+
+          const container = document.getElementById("leaderboardContent");
+          if (stats.length === 0) {
+            container.innerHTML = `<p style="color: var(--text-muted);">No candidates recruited yet.</p>`;
+            return;
+          }
+
+          const maxCount = Math.max(...stats.map((s) => s.count));
+          container.innerHTML = "";
+
+          stats.forEach((stat) => {
+            const percentage = (stat.count / maxCount) * 100;
+            container.innerHTML += `
+                        <div class="leader-row">
+                            <div class="leader-name">${stat.recruiter}</div>
+                            <div class="leader-bar-container">
+                                <div class="leader-bar" style="width: ${percentage}%;"></div>
+                            </div>
+                            <div class="leader-score">${stat.count}</div>
+                        </div>
+                    `;
+          });
+        } catch (e) {
+          console.error("Leaderboard Error", e);
+        }
+      }
+
+      // 2. Load Candidates & Show Schedule Button
+      async function fetchCandidates() {
+        try {
+          // Re-using your existing applications route but passing the matrix parameters!
+          const url = `https://voxa-pi-three.vercel.app/api/admin/applications?role=${user.role}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`;
+          const res = await fetch(url);
+          const apps = await res.json();
+
+          const tbody = document.getElementById("candidateTableBody");
+          tbody.innerHTML = "";
+
+          apps.forEach((app) => {
+            let scheduleText = app.InterviewDate
+              ? `${app.InterviewDate} @ ${app.InterviewTime}`
+              : "Not Scheduled";
+
+            // Only show the Schedule button if the user is a Leader/Manager AND it hasn't been scheduled
+            let actionBtn = "";
+            if (
+              !app.InterviewDate &&
+              (user.role === "Leader" ||
+                user.role === "UnitManager" ||
+                user.role === "CEO")
+            ) {
+              actionBtn = `<button onclick="openModal(${app.id})" style="background:var(--primary-color); color:#000; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;">Schedule</button>`;
+            } else if (app.InterviewLink) {
+              actionBtn = `<a href="${app.InterviewLink}" target="_blank" style="color: #10b981; font-size: 0.85rem;">Join Call</a>`;
+            }
+
+            tbody.innerHTML += `
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 12px 10px;">${app.FullName}</td>
+                            <td style="padding: 12px 10px; color: var(--text-muted);">${app.RecruiterSource || "Direct"}</td>
+                            <td style="padding: 12px 10px;">${app.Status || "Pending"}</td>
+                            <td style="padding: 12px 10px; font-size: 0.9rem;">${scheduleText}</td>
+                            <td style="padding: 12px 10px;">${actionBtn}</td>
+                        </tr>
+                    `;
+          });
+        } catch (e) {
+          console.error("Candidate Fetch Error", e);
+        }
+      }
+
+      // 3. Modal Logic
+      function openModal(appId) {
+        document.getElementById("modalAppId").value = appId;
+        document.getElementById("scheduleModal").style.display = "flex";
+      }
+
+      function closeModal() {
+        document.getElementById("scheduleModal").style.display = "none";
+      }
+
+      async function submitSchedule() {
+        const payload = {
+          application_id: document.getElementById("modalAppId").value,
+          date: document.getElementById("modalDate").value,
+          time: document.getElementById("modalTime").value,
+          link: document.getElementById("modalLink").value,
+        };
+
+        const res = await fetch(
+          "https://voxa-pi-three.vercel.app/api/schedule-interview",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          },
+        );
+
+        if (res.ok) {
+          alert("✅ Interview Scheduled!");
+          closeModal();
+          fetchCandidates(); // Refresh the table
+        } else {
+          alert("❌ Error scheduling interview.");
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("user");
+        window.location.href = "login.html";
+      }
+    </script>
+  </body>
+</html>
