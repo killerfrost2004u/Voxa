@@ -617,6 +617,12 @@
         audioBlob = null,
         durationSeconds = 0;
 
+      const urlParams = new URLSearchParams(window.location.search);
+      const refRecruiter = urlParams.get("recruiter") || null;
+      const refAgency = urlParams.get("agency") || null;
+      const refUnit = urlParams.get("unit") || null;
+      const refTeam = urlParams.get("team") || null;
+
       function switchVoiceMethod(method) {
         currentMethod = method;
         document
@@ -791,23 +797,16 @@
             const mil = document.getElementById("app-military");
             formData.append("militaryStatus", mil ? mil.value : "N/A");
 
-            // Hidden Data
+            // Hidden Data (Job specifics)
             formData.append("title", params.get("title") || "General");
             formData.append("company", params.get("company") || "Voxa");
             formData.append("ref", params.get("ref") || "Direct/Organic");
 
-            // Put this at the very top of your application script in apply.html
-            const urlParams = new URLSearchParams(window.location.search);
-            const recruiterSource = urlParams.get("recruiter") || null;
-            const agencyName = urlParams.get("agency") || null;
-            const unitName = urlParams.get("unit") || null;
-            const teamName = urlParams.get("team") || null;
-
-            // Then, when you build your FormData payload to send to Python, append them!
-            formData.append("recruiterSource", recruiterSource);
-            formData.append("agencyName", agencyName);
-            formData.append("unitName", unitName);
-            formData.append("teamName", teamName);
+            // 🚀 Matrix Referral Tracking
+            if (params.get("recruiter")) formData.append("recruiterSource", params.get("recruiter"));
+            if (params.get("agency")) formData.append("agencyName", params.get("agency"));
+            if (params.get("unit")) formData.append("unitName", params.get("unit"));
+            if (params.get("team")) formData.append("teamName", params.get("team"));
 
             // 3. SEND
             const res = await fetch(

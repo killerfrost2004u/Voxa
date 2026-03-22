@@ -489,16 +489,26 @@ def apply():
         conn = get_db_connection()
         c = conn.cursor()
         d = request.form
+        
+        # 🚀 Capture the Referral Matrix Data
+        recruiter = d.get('recruiterSource') or d.get('ref') or 'Direct/Organic'
+        agency = d.get('agencyName')
+        unit = d.get('unitName')
+        team = d.get('teamName')
+
+        # 🚀 Added the Matrix columns to the SQL statement
         c.execute(
             """INSERT INTO "JobApplications" 
             ("JobTitle", "Company", "FullName", "Email", "Phone", "WhatsApp", "EnglishLevel", "Experience", 
              "Gender", "GraduationStatus", "MilitaryStatus", "NationalID", "Nationality", "Address", 
-             "DateOfBirth", "FacultyUniversity", "VoiceRecordPath", "VoiceRecordPath2", "SubmittedAt", "RecruiterSource") 
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP,%s)""",
+             "DateOfBirth", "FacultyUniversity", "VoiceRecordPath", "VoiceRecordPath2", "SubmittedAt", 
+             "RecruiterSource", "AgencyName", "UnitName", "TeamName") 
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP,%s,%s,%s,%s)""",
             (d.get('title'), d.get('company'), d.get('name'), d.get('email'), d.get('phone'), d.get('whatsapp'),
              d.get('english'), d.get('experience'), d.get('gender'), d.get('gradStatus'), d.get('militaryStatus'),
              d.get('nationalId'), d.get('nationality'), d.get('address'), d.get('dob') or None, d.get('faculty'), 
-             fn, fn2, d.get('ref', 'Direct/Organic')))
+             fn, fn2, recruiter, agency, unit, team)
+        )
         conn.commit()
         conn.close()
         return jsonify({"message": "OK"}), 201
