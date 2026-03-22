@@ -105,12 +105,17 @@ if (loginForm) {
         );
 
         // SMART ROUTING BASED ON ROLE
-        if (data.user.role === "SuperAdmin" || data.user.role === "Admin") {
+        const userRole = data.user.role;
+        
+        if (userRole === "SuperAdmin" || userRole === "Admin") {
           window.location.href = "admin.html";
-        } else if (data.user.role === "Validator") {
+        } else if (["CEO", "UnitManager", "Leader", "Recruiter"].includes(userRole)) {
+          // 🚀 Send corporate staff to the new Shapeshifter Workspace!
+          window.location.href = "agency-dashboard.html";
+        } else if (userRole === "Validator") {
           window.location.href = "validator.html";
         } else {
-          // Regular candidates or recruiters go to the dashboard
+          // Regular candidates go to the candidate portal
           window.location.href = "dashboard.html";
         }
       } else {
