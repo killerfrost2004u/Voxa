@@ -796,4 +796,76 @@ def schedule_interview():
         cur.close()
         conn.close()
 
+@app.route('/api/pending-staff', methods=['GET'])
+def get_pending_staff():
+    role = request.args.get('role')
+    agency = request.args.get('agency')
+    unit = request.args.get('unit')
+    team = request.args.get('team')
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # The Matrix Filter: Who is allowed to see which pending users?
+        base_query = 'SELECT "UserID", "FullName", "Email", "Role", "AgencyName", "UnitName", "TeamName" FROM "Users" WHERE "Status" = \'Pending\''
+        params = []
+
+        if role in ['SuperAdmin', 'Admin']:
+            pass # SuperAdmins see ALL pending users across the whole system
+        elif role == 'CEO':
+            base_query += ' AND "AgencyName" = %s AND "Role" IN (\'UnitManager\', \'Validator\', \'Leader\', \'Recruiter\')'
+            params.append(agency)
+        elif role == 'UnitManager':
+            base_query += ' AND "AgencyName" = %s AND "UnitName" = %s AND "Role" IN (\'Leader\', \'Recruiter\')'
+            params.extend([agency, unit])
+        elif role == 'Leader':
+            base_query += ' AND "AgencyName" = %s AND "UnitName" = %s AND "TeamName" = %s AND "Role" = \'Recruiter\''
+            params.extend([agency, unit, team])
+        else:
+            return jsonify([]), 200 # Normal Recruiters shouldn't see this queue
+
+        cur.execute(base_query, tuple(params))
+        rows = cur.fetchall()
+        
+        # Convert to a clean list for the frontend
+        result = []
+        for row in rows:
+            result.append({
+                "id": row[0], "name": row[1], "email": row[2], 
+                "role": row[3], "agency": row[4], "unit": row[5], "team": row[6]
+            })
+        return jsonify(result), 200
+    except Exception as e:
+        print(f"❌ Pending Fetch Error: {e}")
+        return jsonify({"error": "Failed to fetch pending staff"}), 500
+    finally:
+        if 'cur' in locals(): cur.close()
+        if 'conn' in locals(): conn.close()
+
+
+@app.route('/api/approve-staff', methods=['POST'])
+def approve_staff():
+    data = request.json
+    target_user_id = data.get('user_id')
+    action = data.get('action') # 'approve' or 'reject'
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        if action == 'approve':
+            # Unlock their account!
+            cur.execute('UPDATE "Users" SET "Status" = \'Approved\' WHERE "UserID" = %s', (target_user_id,))
+        elif action == 'reject':
+            # Delete their pending request completely
+            cur.execute('DELETE FROM "Users" WHERE "UserID" = %s AND "Status" = \'Pending\'', (target_user_id,))
+        
+        conn.commit()
+        return jsonify({"message": f"Staff member successfully {action}d!"}), 200
+    except Exception as e:
+        print(f"❌ Approval Error: {e}")
+        return jsonify({"error": "Failed to process approval"}), 500
+    finally:
+        if 'cur' in locals(): cur.close()
+        if 'conn' in locals(): conn.close()
+
 if __name__ == '__main__': app.run(debug=True, port=5000, use_reloader=False)

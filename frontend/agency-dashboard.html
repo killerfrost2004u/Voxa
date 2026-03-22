@@ -139,7 +139,11 @@
         <h2 id="welcomeMsg">Workspace</h2>
         <p
           id="roleBadge"
-          style="color: var(--primary-color); font-weight: 600"></p>
+          style="color: var(--primary-color); font-weight: 600; margin-bottom: 10px;"></p>
+        
+        <button onclick="copyReferralLink()" style="background: var(--bg-input); color: var(--primary-color); border: 1px dashed var(--primary-color); padding: 8px 15px; border-radius: 6px; cursor: pointer;">
+          <i class="fas fa-link"></i> Copy My Candidate Invite Link
+        </button>
       </div>
       <button onclick="logout()" class="btn-outline" style="padding: 8px 15px">
         Logout
@@ -147,6 +151,27 @@
     </div>
 
     <div class="container">
+      
+      <div class="leaderboard-card" id="approvals-section" style="display: none; border: 1px solid #f59e0b; background: rgba(245, 158, 11, 0.05);">
+          <h3 style="margin-bottom: 20px; color: #f59e0b;">
+              <i class="fas fa-bell"></i> Action Required: Pending Staff Approvals
+          </h3>
+          <div style="overflow-x: auto;">
+              <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                  <thead>
+                      <tr style="border-bottom: 1px solid var(--border-color);">
+                          <th style="padding: 10px;">Name</th>
+                          <th style="padding: 10px;">Requested Role</th>
+                          <th style="padding: 10px;">Unit/Team</th>
+                          <th style="padding: 10px;">Action</th>
+                      </tr>
+                  </thead>
+                  <tbody id="pendingTableBody">
+                      </tbody>
+              </table>
+          </div>
+      </div>
+
       <div class="leaderboard-card">
         <h3
           style="
@@ -161,26 +186,6 @@
           <p style="color: var(--text-muted)">Loading analytics...</p>
         </div>
       </div>
-
-      <div class="leaderboard-card">
-        <h3 style="margin-bottom: 20px">👥 Candidate Pipeline</h3>
-        <div style="overflow-x: auto">
-          <table
-            style="width: 100%; text-align: left; border-collapse: collapse">
-            <thead>
-              <tr style="border-bottom: 1px solid var(--border-color)">
-                <th style="padding: 10px">Name</th>
-                <th style="padding: 10px">Recruiter</th>
-                <th style="padding: 10px">Status</th>
-                <th style="padding: 10px">Interview Slot</th>
-                <th style="padding: 10px">Action</th>
-              </tr>
-            </thead>
-            <tbody id="candidateTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
 
     <div class="modal-overlay" id="scheduleModal">
       <div class="modal-card">
@@ -231,9 +236,79 @@
       document.getElementById("roleBadge").innerText = roleString;
 
       window.onload = async () => {
+        await fetchPendingStaff();
         await fetchLeaderboard();
         await fetchCandidates();
       };
+
+      async function fetchPendingStaff() {
+        try {
+          const url = `https://voxa-pi-three.vercel.app/api/pending-staff?role=${user.role}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`;
+          const res = await fetch(url);
+          const pendingUsers = await res.json();
+
+          const section = document.getElementById("approvals-section");
+          const tbody = document.getElementById("pendingTableBody");
+
+          if (pendingUsers.length === 0) {
+            section.style.display = "none"; // Hide the box if there's no work to do!
+            return;
+          }
+
+          section.style.display = "block"; // Show the box!
+          tbody.innerHTML = "";
+
+          pendingUsers.forEach((p) => {
+            let placement = p.unit || "Direct Report";
+            if (p.team) placement += ` / ${p.team}`;
+
+            tbody.innerHTML += `
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 12px 10px; font-weight: 500;">
+                                ${p.name} <br><span style="font-size: 0.8rem; color: var(--text-muted);">${p.email}</span>
+                            </td>
+                            <td style="padding: 12px 10px; color: var(--primary-color);">${p.role}</td>
+                            <td style="padding: 12px 10px; color: var(--text-muted);">${placement}</td>
+                            <td style="padding: 12px 10px; display: flex; gap: 10px;">
+                                <button onclick="processApproval(${p.id}, 'approve')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                                    <i class="fas fa-check"></i> Accept
+                                </button>
+                                <button onclick="processApproval(${p.id}, 'reject')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+          });
+        } catch (e) {
+          console.error("Pending Fetch Error", e);
+        }
+      }
+
+      async function processApproval(userId, action) {
+        if (!confirm(`Are you sure you want to ${action} this staff member?`))
+          return;
+
+        try {
+          const res = await fetch(
+            "https://voxa-pi-three.vercel.app/api/approve-staff",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ user_id: userId, action: action }),
+            },
+          );
+
+          if (res.ok) {
+            alert(`✅ Staff member ${action}d!`);
+            fetchPendingStaff(); // Instantly refresh the queue
+          } else {
+            alert("❌ Error processing request.");
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
 
       // 1. Load the Bar Chart Leaderboard
       async function fetchLeaderboard() {
