@@ -64,7 +64,8 @@
         font-family: inherit;
         font-size: 1rem;
         outline: none;
-        transition: border-color 0.2s;
+        transition: 0.2s;
+        appearance: none;
       }
       .form-group input:focus,
       .form-group select:focus {
@@ -121,9 +122,8 @@
           VOXA
         </a>
         <div class="nav-links">
-          <a href="jobs.html">Find Jobs</a>
-          <a href="salaries.html">Salaries</a>
-          <a href="companies.html">Companies</a>
+          <a href="jobs.html">Find Jobs</a><a href="salaries.html">Salaries</a
+          ><a href="companies.html">Companies</a>
         </div>
         <div class="nav-auth">
           <a href="login.html" class="btn-outline">Login</a>
@@ -151,6 +151,16 @@
 
         <form id="staffSignupForm" onsubmit="handleStaffSignup(event)">
           <div class="form-group">
+            <label>Requested Role</label>
+            <select id="sRole" required onchange="updateFormVisibility()">
+              <option value="UnitManager">Unit Manager</option>
+              <option value="Leader">Team Leader</option>
+              <option value="Recruiter" selected>Recruiter</option>
+              <option value="Validator">Validator (QA)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
             <label>Full Name</label>
             <input
               type="text"
@@ -177,33 +187,25 @@
               required />
           </div>
 
-          <div class="form-group">
+          <div class="form-group" id="groupAgency">
             <label>Agency Name</label>
-            <input
-              type="text"
-              id="sAgency"
-              placeholder="e.g. Dark Wolves"
-              required />
-          </div>
-
-          <div class="form-group">
-            <label>Requested Role</label>
-            <select id="sRole" required>
-              <option value="UnitManager">Unit Manager</option>
-              <option value="Leader">Team Leader</option>
-              <option value="Recruiter" selected>Recruiter</option>
-              <option value="Validator">Validator (QA)</option>
+            <select id="sAgency" required onchange="updateUnits()">
+              <option value="" disabled selected>Loading Agencies...</option>
             </select>
           </div>
 
-          <div class="form-group">
-            <label>Unit Name (Optional)</label>
-            <input type="text" id="sUnit" placeholder="e.g. Unit A" />
+          <div class="form-group" id="groupUnit">
+            <label>Unit Manager</label>
+            <select id="sUnit" required onchange="updateTeams()">
+              <option value="" disabled selected>Select Unit...</option>
+            </select>
           </div>
 
-          <div class="form-group">
-            <label>Team Name (Optional)</label>
-            <input type="text" id="sTeam" placeholder="e.g. Night Shift Team" />
+          <div class="form-group" id="groupTeam">
+            <label>Team Leader</label>
+            <select id="sTeam" required>
+              <option value="" disabled selected>Select Leader...</option>
+            </select>
           </div>
 
           <button type="submit" class="btn-submit" id="submitBtn">
@@ -217,53 +219,142 @@
       </div>
     </div>
 
-    <footer class="footer">
-      <div class="container footer-grid">
-        <div class="footer-col brand-col">
-          <img
-            src="images/voxa-logo.png"
-            alt="Voxa"
-            style="height: 40px; margin-bottom: 1rem; border-radius: 8px" />
-          <p
-            style="
-              color: var(--text-muted);
-              font-size: 0.9rem;
-              margin-bottom: 1rem;
-            ">
-            Connecting top bilingual talent with global BPO leaders through
-            AI-driven insights.
-          </p>
-        </div>
-        <div class="footer-col">
-          <h4>Platform</h4>
-          <a href="jobs.html">Browse Jobs</a>
-          <a href="companies.html">Top Companies</a>
-          <a href="salaries.html">Salary Insights</a>
-        </div>
-      </div>
-      <div class="footer-bottom">&copy; 2026 Voxa AI. All rights reserved.</div>
-    </footer>
-
     <script>
+      let dbStructure = {};
+
+      // 1. On page load, get the existing Agencies, Units, and Teams
+      window.onload = async function () {
+        try {
+          const res = await fetch(
+            "https://voxa-pi-three.vercel.app/api/structure",
+          );
+          dbStructure = await res.json();
+
+          const sAgency = document.getElementById("sAgency");
+          sAgency.innerHTML =
+            '<option value="" disabled selected>Select Agency...</option>';
+
+          for (let agency in dbStructure) {
+            let opt = document.createElement("option");
+            opt.value = agency;
+            opt.textContent = agency;
+            sAgency.appendChild(opt);
+          }
+        } catch (e) {
+          console.error("Failed to load structure.");
+        }
+
+        updateFormVisibility(); // Set the initial hiding/showing rules
+      };
+
+      // 2. Hide/Show fields dynamically based on the requested Role
+      function updateFormVisibility() {
+        const role = document.getElementById("sRole").value;
+        const groupUnit = document.getElementById("groupUnit");
+        const groupTeam = document.getElementById("groupTeam");
+        const sUnit = document.getElementById("sUnit");
+        const sTeam = document.getElementById("sTeam");
+
+        if (role === "Validator" || role === "UnitManager") {
+          groupUnit.style.display = "none";
+          sUnit.removeAttribute("required");
+          groupTeam.style.display = "none";
+          sTeam.removeAttribute("required");
+        } else if (role === "Leader") {
+          groupUnit.style.display = "block";
+          sUnit.setAttribute("required", "true");
+          groupTeam.style.display = "none";
+          sTeam.removeAttribute("required");
+        } else {
+          // Recruiter
+          groupUnit.style.display = "block";
+          sUnit.setAttribute("required", "true");
+          groupTeam.style.display = "block";
+          sTeam.setAttribute("required", "true");
+        }
+      }
+
+      // 3. Populate Unit dropdown based on the selected Agency
+      function updateUnits() {
+        const agency = document.getElementById("sAgency").value;
+        const sUnit = document.getElementById("sUnit");
+        sUnit.innerHTML =
+          '<option value="" disabled selected>Select Unit...</option>';
+
+        if (agency && dbStructure[agency]) {
+          for (let unit in dbStructure[agency]) {
+            if (unit && unit !== "null") {
+              let opt = document.createElement("option");
+              opt.value = unit;
+              opt.textContent = unit;
+              sUnit.appendChild(opt);
+            }
+          }
+        }
+        updateTeams();
+      }
+
+      // 4. Populate Team dropdown based on the selected Unit
+      function updateTeams() {
+        const agency = document.getElementById("sAgency").value;
+        const unit = document.getElementById("sUnit").value;
+        const sTeam = document.getElementById("sTeam");
+        sTeam.innerHTML =
+          '<option value="" disabled selected>Select Leader...</option>';
+
+        if (
+          agency &&
+          unit &&
+          dbStructure[agency] &&
+          dbStructure[agency][unit]
+        ) {
+          dbStructure[agency][unit].forEach((team) => {
+            if (team && team !== "null") {
+              let opt = document.createElement("option");
+              opt.value = team;
+              opt.textContent = team;
+              sTeam.appendChild(opt);
+            }
+          });
+        }
+      }
+
+      // 5. Submit Form
       async function handleStaffSignup(e) {
         e.preventDefault();
 
         const btn = document.getElementById("submitBtn");
         const msgBox = document.getElementById("messageBox");
         const originalText = btn.innerHTML;
-
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
         btn.disabled = true;
         msgBox.style.display = "none";
 
+        const role = document.getElementById("sRole").value;
+        const fullName = document.getElementById("sName").value;
+
+        // Auto-Naming Magic!
+        let targetUnit = null;
+        let targetTeam = null;
+
+        if (role === "UnitManager") {
+          targetUnit = fullName + " Unit";
+        } else if (role === "Leader") {
+          targetUnit = document.getElementById("sUnit").value;
+          targetTeam = fullName + " Team";
+        } else if (role === "Recruiter") {
+          targetUnit = document.getElementById("sUnit").value;
+          targetTeam = document.getElementById("sTeam").value;
+        }
+
         const payload = {
-          fullName: document.getElementById("sName").value,
+          fullName: fullName,
           email: document.getElementById("sEmail").value,
           password: document.getElementById("sPassword").value,
           agency: document.getElementById("sAgency").value,
-          role: document.getElementById("sRole").value,
-          unit: document.getElementById("sUnit").value || null,
-          team: document.getElementById("sTeam").value || null,
+          role: role,
+          unit: targetUnit,
+          team: targetTeam,
         };
 
         try {
@@ -275,7 +366,6 @@
               body: JSON.stringify(payload),
             },
           );
-
           const data = await response.json();
 
           msgBox.style.display = "block";
@@ -285,6 +375,7 @@
             msgBox.style.border = "1px solid #10b981";
             msgBox.innerHTML = `✅ ${data.message}`;
             document.getElementById("staffSignupForm").reset();
+            updateFormVisibility();
           } else {
             msgBox.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
             msgBox.style.color = "#ef4444";

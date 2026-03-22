@@ -687,4 +687,32 @@ def create_staff():
 @app.route('/uploads/<fn>')
 def file(fn): return redirect(f"{R2_PUBLIC_URL}/{fn}")
 
+@app.route('/api/structure', methods=['GET'])
+def get_structure():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        # Grab every unique Agency, Unit, and Team that exists
+        cur.execute('SELECT DISTINCT "AgencyName", "UnitName", "TeamName" FROM "Users" WHERE "AgencyName" IS NOT NULL')
+        rows = cur.fetchall()
+        conn.close()
+
+        # Build a nested dictionary cascade
+        structure = {}
+        for agency, unit, team in rows:
+            if not agency: continue
+            if agency not in structure:
+                structure[agency] = {}
+            
+            if unit:
+                if unit not in structure[agency]:
+                    structure[agency][unit] = []
+                if team and team not in structure[agency][unit]:
+                    structure[agency][unit].append(team)
+
+        return jsonify(structure), 200
+    except Exception as e:
+        print(f"❌ Structure Fetch Error: {e}")
+        return jsonify({}), 500
+
 if __name__ == '__main__': app.run(debug=True, port=5000, use_reloader=False)
