@@ -921,6 +921,51 @@ def get_admin_stats():
         if 'cur' in locals(): cur.close()
         if 'conn' in locals(): conn.close()
 
+@app.route('/api/admin/stats', methods=['GET'])
+def get_admin_stats():
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "Database connection failed"}), 500
+            
+        cur = conn.cursor()
+        
+        # 1. Get Top-Level Totals
+        cur.execute('SELECT COUNT(*) FROM "Users"')
+        total_users = cur.fetchone()[0]
 
+        cur.execute('SELECT COUNT(DISTINCT "AgencyName") FROM "Users" WHERE "AgencyName" IS NOT NULL')
+        total_agencies = cur.fetchone()[0]
+
+        cur.execute('SELECT COUNT(*) FROM "Jobs"')
+        total_jobs = cur.fetchone()[0]
+
+        cur.execute('SELECT COUNT(*) FROM "JobApplications"')
+        total_apps = cur.fetchone()[0]
+
+        # 2. Get Agency Performance Breakdown
+        cur.execute('''
+            SELECT "AgencyName", COUNT("ApplicationID") as candidate_count 
+            FROM "JobApplications" 
+            WHERE "AgencyName" IS NOT NULL 
+            GROUP BY "AgencyName"
+            ORDER BY candidate_count DESC
+        ''')
+        agency_stats = [{"agency": row[0], "count": row[1]} for row in cur.fetchall()]
+
+        return jsonify({
+            "total_users": total_users,
+            "total_agencies": total_agencies,
+            "total_jobs": total_jobs,
+            "total_apps": total_apps,
+            "agency_breakdown": agency_stats
+        }), 200
+
+    except Exception as e:
+        print(f"❌ Admin Stats Error: {e}")
+        return jsonify({"error": "Failed to fetch admin stats"}), 500
+    finally:
+        if 'cur' in locals() and cur: cur.close()
+        if 'conn' in locals() and conn: conn.close()
 
 if __name__ == '__main__': app.run(debug=True, port=5000, use_reloader=False)
