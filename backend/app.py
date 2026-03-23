@@ -446,15 +446,26 @@ def login():
         conn = get_db_connection()
         if conn:
             c = conn.cursor()
-            c.execute("""SELECT "FullName", "Email", "PasswordHash", "Role", "TeamName" FROM "Users" WHERE "Email"=%s""", (data.get('email'),))
+            # 🚀 NEW: Select ALL the matrix columns!
+            c.execute("""SELECT "FullName", "Email", "PasswordHash", "Role", "AgencyName", "UnitName", "TeamName" FROM "Users" WHERE "Email"=%s""", (data.get('email'),))
             user_row = c.fetchone()
             conn.close()
 
             if user_row and bcrypt.checkpw(data.get('password').encode('utf-8'), user_row[2].encode('utf-8')):
                 role = user_row[3] if len(user_row) > 3 else 'Candidate'
+                
+                # 🚀 NEW: Send the exact matrix data back to the frontend!
                 return jsonify({
                     "message": "Login successful", 
-                    "user": {"name": user_row[0], "email": user_row[1], "role": role, "team": user_row[4], "isAdmin": role in ['Admin', 'SuperAdmin']}
+                    "user": {
+                        "fullName": user_row[0], 
+                        "email": user_row[1], 
+                        "role": role, 
+                        "agencyName": user_row[4],
+                        "unitName": user_row[5],
+                        "teamName": user_row[6],
+                        "isAdmin": role in ['Admin', 'SuperAdmin']
+                    }
                 }), 200
             return jsonify({"error": "Invalid email or password"}), 401
     except Exception as e: return jsonify({"error": str(e)}), 500

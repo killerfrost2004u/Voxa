@@ -32,7 +32,7 @@ if (signupForm) {
     const password = document.getElementById("signup-password").value;
 
     const termsChecked = document.getElementById("legal-checkbox").checked;
-    
+
     const errorMsg = document.getElementById("signup-error");
     const successMsg = document.getElementById("signup-success");
 
@@ -92,30 +92,30 @@ if (loginForm) {
       const data = await response.json();
 
       if (response.ok) {
-        // FIXED: Replaced 'result' with 'data.user'
+        // 🚀 NEW: Save all the matrix variables so the dashboard can read them!
         localStorage.setItem(
           "user",
           JSON.stringify({
-            name: data.user.name,
+            fullName: data.user.fullName,
             email: data.user.email,
             role: data.user.role,
-            team: data.user.team, // This is their Agency Name
-            isAdmin: data.user.isAdmin, // Preserves your admin checks
+            agencyName: data.user.agencyName,
+            unitName: data.user.unitName,
+            teamName: data.user.teamName,
+            isAdmin: data.user.isAdmin,
           }),
         );
 
         // SMART ROUTING BASED ON ROLE
-        const userRole = data.user.role;
-        
-        if (userRole === "SuperAdmin" || userRole === "Admin") {
+        if (data.user.role === "SuperAdmin" || data.user.role === "Admin") {
           window.location.href = "admin.html";
-        } else if (["CEO", "UnitManager", "Leader", "Recruiter"].includes(userRole)) {
-          // 🚀 Send corporate staff to the new Shapeshifter Workspace!
+        } else if (
+          ["CEO", "UnitManager", "Leader", "Recruiter"].includes(data.user.role)
+        ) {
           window.location.href = "agency-dashboard.html";
-        } else if (userRole === "Validator") {
+        } else if (data.user.role === "Validator") {
           window.location.href = "validator.html";
         } else {
-          // Regular candidates go to the candidate portal
           window.location.href = "dashboard.html";
         }
       } else {
