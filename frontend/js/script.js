@@ -664,6 +664,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const authButtons = document.querySelector(".auth-buttons");
   if (authButtons && userStr) {
     const user = JSON.parse(userStr);
+    const displayName = user.fullName || user.name || "User";
     authButtons.innerHTML = `
             <a href="dashboard.html" class="btn-text"><i class="fas fa-user-circle"></i> ${user.name.split(" ")[0]}</a>
             <a onclick="globalLogout()" class="btn-primary" style="cursor:pointer; color: black;">Logout</a>
