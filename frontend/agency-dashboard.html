@@ -233,31 +233,9 @@
         font-size: 0.9rem;
         cursor: pointer;
       }
-
-      #diagnostic-terminal {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 350px;
-        height: 250px;
-        background: #000;
-        color: #0f0;
-        border: 2px solid #0f0;
-        border-radius: 8px;
-        font-family: monospace;
-        font-size: 12px;
-        padding: 10px;
-        overflow-y: auto;
-        z-index: 10000;
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
-      }
     </style>
   </head>
   <body style="background: var(--bg-main); color: var(--text-main)">
-    <div id="diagnostic-terminal">
-      <div>[SYSTEM] Terminal Initialized...</div>
-    </div>
-
     <datalist id="agencyUnits"></datalist>
     <datalist id="agencyTeams"></datalist>
 
@@ -493,6 +471,7 @@
             margin-bottom: 15px;
             color: var(--primary-color);
           "></p>
+
         <label style="font-size: 0.85rem; color: var(--text-muted)"
           >Assign Roles</label
         >
@@ -589,22 +568,6 @@
     </div>
 
     <script>
-      // --- LOGGING ENGINE ---
-      function printLog(msg, type = "info") {
-        const term = document.getElementById("diagnostic-terminal");
-        if (term) {
-          const color =
-            type === "error"
-              ? "#ff4444"
-              : type === "success"
-                ? "#10b981"
-                : "#0f0";
-          term.innerHTML += `<div style="color:${color}; margin-top:5px;">> ${msg}</div>`;
-          term.scrollTop = term.scrollHeight;
-        }
-        console.log("[DEBUG] " + msg);
-      }
-
       // --- THE NUCLEAR CSS STRING (Un-overrideable) ---
       const nuclearModalStyle =
         "display: flex !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0,0,0,0.85) !important; z-index: 2147483647 !important; justify-content: center !important; align-items: center !important;";
@@ -645,7 +608,6 @@
           "block";
 
       window.onload = async () => {
-        printLog("System Booting...");
         await fetchCandidates();
         if (!isRecruiterOnly) {
           await fetchPendingStaff();
@@ -654,7 +616,6 @@
         if (isCEO || isUM) {
           await fetchStaffDirectory();
         }
-        printLog("System Ready.", "success");
       };
 
       // --- SMART DROPDOWN POPULATOR ---
@@ -662,7 +623,7 @@
         const units = new Set();
         const teams = new Set();
 
-        window.allStaff.forEach((s) => {
+        allStaff.forEach((s) => {
           if (s.unit && s.unit.trim() !== "" && s.unit !== "None")
             units.add(s.unit.trim());
           if (s.team && s.team.trim() !== "" && s.team !== "None")
@@ -674,27 +635,18 @@
 
         if (unitList)
           unitList.innerHTML = Array.from(units)
-            .map((u) => `<option value="${u}">`)
+            .map((u) => `<option value="${u}"></option>`)
             .join("");
         if (teamList)
           teamList.innerHTML = Array.from(teams)
-            .map((t) => `<option value="${t}">`)
+            .map((t) => `<option value="${t}"></option>`)
             .join("");
-
-        printLog(
-          `Populated Smart Dropdowns: ${units.size} Units, ${teams.size} Teams.`,
-          "success",
-        );
       }
 
       // --- THE NUCLEAR FIX: FORCING VISIBILITY ---
       function forceShowModal(modalId) {
         const modal = document.getElementById(modalId);
-        if (!modal) {
-          printLog("FATAL: Modal element not found!", "error");
-          return;
-        }
-        // Absolute explicit override of EVERY display property
+        if (!modal) return;
         modal.style.cssText = `
               display: flex !important;
               position: fixed !important;
@@ -710,14 +662,11 @@
               visibility: visible !important;
               pointer-events: auto !important;
           `;
-        printLog(`Force injected CSS into ${modalId}`);
       }
 
       function forceHideModal(modalId) {
         const modal = document.getElementById(modalId);
-        if (modal) {
-          modal.style.cssText = "display: none !important;";
-        }
+        if (modal) modal.style.cssText = "display: none !important;";
       }
 
       // --- BULLETPROOF EVENT DELEGATION ---
@@ -727,25 +676,18 @@
         // Open Modals
         if (target.classList.contains("btn-details")) {
           e.preventDefault();
-          const id = target.getAttribute("data-id");
-          printLog(`Clicked Details for ID: ${id}`);
-          window.openViewPanel(id);
+          window.openViewPanel(target.getAttribute("data-id"));
         } else if (target.classList.contains("btn-schedule-call")) {
           e.preventDefault();
-          const id = target.getAttribute("data-id");
-          printLog(`Clicked Schedule for ID: ${id}`);
-          window.openScheduleModal(id);
+          window.openScheduleModal(target.getAttribute("data-id"));
         } else if (target.classList.contains("btn-promote")) {
           e.preventDefault();
-          const id = target.getAttribute("data-id");
-          printLog(`Clicked Promote for ID: ${id}`);
-          window.openPromoteModal(id);
+          window.openPromoteModal(target.getAttribute("data-id"));
         }
         // Close Modals
         else if (target.classList.contains("btn-close")) {
           e.preventDefault();
-          const modalId = target.getAttribute("data-modal");
-          forceHideModal(modalId);
+          forceHideModal(target.getAttribute("data-modal"));
         }
         // Submit Forms
         else if (target.classList.contains("btn-submit-promote")) {
@@ -776,12 +718,10 @@
       // --- DATA FETCHING ---
       async function fetchCandidates() {
         try {
-          printLog("Fetching Candidates...");
           const res = await fetch(
             `https://voxa-pi-three.vercel.app/api/admin/applications?email=${user.email}`,
           );
           allCandidates = await res.json();
-          printLog(`Found ${allCandidates.length} Candidates.`, "success");
 
           const tbody = document.getElementById("candidateTableBody");
           tbody.innerHTML = "";
@@ -850,13 +790,12 @@
           document.getElementById("kpi-rejected").innerText = countRejected;
           document.getElementById("kpi-pending").innerText = countPending;
         } catch (e) {
-          printLog("Error Fetching Candidates: " + e.message, "error");
+          console.error("Error Fetching Candidates: " + e.message);
         }
       }
 
       async function fetchLeaderboard() {
         try {
-          printLog("Fetching Leaderboard...");
           const res = await fetch(
             `https://voxa-pi-three.vercel.app/api/team-stats?role=${userRole}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`,
           );
@@ -876,7 +815,7 @@
             )
             .join("");
         } catch (e) {
-          printLog("Error Fetching Leaderboard: " + e.message, "error");
+          console.error("Error Fetching Leaderboard: " + e.message);
         }
       }
 
@@ -899,26 +838,25 @@
             })
             .join("");
         } catch (e) {
-          printLog("Error Fetching Pending: " + e.message, "error");
+          console.error("Error Fetching Pending: " + e.message);
         }
       }
 
       async function fetchStaffDirectory() {
         try {
-          printLog("Fetching Staff Directory...");
           const res = await fetch(
             `https://voxa-pi-three.vercel.app/api/agency/staff?email=${user.email}`,
           );
-          window.allStaff = await res.json();
+          allStaff = await res.json();
 
-          // Trigger the Smart Dropdown parsing!
+          // POPULATE THE SMART DROPDOWNS
           populateStructureDropdowns();
 
           const tbody = document.getElementById("staffDirectoryBody");
-          if (window.allStaff.length === 0)
+          if (allStaff.length === 0)
             return (tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No staff found under your management.</td></tr>`);
 
-          tbody.innerHTML = window.allStaff
+          tbody.innerHTML = allStaff
             .map((s) => {
               const safeStaffId = s.id || "0";
               let roleBadges = s.role
@@ -939,13 +877,12 @@
             </tr>`;
             })
             .join("");
-          printLog(`Found ${window.allStaff.length} Staff.`, "success");
         } catch (e) {
-          printLog("Error Fetching Staff: " + e.message, "error");
+          console.error("Error Fetching Staff: " + e.message);
         }
       }
 
-      // --- MODAL POPUP LOGIC ---
+      // --- MODAL LOGIC ---
       function calculateAge(dobString) {
         if (!dobString || dobString === "None" || dobString === "null")
           return "N/A";
@@ -958,12 +895,10 @@
 
       window.openViewPanel = function (appId) {
         try {
-          printLog("Running openViewPanel for ID: " + appId);
           const app = allCandidates.find(
             (a) => String(a.ApplicationID || a.id) === String(appId),
           );
           if (!app) {
-            printLog("Candidate not found in array", "error");
             alert("Candidate data not found locally. ID: " + appId);
             return;
           }
@@ -976,22 +911,18 @@
           const panelText = `Candidate: ${app.FullName}\nEmail: ${app.Email}\nPhone: ${app.Phone}\nWhatsApp: ${app.WhatsApp || "N/A"}\nAge: ${age}\nLocation: ${app.Address || "N/A"}\n\nAI Assessment:\n${aiSum}\n\nHR Validator Notes:\n${valNotes}`;
 
           document.getElementById("viewPanelContent").innerText = panelText;
-
-          // NUKE PREVIOUS CSS AND FORCE RENDER
           forceShowModal("viewPanelModal");
         } catch (error) {
-          printLog("CRASH in openViewPanel: " + error.message, "error");
+          console.error("CRASH in openViewPanel: " + error.message);
         }
       };
 
       window.openPromoteModal = function (staffId) {
         try {
-          printLog("Running openPromoteModal for ID: " + staffId);
-          const s = window.allStaff.find(
+          const s = allStaff.find(
             (staff) => String(staff.id) === String(staffId),
           );
           if (!s) {
-            printLog("Staff not found in array", "error");
             alert("Staff data not found locally. ID: " + staffId);
             return;
           }
@@ -1009,10 +940,9 @@
             if (rolesArray.includes(cb.value)) cb.checked = true;
           });
 
-          // NUKE PREVIOUS CSS AND FORCE RENDER
           forceShowModal("promoteModal");
         } catch (error) {
-          printLog("CRASH in openPromoteModal: " + error.message, "error");
+          console.error("CRASH in openPromoteModal: " + error.message);
         }
       };
 
@@ -1021,7 +951,7 @@
           document.getElementById("modalAppId").value = appId;
           forceShowModal("scheduleModal");
         } catch (error) {
-          printLog("CRASH in openScheduleModal: " + error.message, "error");
+          console.error("CRASH in openScheduleModal: " + error.message);
         }
       };
 
@@ -1060,7 +990,7 @@
             alert("Failed to update profile.");
           }
         } catch (e) {
-          printLog("Promotion Error: " + e.message, "error");
+          console.error("Promotion Error: " + e.message);
         }
       };
 
@@ -1088,7 +1018,7 @@
             alert("❌ Error scheduling interview.");
           }
         } catch (e) {
-          printLog("Schedule Error: " + e.message, "error");
+          console.error("Schedule Error: " + e.message);
         }
       };
 
