@@ -87,7 +87,7 @@
         text-align: right;
       }
 
-      /* MODALS */
+      /* Modals */
       .modal-overlay {
         position: fixed;
         top: 0;
@@ -100,9 +100,6 @@
         align-items: center;
         z-index: 1000;
       }
-      .active-modal {
-        display: flex !important;
-      } /* Hard override to force modal open */
       .modal-card {
         background: var(--bg-card);
         padding: 30px;
@@ -126,7 +123,38 @@
         outline: none;
       }
 
-      /* BUTTONS */
+      /* Dynamic Buttons */
+      .btn-action-schedule {
+        background: var(--primary-color);
+        color: #000;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin-right: 5px;
+      }
+      .btn-action-details {
+        background: transparent;
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 4px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+      }
+      .btn-action-promote {
+        background: var(--bg-input);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+      }
+
+      /* Standard Buttons */
       .btn-schedule {
         background: #10b981;
         color: white;
@@ -162,7 +190,7 @@
         background: rgba(239, 68, 68, 0.1);
       }
 
-      /* TAGS */
+      /* Tags */
       .status-badge {
         padding: 4px 8px;
         border-radius: 4px;
@@ -531,7 +559,7 @@
     </div>
 
     <script>
-      // 1. GLOBAL VARIABLES
+      // 1. GLOBAL VARIABLES & AUTH
       let allCandidates = [];
       let allStaff = [];
 
@@ -577,6 +605,41 @@
           await fetchStaffDirectory();
         }
       };
+
+      // --- BULLETPROOF EVENT DELEGATION ---
+      // This guarantees buttons will click, regardless of browser security stripping HTML elements
+      document.addEventListener("click", function (e) {
+        // Details Button Listener
+        const detailsBtn = e.target.closest(".btn-details");
+        if (detailsBtn) {
+          e.preventDefault();
+          openViewPanel(detailsBtn.getAttribute("data-id"));
+        }
+        // Schedule Button Listener
+        const scheduleBtn = e.target.closest(".btn-schedule-call");
+        if (scheduleBtn) {
+          e.preventDefault();
+          openScheduleModal(scheduleBtn.getAttribute("data-id"));
+        }
+        // Promote Button Listener
+        const promoteBtn = e.target.closest(".btn-promote");
+        if (promoteBtn) {
+          e.preventDefault();
+          openPromoteModal(promoteBtn.getAttribute("data-id"));
+        }
+        // Approve Staff Listener
+        const approveBtn = e.target.closest(".btn-approve");
+        if (approveBtn) {
+          e.preventDefault();
+          processApproval(approveBtn.getAttribute("data-id"), "approve");
+        }
+        // Reject Staff Listener
+        const rejectBtn = e.target.closest(".btn-reject");
+        if (rejectBtn) {
+          e.preventDefault();
+          processApproval(rejectBtn.getAttribute("data-id"), "reject");
+        }
+      });
 
       // --- DATA FETCHING FUNCTIONS ---
       async function fetchCandidates() {
@@ -624,12 +687,13 @@
 
             let actionBtn = "";
             if (!app.InterviewDate && (isLeader || isUM || isCEO)) {
-              actionBtn += `<button type="button" onclick="openScheduleModal('${safeAppId}')" style="background:var(--primary-color); color:#000; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold; margin-right: 5px;">Schedule Call</button>`;
+              actionBtn += `<button type="button" class="btn-action-schedule btn-schedule-call" data-id="${safeAppId}">Schedule Call</button>`;
             } else if (app.InterviewLink) {
               actionBtn += `<a href="${app.InterviewLink}" target="_blank" style="background:#10b981; color:white; padding:5px 12px; border-radius:4px; font-size: 0.8rem; font-weight:bold; text-decoration:none; margin-right: 5px;">Join Call</a>`;
             }
 
-            actionBtn += `<button type="button" onclick="openViewPanel('${safeAppId}')" style="background:transparent; color:var(--text-main); border:1px solid var(--border-color); padding:4px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;"><i class="fas fa-eye"></i> Details</button>`;
+            // Notice we use data-id instead of onclick here
+            actionBtn += `<button type="button" class="btn-action-details btn-details" data-id="${safeAppId}"><i class="fas fa-eye"></i> Details</button>`;
 
             tbody.innerHTML += `
               <tr style="border-bottom: 1px solid var(--border-color);">
@@ -696,7 +760,7 @@
             .map((p) => {
               let placement = p.unit || "Direct Report";
               if (p.team) placement += ` / ${p.team}`;
-              return `<tr style="border-bottom: 1px solid var(--border-color);"><td style="padding: 12px 10px; font-weight: 500;">${p.name} <br><span style="font-size: 0.8rem; color: var(--text-muted);">${p.email}</span></td><td style="padding: 12px 10px; color: var(--primary-color);">${p.role}</td><td style="padding: 12px 10px; color: var(--text-muted);">${placement}</td><td style="padding: 12px 10px; display: flex; gap: 10px;"><button type="button" onclick="processApproval(${p.id}, 'approve')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-check"></i> Accept</button><button type="button" onclick="processApproval(${p.id}, 'reject')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-times"></i> Reject</button></td></tr>`;
+              return `<tr style="border-bottom: 1px solid var(--border-color);"><td style="padding: 12px 10px; font-weight: 500;">${p.name} <br><span style="font-size: 0.8rem; color: var(--text-muted);">${p.email}</span></td><td style="padding: 12px 10px; color: var(--primary-color);">${p.role}</td><td style="padding: 12px 10px; color: var(--text-muted);">${placement}</td><td style="padding: 12px 10px; display: flex; gap: 10px;"><button type="button" class="btn-approve" data-id="${p.id}" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-check"></i> Accept</button><button type="button" class="btn-reject" data-id="${p.id}" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-times"></i> Reject</button></td></tr>`;
             })
             .join("");
         } catch (e) {
@@ -731,7 +795,7 @@
                 <td style="padding: 12px 10px; font-weight: bold;">${s.name}<br><small style="color:var(--text-muted); font-weight:normal;">${s.email}</small></td>
                 <td style="padding: 12px 10px;">${roleBadges}</td>
                 <td style="padding: 12px 10px; font-size:0.85rem; color:var(--text-muted);">${placement}</td>
-                <td style="padding: 12px 10px;"><button type="button" onclick="openPromoteModal('${safeStaffId}')" style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color); padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;"><i class="fas fa-edit"></i> Edit / Promote</button></td>
+                <td style="padding: 12px 10px;"><button type="button" class="btn-action-promote btn-promote" data-id="${safeStaffId}"><i class="fas fa-edit"></i> Edit / Promote</button></td>
             </tr>`;
             })
             .join("");
@@ -741,7 +805,6 @@
       }
 
       // --- MODAL ACTION FUNCTIONS ---
-
       function calculateAge(dobString) {
         if (!dobString || dobString === "None" || dobString === "null")
           return "N/A";
@@ -758,7 +821,7 @@
             (a) => String(a.ApplicationID || a.id) === String(appId),
           );
           if (!app) {
-            alert("Candidate data not found for ID: " + appId);
+            alert("Candidate data not found locally. ID: " + appId);
             return;
           }
 
@@ -770,11 +833,9 @@
           const panelText = `Candidate: ${app.FullName}\nEmail: ${app.Email}\nPhone: ${app.Phone}\nWhatsApp: ${app.WhatsApp || "N/A"}\nAge: ${age}\nLocation: ${app.Address || "N/A"}\n\nAI Assessment:\n${aiSum}\n\nHR Validator Notes:\n${valNotes}`;
 
           document.getElementById("viewPanelContent").innerText = panelText;
-          document
-            .getElementById("viewPanelModal")
-            .classList.add("active-modal");
+          document.getElementById("viewPanelModal").style.display = "flex";
         } catch (error) {
-          alert("Error opening Details: " + error.message);
+          alert("Error rendering Details: " + error.message);
         }
       }
 
@@ -784,7 +845,7 @@
             (staff) => String(staff.id) === String(staffId),
           );
           if (!s) {
-            alert("Staff data not found for ID: " + staffId);
+            alert("Staff data not found locally. ID: " + staffId);
             return;
           }
 
@@ -795,13 +856,13 @@
           document.getElementById("editStaffTeam").value = s.team || "";
 
           const roleBoxes = document.querySelectorAll(".role-cb");
-          roleBoxes.forEach((cb) => (cb.checked = false)); // Reset all
+          roleBoxes.forEach((cb) => (cb.checked = false));
           const rolesArray = (s.role || "").split(",").map((r) => r.trim());
           roleBoxes.forEach((cb) => {
             if (rolesArray.includes(cb.value)) cb.checked = true;
           });
 
-          document.getElementById("promoteModal").classList.add("active-modal");
+          document.getElementById("promoteModal").style.display = "flex";
         } catch (error) {
           alert("Error opening Promotions: " + error.message);
         }
@@ -810,20 +871,17 @@
       function openScheduleModal(appId) {
         try {
           document.getElementById("modalAppId").value = appId;
-          document
-            .getElementById("scheduleModal")
-            .classList.add("active-modal");
+          document.getElementById("scheduleModal").style.display = "flex";
         } catch (error) {
           alert("Error opening Scheduler: " + error.message);
         }
       }
 
       function closeModal(modalId) {
-        document.getElementById(modalId).classList.remove("active-modal");
+        document.getElementById(modalId).style.display = "none";
       }
 
       // --- SUBMIT FUNCTIONS ---
-
       async function processApproval(userId, action) {
         if (!confirm(`Are you sure you want to ${action} this staff member?`))
           return;
