@@ -277,6 +277,45 @@
         </div>
       </div>
 
+      <div
+        class="leaderboard-card"
+        id="staff-directory-section"
+        style="display: none">
+        <h3
+          style="
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+          ">
+          <i class="fas fa-user-cog" style="color: var(--primary-color)"></i>
+          Staff Directory & Promotions
+        </h3>
+        <div style="overflow-x: auto">
+          <table
+            style="width: 100%; text-align: left; border-collapse: collapse">
+            <thead>
+              <tr
+                style="
+                  border-bottom: 1px solid var(--border-color);
+                  color: var(--text-muted);
+                ">
+                <th style="padding: 10px">Staff Member</th>
+                <th style="padding: 10px">Current Role</th>
+                <th style="padding: 10px">Placement</th>
+                <th style="padding: 10px">Action</th>
+              </tr>
+            </thead>
+            <tbody id="staffDirectoryBody">
+              <tr>
+                <td colspan="4" style="text-align: center; padding: 20px">
+                  <i class="fas fa-spinner fa-spin"></i> Loading Directory...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="leaderboard-card" id="leaderboard-container">
         <h3
           style="
@@ -366,40 +405,148 @@
       </div>
     </div>
 
+    <div class="modal-overlay" id="promoteModal">
+      <div class="modal-card">
+        <h3 style="margin-bottom: 15px">
+          <i class="fas fa-user-edit" style="color: var(--primary-color)"></i>
+          Edit Staff Profile
+        </h3>
+        <input type="hidden" id="editStaffId" />
+        <p
+          id="editStaffName"
+          style="
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+          "></p>
+
+        <label style="font-size: 0.85rem; color: var(--text-muted)"
+          >Assign Roles (Hold Ctrl/Cmd to select multiple, or select from
+          list)</label
+        >
+        <div
+          style="
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+          ">
+          <label
+            ><input type="checkbox" class="role-cb" value="CEO" /> CEO</label
+          >
+          <label
+            ><input type="checkbox" class="role-cb" value="UnitManager" /> Unit
+            Manager</label
+          >
+          <label
+            ><input type="checkbox" class="role-cb" value="Leader" />
+            Leader</label
+          >
+          <label
+            ><input type="checkbox" class="role-cb" value="Validator" />
+            Validator</label
+          >
+          <label
+            ><input type="checkbox" class="role-cb" value="Recruiter" />
+            Recruiter</label
+          >
+        </div>
+
+        <label style="font-size: 0.85rem; color: var(--text-muted)"
+          >Unit Name</label
+        >
+        <input type="text" id="editStaffUnit" placeholder="E.g. Unit Alpha" />
+
+        <label style="font-size: 0.85rem; color: var(--text-muted)"
+          >Team Name</label
+        >
+        <input type="text" id="editStaffTeam" placeholder="E.g. Team Wolves" />
+
+        <button
+          onclick="submitPromotion()"
+          class="btn-schedule"
+          style="background: var(--primary-color); color: black">
+          Save Changes
+        </button>
+        <button onclick="closeModal('promoteModal')" class="btn-cancel">
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="viewPanelModal">
+      <div class="modal-card" style="max-width: 600px">
+        <h3 style="margin-bottom: 15px">
+          <i
+            class="fas fa-file-invoice"
+            style="color: var(--primary-color)"></i>
+          Candidate Details
+        </h3>
+        <div
+          id="viewPanelContent"
+          style="
+            background: var(--bg-input);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-family: monospace;
+            white-space: pre-wrap;
+            font-size: 0.85rem;
+            max-height: 50vh;
+            overflow-y: auto;
+          "></div>
+        <button
+          onclick="closeModal('viewPanelModal')"
+          class="btn-cancel"
+          style="
+            background: var(--bg-input);
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 20px;
+          ">
+          Close Panel
+        </button>
+      </div>
+    </div>
+
     <script>
       const user = JSON.parse(localStorage.getItem("user"));
-
-      // Strict Security Check
-      if (!user || user.role === "Candidate") {
+      if (!user || user.role === "Candidate")
         window.location.href = "login.html";
-      }
 
-      // Dynamic Title based on Matrix Role
-      const titleMap = {
-        CEO: "Agency Command Center",
-        UnitManager: "Unit Workspace",
-        Leader: "Team Workspace",
-        Recruiter: "My Recruitment Dashboard",
-      };
-      document.getElementById("dashboardTitle").innerText =
-        titleMap[user.role] || "Workspace";
+      const isCEO = user.role.includes("CEO");
+      const isUM = user.role.includes("UnitManager");
+      const isLeader = user.role.includes("Leader");
+      const isRecruiterOnly = !isCEO && !isUM && !isLeader;
 
-      // Role Badge Subtitle
-      let roleString = `${user.role} | ${user.agencyName}`;
-      if (user.unitName) roleString += ` | ${user.unitName}`;
-      if (user.teamName) roleString += ` | ${user.teamName}`;
-      document.getElementById("roleBadge").innerText = roleString;
+      document.getElementById("dashboardTitle").innerText = isCEO
+        ? "Agency Command Center"
+        : isUM
+          ? "Unit Workspace"
+          : isLeader
+            ? "Team Workspace"
+            : "My Recruitment Dashboard";
 
-      // Hide Leaderboard from individual Recruiters to save space
-      if (user.role === "Recruiter") {
+      if (isRecruiterOnly)
         document.getElementById("leaderboard-container").style.display = "none";
-      }
+      if (isCEO || isUM)
+        document.getElementById("staff-directory-section").style.display =
+          "block";
+
+      let allCandidates = []; // Global variable to hold candidates for the view modal
 
       window.onload = async () => {
         await fetchCandidates();
-        if (user.role !== "Recruiter") {
+        if (!isRecruiterOnly) {
           await fetchPendingStaff();
           await fetchLeaderboard();
+        }
+        if (isCEO || isUM) {
+          await fetchStaffDirectory();
         }
       };
 

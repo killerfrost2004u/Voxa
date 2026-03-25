@@ -548,19 +548,28 @@ def apps():
         user_email = request.args.get('email')
         conn = get_db_connection()
         c = conn.cursor()
-        c.execute("""SELECT "FullName", "Role", "TeamName", "UnitName" FROM "Users" WHERE "Email"=%s""", (user_email,))
+        c.execute("""SELECT "FullName", "Role", "TeamName", "UnitName", "AgencyName" FROM "Users" WHERE "Email"=%s""", (user_email,))
         user_data = c.fetchone()
         
         if user_data:
-            u_name, u_role, u_team, u_unit = user_data
-            if u_role in ['Admin', 'SuperAdmin', 'CEO']:
-                c.execute("""SELECT * FROM "JobApplications" ORDER BY "SubmittedAt" DESC""")
-            elif u_role == 'UnitManager':
-                c.execute("""SELECT a.* FROM "JobApplications" a LEFT JOIN "Users" u ON a."RecruiterSource" = u."FullName" WHERE u."UnitName" = %s ORDER BY a."SubmittedAt" DESC""", (u_unit,))
-            elif u_role == 'Leader':
-                c.execute("""SELECT a.* FROM "JobApplications" a LEFT JOIN "Users" u ON a."RecruiterSource" = u."FullName" WHERE u."TeamName" = %s ORDER BY a."SubmittedAt" DESC""", (u_team,))
+            u_name, u_role, u_team, u_unit, u_agency = user_data
+
+            base_select = """SELECT a.*, u."UnitName" as "RecruiterUnit", u."TeamName" as "RecruiterTeam" 
+                             FROM "JobApplications" a 
+                             LEFT JOIN "Users" u ON a."RecruiterSource" = u."FullName" """
+
+            # Support Dual Roles by using "in u_role" instead of "u_role =="
+            if 'Admin' in u_role or 'SuperAdmin' in u_role:
+                c.execute(base_select + """ORDER BY a."SubmittedAt" DESC""")
+            elif 'CEO' in u_role:
+                c.execute(base_select + """WHERE a."AgencyName" = %s ORDER BY a."SubmittedAt" DESC""", (u_agency,))
+            elif 'UnitManager' in u_role:
+                c.execute(base_select + """WHERE a."AgencyName" = %s AND u."UnitName" = %s ORDER BY a."SubmittedAt" DESC""", (u_agency, u_unit))
+            elif 'Leader' in u_role:
+                c.execute(base_select + """WHERE a."AgencyName" = %s AND u."TeamName" = %s ORDER BY a."SubmittedAt" DESC""", (u_agency, u_team))
             else:
-                c.execute("""SELECT * FROM "JobApplications" WHERE "RecruiterSource" = %s ORDER BY "SubmittedAt" DESC""", (u_name,))
+                c.execute(base_select + """WHERE a."RecruiterSource" = %s ORDER BY a."SubmittedAt" DESC""", (u_name,))
+            
 
             cols = [x[0] for x in c.description]
             data = [dict(zip(cols, r)) for r in c.fetchall()]
@@ -704,6 +713,54 @@ def create_staff():
         cur.close()
         conn.close()
 
+@app.route('/api/agency/staff', methods=['GET'])
+def get_agency_staff():
+    email = request.args.get('email')
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute('SELECT "Role", "AgencyName", "UnitName", "TeamName" FROM "Users" WHERE "Email"=%s', (email,))
+        u = cur.fetchone()
+        if not u: return jsonify([])
+        
+        u_role, u_agency, u_unit, u_team = u
+        base_query = 'SELECT "UserID", "FullName", "Email", "Role", "UnitName", "TeamName" FROM "Users" WHERE "Status" = \'Approved\' AND "AgencyName" = %s'
+        params = [u_agency]
+
+        if 'CEO' in u_role or 'SuperAdmin' in u_role or 'Admin' in u_role: pass
+        elif 'UnitManager' in u_role:
+            base_query += ' AND "UnitName" = %s'
+            params.append(u_unit)
+        else:
+            return jsonify([]) # Leaders/Recruiters can't see the promotion directory
+
+        cur.execute(base_query + ' ORDER BY "Role", "FullName"', tuple(params))
+        rows = cur.fetchall()
+        result = [{"id": r[0], "name": r[1], "email": r[2], "role": r[3], "unit": r[4], "team": r[5]} for r in rows]
+        return jsonify(result), 200
+    except Exception as e: return jsonify([]), 500
+    finally:
+        cur.close()
+        conn.close()
+
+@app.route('/api/agency/staff/<int:id>', methods=['PUT'])
+def update_agency_staff(id):
+    data = request.json
+    new_role = data.get('role')
+    new_unit = data.get('unit')
+    new_team = data.get('team')
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute('UPDATE "Users" SET "Role"=%s, "UnitName"=%s, "TeamName"=%s WHERE "UserID"=%s', 
+                    (new_role, new_unit, new_team, id))
+        conn.commit()
+        return jsonify({"message": "Staff profile successfully updated!"}), 200
+    except Exception as e: return jsonify({"error": "Failed to update staff"}), 500
+    finally:
+        cur.close()
+        conn.close()
 
 @app.route('/uploads/<fn>')
 def file(fn): return redirect(f"{R2_PUBLIC_URL}/{fn}")
