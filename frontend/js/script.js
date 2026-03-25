@@ -19,17 +19,37 @@ async function loadJobs() {
     const res = await fetch(`${API_URL}/jobs`);
     let fetchedJobs = await res.json();
 
-    // --- DATA NORMALIZATION ---
+    // --- DATA NORMALIZATION (NEW RULES APPLIED) ---
     window.allJobs = fetchedJobs.map((job) => {
-      job.type = job.type || "Full Time";
-      if (job.hours && job.hours.toLowerCase().includes("part"))
-        job.type = "Part Time";
+      // Safely grab strings and make them lowercase so it catches everything
+      const loc = (job.location || "").toLowerCase();
+      const req = (job.requirements || "").toLowerCase(); // Includes your "Working Hours"
+      const comp = (job.company || "").toLowerCase();
+      const title = (job.title || "").toLowerCase();
 
-      job.isRemote = job.isRemote || false;
-      if (job.location && job.location.toLowerCase().includes("remote"))
-        job.isRemote = true;
-      if (job.title && job.title.toLowerCase().includes("remote"))
-        job.isRemote = true;
+      // 1. Remote Check (WFH, From Home, Remotely, etc.)
+      job.isRemote =
+        loc.includes("remote") ||
+        loc.includes("wfh") ||
+        loc.includes("work from home") ||
+        loc.includes("from home") ||
+        loc.includes("remotely") ||
+        title.includes("wfh") ||
+        title.includes("remote");
+
+      // 2. Rotational Check (Working Hours/Shifts)
+      job.isRotational =
+        req.includes("rotational") || title.includes("rotational");
+
+      // 3. Part Time Check (In Company name or Title)
+      job.isPartTime =
+        comp.includes("part time") ||
+        comp.includes("part-time") ||
+        title.includes("part time") ||
+        title.includes("part-time");
+
+      // Set the Display Type Badge dynamically
+      job.type = job.isPartTime ? "Part Time" : "Full Time";
 
       return job;
     });
@@ -143,20 +163,42 @@ window.buildPaginationControls = function () {
     return btn;
   };
 
-  pageDiv.appendChild(createButton("left", true, window.currentPage === 1, false, window.currentPage - 1));
+  pageDiv.appendChild(
+    createButton(
+      "left",
+      true,
+      window.currentPage === 1,
+      false,
+      window.currentPage - 1,
+    ),
+  );
   for (let i = 1; i <= totalPages; i++) {
-    pageDiv.appendChild(createButton(i, false, false, i === window.currentPage, i));
+    pageDiv.appendChild(
+      createButton(i, false, false, i === window.currentPage, i),
+    );
   }
-  pageDiv.appendChild(createButton("right", true, window.currentPage === totalPages, false, window.currentPage + 1));
+  pageDiv.appendChild(
+    createButton(
+      "right",
+      true,
+      window.currentPage === totalPages,
+      false,
+      window.currentPage + 1,
+    ),
+  );
 };
 
 window.applyFilters = function () {
-  const keyword = document.getElementById("keyword-filter")?.value.toLowerCase() || "";
-  const location = document.getElementById("location-filter")?.value.toLowerCase() || "";
+  const keyword =
+    document.getElementById("keyword-filter")?.value.toLowerCase() || "";
+  const location =
+    document.getElementById("location-filter")?.value.toLowerCase() || "";
   const minSalaryInput = document.getElementById("salary-range");
   const minSalary = minSalaryInput ? parseInt(minSalaryInput.value) * 1000 : 0;
   const sortValue = document.getElementById("sort-jobs")?.value || "newest";
-  const checkedTypes = Array.from(document.querySelectorAll(".checkbox-group input:checked")).map((cb) => cb.value.toLowerCase());
+  const checkedTypes = Array.from(
+    document.querySelectorAll(".checkbox-group input:checked"),
+  ).map((cb) => cb.value.toLowerCase());
 
   window.filteredJobs = window.allJobs.filter((job) => {
     const matchKeyword =
@@ -164,13 +206,18 @@ window.applyFilters = function () {
       (job.company && job.company.toLowerCase().includes(keyword)) ||
       (job.requirements && job.requirements.toLowerCase().includes(keyword));
 
-    const matchLocation = job.location && job.location.toLowerCase().includes(location);
+    const matchLocation =
+      job.location && job.location.toLowerCase().includes(location);
 
     let matchType = true;
     if (checkedTypes.length > 0) {
+      // Connect checkboxes to the new intelligent tags!
       matchType = checkedTypes.some((t) => {
         if (t === "remote") return job.isRemote;
-        return job.type && job.type.toLowerCase().includes(t);
+        if (t === "rotational") return job.isRotational;
+        if (t === "part time") return job.isPartTime;
+        if (t === "full time") return !job.isPartTime;
+        return false;
       });
     }
 
@@ -182,7 +229,9 @@ window.applyFilters = function () {
   });
 
   if (sortValue === "salary") {
-    window.filteredJobs.sort((a, b) => extractSalaryNumber(b) - extractSalaryNumber(a));
+    window.filteredJobs.sort(
+      (a, b) => extractSalaryNumber(b) - extractSalaryNumber(a),
+    );
   } else {
     window.filteredJobs.sort((a, b) => b.id - a.id);
   }
@@ -193,20 +242,29 @@ window.applyFilters = function () {
 };
 
 window.resetFilters = function () {
-  if (document.getElementById("keyword-filter")) document.getElementById("keyword-filter").value = "";
-  if (document.getElementById("location-filter")) document.getElementById("location-filter").value = "";
-  if (document.getElementById("job-search")) document.getElementById("job-search").value = "";
-  if (document.getElementById("location-search")) document.getElementById("location-search").value = "";
-  if (document.getElementById("salary-range")) document.getElementById("salary-range").value = 0;
+  if (document.getElementById("keyword-filter"))
+    document.getElementById("keyword-filter").value = "";
+  if (document.getElementById("location-filter"))
+    document.getElementById("location-filter").value = "";
+  if (document.getElementById("job-search"))
+    document.getElementById("job-search").value = "";
+  if (document.getElementById("location-search"))
+    document.getElementById("location-search").value = "";
+  if (document.getElementById("salary-range"))
+    document.getElementById("salary-range").value = 0;
   updateSalaryLabel(0);
-  document.querySelectorAll(".checkbox-group input").forEach((cb) => (cb.checked = false));
-  if (document.getElementById("sort-jobs")) document.getElementById("sort-jobs").value = "newest";
+  document
+    .querySelectorAll(".checkbox-group input")
+    .forEach((cb) => (cb.checked = false));
+  if (document.getElementById("sort-jobs"))
+    document.getElementById("sort-jobs").value = "newest";
   window.history.pushState({}, document.title, window.location.pathname);
   window.applyFilters();
 };
 
 window.updateSalaryLabel = function (val) {
-  if (document.getElementById("salary-val")) document.getElementById("salary-val").textContent = val;
+  if (document.getElementById("salary-val"))
+    document.getElementById("salary-val").textContent = val;
 };
 
 window.searchJobs = function () {
@@ -214,8 +272,10 @@ window.searchJobs = function () {
   const location = document.getElementById("location-search")?.value || "";
 
   if (window.location.pathname.includes("jobs.html")) {
-    if (document.getElementById("keyword-filter")) document.getElementById("keyword-filter").value = keyword;
-    if (document.getElementById("location-filter")) document.getElementById("location-filter").value = location;
+    if (document.getElementById("keyword-filter"))
+      document.getElementById("keyword-filter").value = keyword;
+    if (document.getElementById("location-filter"))
+      document.getElementById("location-filter").value = location;
     window.applyFilters();
   } else {
     window.location.href = `jobs.html?keyword=${encodeURIComponent(keyword)}&location=${encodeURIComponent(location)}`;
@@ -229,7 +289,8 @@ window.smartTagSearch = function (tag) {
   window.resetFilters();
 
   let query = tag.toLowerCase();
-  if (query === "customer support" || query === "call center") query = "customer service";
+  if (query === "customer support" || query === "call center")
+    query = "customer service";
   if (query === "wfh") query = "remote";
 
   if (searchInput) searchInput.value = query;
@@ -260,7 +321,7 @@ window.filterHomeTabs = function (element, category) {
 
   let filteredForHome = window.allJobs;
   if (category === "full time") {
-    filteredForHome = window.allJobs.filter((job) => job.type && job.type.toLowerCase().includes("full"));
+    filteredForHome = window.allJobs.filter((job) => !job.isPartTime);
   } else if (category === "remote") {
     filteredForHome = window.allJobs.filter((job) => job.isRemote);
   }
@@ -276,7 +337,11 @@ function processCompanies(data) {
   data.forEach((job) => {
     if (!job.company) return;
     if (!companyMap[job.company]) {
-      companyMap[job.company] = { name: job.company, logo: job.logo, openJobs: 0 };
+      companyMap[job.company] = {
+        name: job.company,
+        logo: job.logo,
+        openJobs: 0,
+      };
     }
     companyMap[job.company].openJobs++;
   });
@@ -315,7 +380,11 @@ window.renderCompanyProfile = function (companyName, allJobsArray) {
     return;
   }
 
-  const companyInfo = { name: companyName, logo: companyJobs[0].logo || "DW", count: companyJobs.length };
+  const companyInfo = {
+    name: companyName,
+    logo: companyJobs[0].logo || "DW",
+    count: companyJobs.length,
+  };
 
   headerContainer.innerHTML = `
         <div class="company-logo-large" style="margin: 0 auto 1rem auto; display:flex;">${companyInfo.logo}</div>
@@ -335,45 +404,50 @@ window.renderCompanyProfile = function (companyName, allJobsArray) {
 // ==========================================
 
 function extractSalaryNumber(job) {
-    if (!job.salary) return 0;
-    let text = job.salary.toLowerCase().replace(/,/g, '');
-    text = text.replace(/\d+%/g, ''); 
-    text = text.replace(/\d+\s*(months?|years?|days?)/g, ''); 
-    
-    let isUSD = text.includes('usd') || text.includes('$');
-    let isGBP = text.includes('gbp') || text.includes('£');
-    let isHourly = text.includes('/hr') || text.includes('per hour') || text.includes('an hour');
-    
-    let regex = /((?:\d+\.)?\d+)\s*(k)?/g;
-    let matches = [...text.matchAll(regex)];
-    let parsedNumbers = [];
-    
-    for (let match of matches) {
-        let num = parseFloat(match[1]);
-        let hasK = match[2] !== undefined; 
-        
-        if ((hasK || (num >= 3 && num <= 200)) && !isHourly && !isUSD && !isGBP) {
-            if (num < 1000) num = num * 1000; 
-        }
-        
-        let monthlyNum = num;
-        if (isHourly) monthlyNum = num * 160;
-        if (isUSD) monthlyNum *= 50;
-        if (isGBP) monthlyNum *= 63;
-        
-        if (monthlyNum >= 3000 && monthlyNum <= 200000) {
-            parsedNumbers.push(monthlyNum);
-        }
+  if (!job.salary) return 0;
+  let text = job.salary.toLowerCase().replace(/,/g, "");
+  text = text.replace(/\d+%/g, "");
+  text = text.replace(/\d+\s*(months?|years?|days?)/g, "");
+
+  let isUSD = text.includes("usd") || text.includes("$");
+  let isGBP = text.includes("gbp") || text.includes("£");
+  let isHourly =
+    text.includes("/hr") ||
+    text.includes("per hour") ||
+    text.includes("an hour");
+
+  let regex = /((?:\d+\.)?\d+)\s*(k)?/g;
+  let matches = [...text.matchAll(regex)];
+  let parsedNumbers = [];
+
+  for (let match of matches) {
+    let num = parseFloat(match[1]);
+    let hasK = match[2] !== undefined;
+
+    if ((hasK || (num >= 3 && num <= 200)) && !isHourly && !isUSD && !isGBP) {
+      if (num < 1000) num = num * 1000;
     }
-    
-    if (parsedNumbers.length === 0) return 0;
-    if (text.includes('-') || text.includes(' to ')) {
-        if (parsedNumbers.length >= 2) return Math.round((parsedNumbers[0] + parsedNumbers[1]) / 2);
+
+    let monthlyNum = num;
+    if (isHourly) monthlyNum = num * 160;
+    if (isUSD) monthlyNum *= 50;
+    if (isGBP) monthlyNum *= 63;
+
+    if (monthlyNum >= 3000 && monthlyNum <= 200000) {
+      parsedNumbers.push(monthlyNum);
     }
-    if (text.includes('/') && !isHourly) {
-        if (parsedNumbers.length >= 2) return Math.round((parsedNumbers[0] + parsedNumbers[1]) / 2);
-    }
-    return Math.round(parsedNumbers[0]);
+  }
+
+  if (parsedNumbers.length === 0) return 0;
+  if (text.includes("-") || text.includes(" to ")) {
+    if (parsedNumbers.length >= 2)
+      return Math.round((parsedNumbers[0] + parsedNumbers[1]) / 2);
+  }
+  if (text.includes("/") && !isHourly) {
+    if (parsedNumbers.length >= 2)
+      return Math.round((parsedNumbers[0] + parsedNumbers[1]) / 2);
+  }
+  return Math.round(parsedNumbers[0]);
 }
 
 function processSalaries(data) {
@@ -392,7 +466,11 @@ function processSalaries(data) {
 
   salaryStats = Object.values(roleMap)
     .filter((r) => r.count > 0)
-    .map((r) => ({ title: r.title, avg: Math.round(r.total / r.count), samples: r.count }))
+    .map((r) => ({
+      title: r.title,
+      avg: Math.round(r.total / r.count),
+      samples: r.count,
+    }))
     .sort((a, b) => b.avg - a.avg);
 }
 
@@ -434,8 +512,11 @@ function renderSalaries(data) {
 }
 
 window.filterSalaries = function () {
-  const query = document.getElementById("salary-search")?.value.toLowerCase() || "";
-  const filtered = salaryStats.filter((s) => s.title.toLowerCase().includes(query));
+  const query =
+    document.getElementById("salary-search")?.value.toLowerCase() || "";
+  const filtered = salaryStats.filter((s) =>
+    s.title.toLowerCase().includes(query),
+  );
   renderSalaries(filtered);
 };
 
@@ -490,24 +571,39 @@ function appendJobCard(container, job, isWide) {
 window.openJobDetails = function (jobId) {
   const job = window.allJobs.find((j) => j.id === jobId);
   if (!job) return;
-  if (document.getElementById("modal-title")) document.getElementById("modal-title").textContent = job.title;
-  if (document.getElementById("modal-company")) document.getElementById("modal-company").textContent = job.company;
-  if (document.getElementById("modal-salary")) document.getElementById("modal-salary").textContent = job.salary || "Competitive";
-  if (document.getElementById("modal-location")) document.getElementById("modal-location").textContent = job.location || "Remote";
-  if (document.getElementById("modal-hours")) document.getElementById("modal-hours").textContent = job.hours || "Standard";
-  if (document.getElementById("modal-logo")) document.getElementById("modal-logo").textContent = job.logo || "DW";
+  if (document.getElementById("modal-title"))
+    document.getElementById("modal-title").textContent = job.title;
+  if (document.getElementById("modal-company"))
+    document.getElementById("modal-company").textContent = job.company;
+  if (document.getElementById("modal-salary"))
+    document.getElementById("modal-salary").textContent =
+      job.salary || "Competitive";
+  if (document.getElementById("modal-location"))
+    document.getElementById("modal-location").textContent =
+      job.location || "Remote";
+  if (document.getElementById("modal-hours"))
+    document.getElementById("modal-hours").textContent =
+      job.hours || "Standard";
+  if (document.getElementById("modal-logo"))
+    document.getElementById("modal-logo").textContent = job.logo || "DW";
 
   const reqContainer = document.getElementById("modal-requirements");
   if (reqContainer) {
     if (job.requirements) {
       reqContainer.innerHTML = `<p class="text-block">${job.requirements}</p>`;
     } else {
-      reqContainer.innerHTML = "<p class='text-muted'>No specific requirements listed.</p>";
+      reqContainer.innerHTML =
+        "<p class='text-muted'>No specific requirements listed.</p>";
     }
   }
-  if (document.getElementById("modal-description")) document.getElementById("modal-description").textContent = job.description || "No description provided.";
-  if (document.getElementById("modal-training")) document.getElementById("modal-training").textContent = job.training || "Not specified.";
-  if (document.getElementById("job-modal")) document.getElementById("job-modal").classList.add("open");
+  if (document.getElementById("modal-description"))
+    document.getElementById("modal-description").textContent =
+      job.description || "No description provided.";
+  if (document.getElementById("modal-training"))
+    document.getElementById("modal-training").textContent =
+      job.training || "Not specified.";
+  if (document.getElementById("job-modal"))
+    document.getElementById("job-modal").classList.add("open");
 };
 
 window.closeJobModal = function () {
@@ -522,10 +618,12 @@ window.addEventListener("click", (e) => {
 window.applyForJob = function () {
   const title = document.getElementById("modal-title").textContent;
   const company = document.getElementById("modal-company").textContent;
-  const job = window.allJobs.find((j) => j.title === title && j.company === company);
+  const job = window.allJobs.find(
+    (j) => j.title === title && j.company === company,
+  );
 
   const id = job ? job.id : 0;
-  const isBilingual = job && job.bilingual ? "1" : "0"; 
+  const isBilingual = job && job.bilingual ? "1" : "0";
 
   window.location.href = `apply.html?id=${id}&title=${encodeURIComponent(title)}&company=${encodeURIComponent(company)}&bilingual=${isBilingual}`;
 };
@@ -541,13 +639,13 @@ window.saveJob = function (id, title, company, logo) {
   alert("Job Saved to Dashboard!");
 };
 
-// --- AUTH & NAVBAR FIX (CRASH PROOF) ---
+// --- AUTH & NAVBAR FIX ---
 document.addEventListener("DOMContentLoaded", () => {
   const userStr = localStorage.getItem("user");
   const authButtons = document.querySelector(".auth-buttons");
   if (authButtons && userStr) {
     const user = JSON.parse(userStr);
-    const displayName = user.fullName || user.name || "User"; // 🚀 FIX: Prevents the crash!
+    const displayName = user.fullName || user.name || "User";
     authButtons.innerHTML = `
             <a href="dashboard.html" class="btn-text"><i class="fas fa-user-circle"></i> ${displayName.split(" ")[0]}</a>
             <a onclick="globalLogout()" class="btn-primary" style="cursor:pointer; color: black;">Logout</a>
