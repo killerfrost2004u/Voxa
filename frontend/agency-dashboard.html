@@ -258,6 +258,9 @@
       <div>[SYSTEM] Terminal Initialized...</div>
     </div>
 
+    <datalist id="agencyUnits"></datalist>
+    <datalist id="agencyTeams"></datalist>
+
     <div class="dashboard-header">
       <div>
         <h2 id="dashboardTitle">Workspace</h2>
@@ -514,12 +517,25 @@
             Recruiter</label
           >
         </div>
+
         <label style="font-size: 0.85rem; color: var(--text-muted)"
           >Unit Name</label
-        ><input type="text" id="editStaffUnit" placeholder="E.g. Unit Alpha" />
+        >
+        <input
+          type="text"
+          id="editStaffUnit"
+          list="agencyUnits"
+          placeholder="Select or type Unit Name..." />
+
         <label style="font-size: 0.85rem; color: var(--text-muted)"
           >Team Name</label
-        ><input type="text" id="editStaffTeam" placeholder="E.g. Team Wolves" />
+        >
+        <input
+          type="text"
+          id="editStaffTeam"
+          list="agencyTeams"
+          placeholder="Select or type Team Name..." />
+
         <button
           type="button"
           class="btn-schedule btn-submit-promote"
@@ -589,6 +605,11 @@
         console.log("[DEBUG] " + msg);
       }
 
+      // --- THE NUCLEAR CSS STRING (Un-overrideable) ---
+      const nuclearModalStyle =
+        "display: flex !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0,0,0,0.85) !important; z-index: 2147483647 !important; justify-content: center !important; align-items: center !important;";
+      const hideModalStyle = "display: none !important;";
+
       // --- 1. GLOBAL VARIABLES ---
       let allCandidates = [];
       let allStaff = [];
@@ -635,6 +656,36 @@
         }
         printLog("System Ready.", "success");
       };
+
+      // --- SMART DROPDOWN POPULATOR ---
+      function populateStructureDropdowns() {
+        const units = new Set();
+        const teams = new Set();
+
+        window.allStaff.forEach((s) => {
+          if (s.unit && s.unit.trim() !== "" && s.unit !== "None")
+            units.add(s.unit.trim());
+          if (s.team && s.team.trim() !== "" && s.team !== "None")
+            teams.add(s.team.trim());
+        });
+
+        const unitList = document.getElementById("agencyUnits");
+        const teamList = document.getElementById("agencyTeams");
+
+        if (unitList)
+          unitList.innerHTML = Array.from(units)
+            .map((u) => `<option value="${u}">`)
+            .join("");
+        if (teamList)
+          teamList.innerHTML = Array.from(teams)
+            .map((t) => `<option value="${t}">`)
+            .join("");
+
+        printLog(
+          `Populated Smart Dropdowns: ${units.size} Units, ${teams.size} Teams.`,
+          "success",
+        );
+      }
 
       // --- THE NUCLEAR FIX: FORCING VISIBILITY ---
       function forceShowModal(modalId) {
@@ -805,6 +856,7 @@
 
       async function fetchLeaderboard() {
         try {
+          printLog("Fetching Leaderboard...");
           const res = await fetch(
             `https://voxa-pi-three.vercel.app/api/team-stats?role=${userRole}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`,
           );
@@ -857,12 +909,16 @@
           const res = await fetch(
             `https://voxa-pi-three.vercel.app/api/agency/staff?email=${user.email}`,
           );
-          allStaff = await res.json();
+          window.allStaff = await res.json();
+
+          // Trigger the Smart Dropdown parsing!
+          populateStructureDropdowns();
+
           const tbody = document.getElementById("staffDirectoryBody");
-          if (allStaff.length === 0)
+          if (window.allStaff.length === 0)
             return (tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No staff found under your management.</td></tr>`);
 
-          tbody.innerHTML = allStaff
+          tbody.innerHTML = window.allStaff
             .map((s) => {
               const safeStaffId = s.id || "0";
               let roleBadges = s.role
@@ -883,7 +939,7 @@
             </tr>`;
             })
             .join("");
-          printLog(`Found ${allStaff.length} Staff.`, "success");
+          printLog(`Found ${window.allStaff.length} Staff.`, "success");
         } catch (e) {
           printLog("Error Fetching Staff: " + e.message, "error");
         }
@@ -902,11 +958,13 @@
 
       window.openViewPanel = function (appId) {
         try {
+          printLog("Running openViewPanel for ID: " + appId);
           const app = allCandidates.find(
             (a) => String(a.ApplicationID || a.id) === String(appId),
           );
           if (!app) {
-            alert("Candidate data not found locally.");
+            printLog("Candidate not found in array", "error");
+            alert("Candidate data not found locally. ID: " + appId);
             return;
           }
 
@@ -928,11 +986,13 @@
 
       window.openPromoteModal = function (staffId) {
         try {
-          const s = allStaff.find(
+          printLog("Running openPromoteModal for ID: " + staffId);
+          const s = window.allStaff.find(
             (staff) => String(staff.id) === String(staffId),
           );
           if (!s) {
-            alert("Staff data not found locally.");
+            printLog("Staff not found in array", "error");
+            alert("Staff data not found locally. ID: " + staffId);
             return;
           }
 
