@@ -7,414 +7,117 @@
     <link rel="icon" type="image/png" href="images/voxa-logo.png" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/dashboard.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-      .dashboard-header {
-        background: var(--bg-card);
-        padding: 20px 30px;
-        border-bottom: 1px solid var(--border-color);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-      }
-      .kpi-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
-      }
-      .kpi-box {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        padding: 20px;
-        border-radius: 12px;
-        text-align: center;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      }
-      .kpi-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--primary-color);
-        margin: 10px 0;
-      }
-      .kpi-label {
-        color: var(--text-muted);
-        font-size: 0.9rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-      }
-      .leaderboard-card {
-        background: var(--bg-card);
-        padding: 25px;
-        border-radius: 12px;
-        border: 1px solid var(--border-color);
-        margin-bottom: 30px;
-      }
-      .leader-row {
-        display: flex;
-        align-items: center;
-        margin-bottom: 15px;
-      }
-      .leader-name {
-        width: 150px;
-        color: var(--text-main);
-        font-weight: 500;
-        font-size: 0.95rem;
-      }
-      .leader-bar-container {
-        flex-grow: 1;
-        background: var(--bg-input);
-        height: 20px;
-        border-radius: 10px;
-        overflow: hidden;
-        position: relative;
-      }
-      .leader-bar {
-        height: 100%;
-        background: var(--primary-color);
-        width: 0%;
-        transition: width 1s ease-out;
-      }
-      .leader-score {
-        margin-left: 15px;
-        font-weight: bold;
-        color: var(--primary-color);
-        width: 40px;
-        text-align: right;
-      }
-
+      .dashboard-header { background: var(--bg-card); padding: 20px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+      .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+      .kpi-box { background: var(--bg-card); border: 1px solid var(--border-color); padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+      .kpi-value { font-size: 2.5rem; font-weight: 700; color: var(--primary-color); margin: 10px 0; }
+      .kpi-label { color: var(--text-muted); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+      .leaderboard-card { background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 30px; }
+      .leader-row { display: flex; align-items: center; margin-bottom: 15px; }
+      .leader-name { width: 150px; color: var(--text-main); font-weight: 500; font-size: 0.95rem; }
+      .leader-bar-container { flex-grow: 1; background: var(--bg-input); height: 20px; border-radius: 10px; overflow: hidden; position: relative; }
+      .leader-bar { height: 100%; background: var(--primary-color); width: 0%; transition: width 1s ease-out; }
+      .leader-score { margin-left: 15px; font-weight: bold; color: var(--primary-color); width: 40px; text-align: right; }
+      
       /* Modals (Default state) */
-      .modal-overlay {
-        display: none;
-      }
-      .modal-card {
-        background: var(--bg-card);
-        padding: 30px;
-        border-radius: 12px;
-        width: 90%;
-        max-width: 500px;
-        border: 1px solid var(--border-color);
-        max-height: 90vh;
-        overflow-y: auto;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      }
-      .modal-card input,
-      .modal-card select {
-        width: 100%;
-        padding: 10px;
-        margin-top: 5px;
-        margin-bottom: 15px;
-        background: var(--bg-input);
-        color: white;
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        outline: none;
-      }
-
+      .modal-overlay { display: none; }
+      .modal-card { background: var(--bg-card); padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+      .modal-card input, .modal-card select { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 15px; background: var(--bg-input); color: white; border: 1px solid var(--border-color); border-radius: 6px; outline: none;}
+      
       /* Dynamic Buttons */
-      .btn-action-schedule {
-        background: var(--primary-color);
-        color: #000;
-        border: none;
-        padding: 5px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.8rem;
-        font-weight: bold;
-        margin-right: 5px;
-      }
-      .btn-action-details {
-        background: transparent;
-        color: var(--text-main);
-        border: 1px solid var(--border-color);
-        padding: 4px 10px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.8rem;
-      }
-      .btn-action-promote {
-        background: var(--bg-input);
-        color: var(--text-main);
-        border: 1px solid var(--border-color);
-        padding: 5px 10px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.8rem;
-      }
-
+      .btn-action-schedule { background:var(--primary-color); color:#000; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold; margin-right: 5px; }
+      .btn-action-details { background:transparent; color:var(--text-main); border:1px solid var(--border-color); padding:4px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; }
+      .btn-action-promote { background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color); padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; }
+      
       /* Standard Buttons */
-      .btn-schedule {
-        background: #10b981;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: bold;
-        width: 100%;
-      }
-      .btn-cancel {
-        background: transparent;
-        color: var(--text-muted);
-        border: none;
-        width: 100%;
-        margin-top: 10px;
-        cursor: pointer;
-      }
-      .btn-outline {
-        background: transparent;
-        color: var(--text-main);
-        border: 1px solid var(--border-color);
-        padding: 8px 15px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 0.9rem;
-        font-weight: 600;
-        transition: all 0.2s ease;
-      }
-      .btn-outline:hover {
-        border-color: #ef4444;
-        color: #ef4444;
-        background: rgba(239, 68, 68, 0.1);
-      }
-
+      .btn-schedule { background: #10b981; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+      .btn-cancel { background: transparent; color: var(--text-muted); border: none; width: 100%; margin-top: 10px; cursor: pointer; }
+      .btn-outline { background: transparent; color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all 0.2s ease; }
+      .btn-outline:hover { border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+      
       /* Tags */
-      .status-badge {
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        font-weight: bold;
-        display: inline-block;
-      }
-      .status-accepted {
-        background: rgba(16, 185, 129, 0.1);
-        color: #10b981;
-        border: 1px solid #10b981;
-      }
-      .status-rejected {
-        background: rgba(239, 68, 68, 0.1);
-        color: #ef4444;
-        border: 1px solid #ef4444;
-      }
-      .status-pending {
-        background: rgba(0, 229, 255, 0.1);
-        color: var(--primary-color);
-        border: 1px solid var(--primary-color);
-      }
-      .lineage-tag {
-        font-size: 0.75rem;
-        background: rgba(0, 229, 255, 0.05);
-        color: var(--primary-color);
-        border: 1px solid var(--primary-color);
-        padding: 2px 6px;
-        border-radius: 4px;
-        margin-right: 5px;
-        display: inline-block;
-        margin-top: 5px;
-      }
-      .multi-select-box {
-        background: var(--bg-input);
-        border: 1px solid var(--border-color);
-        padding: 10px;
-        border-radius: 6px;
-        margin-bottom: 15px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-      .multi-select-box label {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 0.9rem;
-        cursor: pointer;
-      }
+      .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; display: inline-block; }
+      .status-accepted { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid #10b981; }
+      .status-rejected { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444; }
+      .status-pending { background: rgba(0, 229, 255, 0.1); color: var(--primary-color); border: 1px solid var(--primary-color); }
+      .lineage-tag { font-size: 0.75rem; background: rgba(0, 229, 255, 0.05); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 2px 6px; border-radius: 4px; margin-right: 5px; display: inline-block; margin-top: 5px;}
+      .multi-select-box { background: var(--bg-input); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px; }
+      .multi-select-box label { display: flex; align-items: center; gap: 5px; font-size: 0.9rem; cursor: pointer; }
     </style>
   </head>
   <body style="background: var(--bg-main); color: var(--text-main)">
+
     <datalist id="agencyUnits"></datalist>
     <datalist id="agencyTeams"></datalist>
 
     <div class="dashboard-header">
       <div>
         <h2 id="dashboardTitle">Workspace</h2>
-        <p
-          id="roleBadge"
-          style="
-            color: var(--primary-color);
-            font-weight: 600;
-            margin-bottom: 10px;
-          "></p>
-        <button
-          class="btn-copy-link"
-          style="
-            background: var(--bg-input);
-            color: var(--primary-color);
-            border: 1px dashed var(--primary-color);
-            padding: 8px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: 0.2s;
-          ">
+        <p id="roleBadge" style="color: var(--primary-color); font-weight: 600; margin-bottom: 10px;"></p>
+        <button class="btn-copy-link" style="background: var(--bg-input); color: var(--primary-color); border: 1px dashed var(--primary-color); padding: 8px 15px; border-radius: 6px; cursor: pointer; transition: 0.2s;">
           <i class="fas fa-link"></i> Copy My Candidate Invite Link
         </button>
       </div>
-      <button class="btn-outline btn-logout" style="padding: 8px 15px">
-        Logout
-      </button>
+      <button class="btn-outline btn-logout" style="padding: 8px 15px">Logout</button>
     </div>
 
     <div class="container">
+      
       <div class="kpi-grid">
-        <div class="kpi-box">
-          <i
-            class="fas fa-users"
-            style="font-size: 1.5rem; color: var(--text-muted)"></i>
-          <div class="kpi-value" id="kpi-total">0</div>
-          <div class="kpi-label">Total Candidates</div>
-        </div>
-        <div class="kpi-box">
-          <i
-            class="fas fa-check-circle"
-            style="font-size: 1.5rem; color: #10b981"></i>
-          <div class="kpi-value" id="kpi-accepted" style="color: #10b981">
-            0
-          </div>
-          <div class="kpi-label">Accepted</div>
-        </div>
-        <div class="kpi-box">
-          <i
-            class="fas fa-times-circle"
-            style="font-size: 1.5rem; color: #ef4444"></i>
-          <div class="kpi-value" id="kpi-rejected" style="color: #ef4444">
-            0
-          </div>
-          <div class="kpi-label">Rejected</div>
-        </div>
-        <div class="kpi-box">
-          <i class="fas fa-clock" style="font-size: 1.5rem; color: #f59e0b"></i>
-          <div class="kpi-value" id="kpi-pending" style="color: #f59e0b">0</div>
-          <div class="kpi-label">In Review</div>
-        </div>
+        <div class="kpi-box"><i class="fas fa-users" style="font-size: 1.5rem; color: var(--text-muted)"></i><div class="kpi-value" id="kpi-total">0</div><div class="kpi-label">Total Candidates</div></div>
+        <div class="kpi-box"><i class="fas fa-check-circle" style="font-size: 1.5rem; color: #10b981"></i><div class="kpi-value" id="kpi-accepted" style="color: #10b981">0</div><div class="kpi-label">Accepted</div></div>
+        <div class="kpi-box"><i class="fas fa-times-circle" style="font-size: 1.5rem; color: #ef4444"></i><div class="kpi-value" id="kpi-rejected" style="color: #ef4444">0</div><div class="kpi-label">Rejected</div></div>
+        <div class="kpi-box"><i class="fas fa-clock" style="font-size: 1.5rem; color: #f59e0b"></i><div class="kpi-value" id="kpi-pending" style="color: #f59e0b">0</div><div class="kpi-label">In Review</div></div>
       </div>
 
-      <div
-        class="leaderboard-card"
-        id="approvals-section"
-        style="
-          display: none;
-          border: 1px solid #f59e0b;
-          background: rgba(245, 158, 11, 0.05);
-        ">
-        <h3 style="margin-bottom: 20px; color: #f59e0b">
-          <i class="fas fa-bell"></i> Action Required: Pending Staff Approvals
-        </h3>
-        <div style="overflow-x: auto">
-          <table
-            style="width: 100%; text-align: left; border-collapse: collapse">
-            <thead>
-              <tr style="border-bottom: 1px solid var(--border-color)">
-                <th style="padding: 10px">Name</th>
-                <th style="padding: 10px">Requested Role</th>
-                <th style="padding: 10px">Unit/Team</th>
-                <th style="padding: 10px">Action</th>
-              </tr>
-            </thead>
-            <tbody id="pendingTableBody"></tbody>
-          </table>
-        </div>
+      <div class="leaderboard-card" id="approvals-section" style="display: none; border: 1px solid #f59e0b; background: rgba(245, 158, 11, 0.05);">
+          <h3 style="margin-bottom: 20px; color: #f59e0b;"><i class="fas fa-bell"></i> Action Required: Pending Staff Approvals</h3>
+          <div style="overflow-x: auto;">
+              <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                  <thead>
+                      <tr style="border-bottom: 1px solid var(--border-color);"><th style="padding: 10px;">Name</th><th style="padding: 10px;">Requested Role</th><th style="padding: 10px;">Unit/Team</th><th style="padding: 10px;">Action</th></tr>
+                  </thead>
+                  <tbody id="pendingTableBody"></tbody>
+              </table>
+          </div>
       </div>
 
-      <div
-        class="leaderboard-card"
-        id="staff-directory-section"
-        style="display: none">
-        <h3
-          style="
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-          ">
-          <i class="fas fa-user-cog" style="color: var(--primary-color)"></i>
-          Staff Directory & Promotions
-        </h3>
-        <div style="overflow-x: auto">
-          <table
-            style="width: 100%; text-align: left; border-collapse: collapse">
-            <thead>
-              <tr
-                style="
-                  border-bottom: 1px solid var(--border-color);
-                  color: var(--text-muted);
-                ">
-                <th style="padding: 10px">Staff Member</th>
-                <th style="padding: 10px">Current Role</th>
-                <th style="padding: 10px">Placement</th>
-                <th style="padding: 10px">Action</th>
-              </tr>
-            </thead>
-            <tbody id="staffDirectoryBody">
-              <tr>
-                <td colspan="4" style="text-align: center; padding: 20px">
-                  <i class="fas fa-spinner fa-spin"></i> Loading Directory...
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="leaderboard-card" id="staff-directory-section" style="display: none;">
+          <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+              <i class="fas fa-user-cog" style="color: var(--primary-color)"></i> Staff Directory & Promotions
+          </h3>
+          <div style="overflow-x: auto;">
+              <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                  <thead>
+                      <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
+                          <th style="padding: 10px;">Staff Member</th><th style="padding: 10px;">Current Role</th><th style="padding: 10px;">Placement</th><th style="padding: 10px;">Action</th>
+                      </tr>
+                  </thead>
+                  <tbody id="staffDirectoryBody">
+                      <tr><td colspan="4" style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Loading Directory...</td></tr>
+                  </tbody>
+              </table>
+          </div>
       </div>
 
       <div class="leaderboard-card" id="leaderboard-container">
-        <h3
-          style="
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-          ">
-          <i class="fas fa-trophy" style="color: var(--primary-color)"></i>
-          Performance Leaderboard
-        </h3>
-        <div id="leaderboardContent">
-          <p style="color: var(--text-muted)">Loading analytics...</p>
-        </div>
+        <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;"><i class="fas fa-trophy" style="color: var(--primary-color)"></i> Performance Leaderboard</h3>
+        <div id="leaderboardContent"><p style="color: var(--text-muted)">Loading analytics...</p></div>
       </div>
 
       <div class="leaderboard-card">
-        <h3
-          style="
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-          ">
-          <i class="fas fa-users" style="color: var(--primary-color)"></i>
-          Candidate Pipeline
-        </h3>
-        <div style="overflow-x: auto">
-          <table
-            style="width: 100%; text-align: left; border-collapse: collapse">
+        <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;"><i class="fas fa-users" style="color: var(--primary-color)"></i> Candidate Pipeline</h3>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; text-align: left; border-collapse: collapse;">
             <thead>
-              <tr
-                style="
-                  border-bottom: 1px solid var(--border-color);
-                  color: var(--text-muted);
-                ">
-                <th style="padding: 10px">Candidate Name</th>
-                <th style="padding: 10px">Hierarchy Lineage</th>
-                <th style="padding: 10px">Status</th>
-                <th style="padding: 10px">Interview Schedule</th>
-                <th style="padding: 10px">Action</th>
+              <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
+                <th style="padding: 10px;">Candidate Name</th><th style="padding: 10px;">Hierarchy Lineage</th><th style="padding: 10px;">Status</th><th style="padding: 10px;">Interview Schedule</th><th style="padding: 10px;">Action</th>
               </tr>
             </thead>
             <tbody id="candidateTableBody">
-              <tr>
-                <td colspan="5" style="text-align: center; padding: 20px">
-                  <i class="fas fa-spinner fa-spin"></i> Loading...
-                </td>
-              </tr>
+              <tr><td colspan="5" style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -425,152 +128,55 @@
       <div class="modal-card">
         <h3 style="margin-bottom: 15px">📅 Schedule Interview</h3>
         <input type="hidden" id="modalAppId" />
-        <label style="font-size: 0.85rem; color: var(--text-muted)">Date</label
-        ><input type="date" id="modalDate" required />
-        <label style="font-size: 0.85rem; color: var(--text-muted)"
-          >Time Slot</label
-        >
+        <label style="font-size: 0.85rem; color: var(--text-muted);">Date</label><input type="date" id="modalDate" required />
+        <label style="font-size: 0.85rem; color: var(--text-muted);">Time Slot</label>
         <select id="modalTime" required>
-          <option value="10:00 AM - 10:30 AM">10:00 AM - 10:30 AM</option>
-          <option value="11:00 AM - 11:30 AM">11:00 AM - 11:30 AM</option>
-          <option value="2:00 PM - 2:30 PM">2:00 PM - 2:30 PM</option>
-          <option value="4:00 PM - 4:30 PM">4:00 PM - 4:30 PM</option>
-          <option value="7:00 PM - 9:00 PM">
-            7:00 PM - 9:00 PM (Night Slot)
-          </option>
+          <option value="10:00 AM - 10:30 AM">10:00 AM - 10:30 AM</option><option value="11:00 AM - 11:30 AM">11:00 AM - 11:30 AM</option><option value="2:00 PM - 2:30 PM">2:00 PM - 2:30 PM</option><option value="4:00 PM - 4:30 PM">4:00 PM - 4:30 PM</option><option value="7:00 PM - 9:00 PM">7:00 PM - 9:00 PM (Night Slot)</option>
         </select>
-        <label style="font-size: 0.85rem; color: var(--text-muted)"
-          >Meeting Link (Optional)</label
-        ><input
-          type="url"
-          id="modalLink"
-          placeholder="https://zoom.us/j/123..." />
-        <button type="button" class="btn-schedule btn-submit-schedule">
-          Confirm Slot
-        </button>
-        <button
-          type="button"
-          class="btn-cancel btn-close"
-          data-modal="scheduleModal">
-          Cancel
-        </button>
+        <label style="font-size: 0.85rem; color: var(--text-muted);">Meeting Link (Optional)</label><input type="url" id="modalLink" placeholder="https://zoom.us/j/123..." />
+        <button type="button" class="btn-schedule btn-submit-schedule">Confirm Slot</button>
+        <button type="button" class="btn-cancel btn-close" data-modal="scheduleModal">Cancel</button>
       </div>
     </div>
 
     <div class="modal-overlay" id="promoteModal">
       <div class="modal-card">
-        <h3 style="margin-bottom: 15px">
-          <i class="fas fa-user-edit" style="color: var(--primary-color)"></i>
-          Edit Staff Profile
-        </h3>
+        <h3 style="margin-bottom: 15px"><i class="fas fa-user-edit" style="color:var(--primary-color);"></i> Edit Staff Profile</h3>
         <input type="hidden" id="editStaffId" />
-        <p
-          id="editStaffName"
-          style="
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: var(--primary-color);
-          "></p>
-
-        <label style="font-size: 0.85rem; color: var(--text-muted)"
-          >Assign Roles</label
-        >
+        <p id="editStaffName" style="font-weight: bold; margin-bottom: 15px; color: var(--primary-color);"></p>
+        
+        <label style="font-size: 0.85rem; color: var(--text-muted);">Assign Roles</label>
         <div class="multi-select-box">
-          <label
-            ><input type="checkbox" class="role-cb" value="CEO" /> CEO</label
-          >
-          <label
-            ><input type="checkbox" class="role-cb" value="UnitManager" /> Unit
-            Manager</label
-          >
-          <label
-            ><input type="checkbox" class="role-cb" value="Leader" />
-            Leader</label
-          >
-          <label
-            ><input type="checkbox" class="role-cb" value="Validator" />
-            Validator</label
-          >
-          <label
-            ><input type="checkbox" class="role-cb" value="Recruiter" />
-            Recruiter</label
-          >
+            <label><input type="checkbox" class="role-cb" value="CEO"> CEO</label>
+            <label><input type="checkbox" class="role-cb" value="UnitManager"> Unit Manager</label>
+            <label><input type="checkbox" class="role-cb" value="Leader"> Leader</label>
+            <label><input type="checkbox" class="role-cb" value="Validator"> Validator</label>
+            <label><input type="checkbox" class="role-cb" value="Recruiter"> Recruiter</label>
         </div>
-
-        <label style="font-size: 0.85rem; color: var(--text-muted)"
-          >Unit Name</label
-        >
-        <input
-          type="text"
-          id="editStaffUnit"
-          list="agencyUnits"
-          placeholder="Select or type Unit Name..." />
-
-        <label style="font-size: 0.85rem; color: var(--text-muted)"
-          >Team Name</label
-        >
-        <input
-          type="text"
-          id="editStaffTeam"
-          list="agencyTeams"
-          placeholder="Select or type Team Name..." />
-
-        <button
-          type="button"
-          class="btn-schedule btn-submit-promote"
-          style="background: var(--primary-color); color: black">
-          Save Changes
-        </button>
-        <button
-          type="button"
-          class="btn-cancel btn-close"
-          data-modal="promoteModal">
-          Cancel
-        </button>
+        
+        <label style="font-size: 0.85rem; color: var(--text-muted);">Unit Name</label>
+        <input type="text" id="editStaffUnit" list="agencyUnits" placeholder="Select or type Unit Name..." />
+        
+        <label style="font-size: 0.85rem; color: var(--text-muted);">Team Name</label>
+        <input type="text" id="editStaffTeam" list="agencyTeams" placeholder="Select or type Team Name..." />
+        
+        <button type="button" class="btn-schedule btn-submit-promote" style="background:var(--primary-color); color:black;">Save Changes</button>
+        <button type="button" class="btn-cancel btn-close" data-modal="promoteModal">Cancel</button>
       </div>
     </div>
 
     <div class="modal-overlay" id="viewPanelModal">
-      <div class="modal-card" style="max-width: 600px">
-        <h3 style="margin-bottom: 15px">
-          <i
-            class="fas fa-file-invoice"
-            style="color: var(--primary-color)"></i>
-          Candidate Details
-        </h3>
-        <div
-          id="viewPanelContent"
-          style="
-            background: var(--bg-input);
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            font-family: monospace;
-            white-space: pre-wrap;
-            font-size: 0.85rem;
-            max-height: 50vh;
-            overflow-y: auto;
-            color: white;
-          "></div>
-        <button
-          type="button"
-          class="btn-cancel btn-close"
-          data-modal="viewPanelModal"
-          style="
-            background: var(--bg-input);
-            padding: 10px;
-            border-radius: 6px;
-            margin-top: 20px;
-          ">
-          Close Panel
-        </button>
+      <div class="modal-card" style="max-width: 600px;">
+        <h3 style="margin-bottom: 15px"><i class="fas fa-file-invoice" style="color:var(--primary-color);"></i> Candidate Details</h3>
+        <div id="viewPanelContent" style="background: var(--bg-input); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); font-family: monospace; white-space: pre-wrap; font-size: 0.85rem; max-height: 50vh; overflow-y: auto; color: white;">
+        </div>
+        <button type="button" class="btn-cancel btn-close" data-modal="viewPanelModal" style="background:var(--bg-input); padding: 10px; border-radius: 6px; margin-top: 20px;">Close Panel</button>
       </div>
     </div>
 
     <script>
       // --- THE NUCLEAR CSS STRING (Un-overrideable) ---
-      const nuclearModalStyle =
-        "display: flex !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0,0,0,0.85) !important; z-index: 2147483647 !important; justify-content: center !important; align-items: center !important;";
+      const nuclearModalStyle = "display: flex !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0,0,0,0.85) !important; z-index: 2147483647 !important; justify-content: center !important; align-items: center !important;";
       const hideModalStyle = "display: none !important;";
 
       // --- 1. GLOBAL VARIABLES ---
@@ -588,24 +194,15 @@
       const isLeader = userRole.includes("Leader");
       const isRecruiterOnly = !isCEO && !isUM && !isLeader;
 
-      document.getElementById("dashboardTitle").innerText = isCEO
-        ? "Agency Command Center"
-        : isUM
-          ? "Unit Workspace"
-          : isLeader
-            ? "Team Workspace"
-            : "My Recruitment Dashboard";
-
+      document.getElementById("dashboardTitle").innerText = isCEO ? "Agency Command Center" : isUM ? "Unit Workspace" : isLeader ? "Team Workspace" : "My Recruitment Dashboard";
+      
       let roleString = `${userRole} | ${user.agencyName}`;
       if (user.unitName) roleString += ` | ${user.unitName}`;
       if (user.teamName) roleString += ` | ${user.teamName}`;
       document.getElementById("roleBadge").innerText = roleString;
 
-      if (isRecruiterOnly)
-        document.getElementById("leaderboard-container").style.display = "none";
-      if (isCEO || isUM)
-        document.getElementById("staff-directory-section").style.display =
-          "block";
+      if (isRecruiterOnly) document.getElementById("leaderboard-container").style.display = "none";
+      if (isCEO || isUM) document.getElementById("staff-directory-section").style.display = "block";
 
       window.onload = async () => {
         await fetchCandidates();
@@ -623,31 +220,23 @@
         const units = new Set();
         const teams = new Set();
 
-        allStaff.forEach((s) => {
-          if (s.unit && s.unit.trim() !== "" && s.unit !== "None")
-            units.add(s.unit.trim());
-          if (s.team && s.team.trim() !== "" && s.team !== "None")
-            teams.add(s.team.trim());
+        allStaff.forEach(s => {
+          if (s.unit && s.unit.trim() !== "" && s.unit !== "None") units.add(s.unit.trim());
+          if (s.team && s.team.trim() !== "" && s.team !== "None") teams.add(s.team.trim());
         });
 
         const unitList = document.getElementById("agencyUnits");
         const teamList = document.getElementById("agencyTeams");
 
-        if (unitList)
-          unitList.innerHTML = Array.from(units)
-            .map((u) => `<option value="${u}"></option>`)
-            .join("");
-        if (teamList)
-          teamList.innerHTML = Array.from(teams)
-            .map((t) => `<option value="${t}"></option>`)
-            .join("");
+        if(unitList) unitList.innerHTML = Array.from(units).map(u => `<option value="${u}"></option>`).join("");
+        if(teamList) teamList.innerHTML = Array.from(teams).map(t => `<option value="${t}"></option>`).join("");
       }
 
       // --- THE NUCLEAR FIX: FORCING VISIBILITY ---
       function forceShowModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (!modal) return;
-        modal.style.cssText = `
+          const modal = document.getElementById(modalId);
+          if (!modal) return;
+          modal.style.cssText = `
               display: flex !important;
               position: fixed !important;
               top: 0 !important;
@@ -665,70 +254,71 @@
       }
 
       function forceHideModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) modal.style.cssText = "display: none !important;";
+          const modal = document.getElementById(modalId);
+          if (modal) modal.style.cssText = "display: none !important;";
       }
 
       // --- BULLETPROOF EVENT DELEGATION ---
-      document.addEventListener("click", function (e) {
-        const target = e.target.closest("button") || e.target;
+      document.addEventListener('click', function(e) {
+          const target = e.target.closest('button') || e.target;
 
-        // Open Modals
-        if (target.classList.contains("btn-details")) {
-          e.preventDefault();
-          window.openViewPanel(target.getAttribute("data-id"));
-        } else if (target.classList.contains("btn-schedule-call")) {
-          e.preventDefault();
-          window.openScheduleModal(target.getAttribute("data-id"));
-        } else if (target.classList.contains("btn-promote")) {
-          e.preventDefault();
-          window.openPromoteModal(target.getAttribute("data-id"));
-        }
-        // Close Modals
-        else if (target.classList.contains("btn-close")) {
-          e.preventDefault();
-          forceHideModal(target.getAttribute("data-modal"));
-        }
-        // Submit Forms
-        else if (target.classList.contains("btn-submit-promote")) {
-          e.preventDefault();
-          window.submitPromotion();
-        } else if (target.classList.contains("btn-submit-schedule")) {
-          e.preventDefault();
-          window.submitSchedule();
-        }
-        // Approve/Reject Actions
-        else if (target.classList.contains("btn-approve")) {
-          e.preventDefault();
-          window.processApproval(target.getAttribute("data-id"), "approve");
-        } else if (target.classList.contains("btn-reject")) {
-          e.preventDefault();
-          window.processApproval(target.getAttribute("data-id"), "reject");
-        }
-        // Static Buttons
-        else if (target.classList.contains("btn-copy-link")) {
-          e.preventDefault();
-          window.copyReferralLink();
-        } else if (target.classList.contains("btn-logout")) {
-          e.preventDefault();
-          window.logout();
-        }
+          // Open Modals
+          if (target.classList.contains('btn-details')) {
+              e.preventDefault();
+              window.openViewPanel(target.getAttribute('data-id'));
+          }
+          else if (target.classList.contains('btn-schedule-call')) {
+              e.preventDefault();
+              window.openScheduleModal(target.getAttribute('data-id'));
+          }
+          else if (target.classList.contains('btn-promote')) {
+              e.preventDefault();
+              window.openPromoteModal(target.getAttribute('data-id'));
+          }
+          // Close Modals
+          else if (target.classList.contains('btn-close')) {
+              e.preventDefault();
+              forceHideModal(target.getAttribute('data-modal'));
+          }
+          // Submit Forms
+          else if (target.classList.contains('btn-submit-promote')) {
+              e.preventDefault();
+              window.submitPromotion();
+          }
+          else if (target.classList.contains('btn-submit-schedule')) {
+              e.preventDefault();
+              window.submitSchedule();
+          }
+          // Approve/Reject Actions
+          else if (target.classList.contains('btn-approve')) {
+              e.preventDefault();
+              window.processApproval(target.getAttribute('data-id'), 'approve');
+          }
+          else if (target.classList.contains('btn-reject')) {
+              e.preventDefault();
+              window.processApproval(target.getAttribute('data-id'), 'reject');
+          }
+          // Static Buttons
+          else if (target.classList.contains('btn-copy-link')) {
+              e.preventDefault();
+              window.copyReferralLink();
+          }
+          else if (target.classList.contains('btn-logout')) {
+              e.preventDefault();
+              window.logout();
+          }
       });
 
       // --- DATA FETCHING ---
       async function fetchCandidates() {
         try {
-          const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/admin/applications?email=${user.email}`,
-          );
+          const res = await fetch(`https://voxa-pi-three.vercel.app/api/admin/applications?email=${user.email}`);
           allCandidates = await res.json();
 
           const tbody = document.getElementById("candidateTableBody");
           tbody.innerHTML = "";
 
-          let countAccepted = 0,
-            countRejected = 0,
-            countPending = 0;
+          let countAccepted = 0, countRejected = 0, countPending = 0;
 
           if (allCandidates.length === 0) {
             tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-muted);">No candidates generated yet.</td></tr>`;
@@ -736,37 +326,29 @@
 
           allCandidates.forEach((app) => {
             const safeAppId = app.ApplicationID || app.id || "0";
-            let status =
-              app.Status ||
-              (app.AI_Rating && app.AI_Rating !== "null"
-                ? "Analyzed"
-                : "In Review");
-
-            if (status === "Accepted") countAccepted++;
-            else if (status === "Rejected") countRejected++;
+            let status = app.Status || (app.AI_Rating && app.AI_Rating !== "null" ? "Analyzed" : "In Review");
+            
+            if (status === "Accepted") countAccepted++; 
+            else if (status === "Rejected") countRejected++; 
             else countPending++;
 
             let badgeClass = "status-pending";
             if (status === "Accepted") badgeClass = "status-accepted";
             if (status === "Rejected") badgeClass = "status-rejected";
-
-            let scheduleText = app.InterviewDate
-              ? `<span style="color:var(--primary-color); font-weight:bold;">${app.InterviewDate} @ ${app.InterviewTime}</span>`
-              : "<span style='color:var(--text-muted);'>Not Scheduled</span>";
+            
+            let scheduleText = app.InterviewDate ? `<span style="color:var(--primary-color); font-weight:bold;">${app.InterviewDate} @ ${app.InterviewTime}</span>` : "<span style='color:var(--text-muted);'>Not Scheduled</span>";
 
             let lineageHtml = "";
-            if (app.RecruiterUnit)
-              lineageHtml += `<span class="lineage-tag"><i class="fas fa-building"></i> ${app.RecruiterUnit}</span>`;
-            if (app.RecruiterTeam)
-              lineageHtml += `<span class="lineage-tag"><i class="fas fa-users"></i> ${app.RecruiterTeam}</span>`;
-
+            if(app.RecruiterUnit) lineageHtml += `<span class="lineage-tag"><i class="fas fa-building"></i> ${app.RecruiterUnit}</span>`;
+            if(app.RecruiterTeam) lineageHtml += `<span class="lineage-tag"><i class="fas fa-users"></i> ${app.RecruiterTeam}</span>`;
+            
             let actionBtn = "";
             if (!app.InterviewDate && (isLeader || isUM || isCEO)) {
               actionBtn += `<button type="button" class="btn-action-schedule btn-schedule-call" data-id="${safeAppId}">Schedule Call</button> `;
             } else if (app.InterviewLink) {
               actionBtn += `<a href="${app.InterviewLink}" target="_blank" style="background:#10b981; color:white; padding:5px 12px; border-radius:4px; font-size: 0.8rem; font-weight:bold; text-decoration:none; margin-right: 5px;">Join Call</a> `;
             }
-
+            
             actionBtn += `<button type="button" class="btn-action-details btn-details" data-id="${safeAppId}"><i class="fas fa-eye"></i> Details</button>`;
 
             tbody.innerHTML += `
@@ -789,212 +371,141 @@
           document.getElementById("kpi-accepted").innerText = countAccepted;
           document.getElementById("kpi-rejected").innerText = countRejected;
           document.getElementById("kpi-pending").innerText = countPending;
-        } catch (e) {
-          console.error("Error Fetching Candidates: " + e.message);
-        }
+
+        } catch (e) { console.error("Error Fetching Candidates: " + e.message); }
       }
 
       async function fetchLeaderboard() {
         try {
-          const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/team-stats?role=${userRole}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`,
-          );
+          const res = await fetch(`https://voxa-pi-three.vercel.app/api/team-stats?role=${userRole}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`);
           const stats = await res.json();
           const container = document.getElementById("leaderboardContent");
-          if (stats.length === 0)
-            return (container.innerHTML = `<p style="color: var(--text-muted);">No candidates recruited yet.</p>`);
+          if (stats.length === 0) return container.innerHTML = `<p style="color: var(--text-muted);">No candidates recruited yet.</p>`;
           const maxCount = Math.max(...stats.map((s) => s.count));
-          container.innerHTML = stats
-            .map(
-              (stat) => `
+          container.innerHTML = stats.map((stat) => `
               <div class="leader-row">
-                  <div class="leader-name">${stat.recruiter || "Direct/Organic"}</div>
+                  <div class="leader-name">${stat.recruiter || 'Direct/Organic'}</div>
                   <div class="leader-bar-container"><div class="leader-bar" style="width: ${(stat.count / maxCount) * 100}%;"></div></div>
                   <div class="leader-score">${stat.count}</div>
-              </div>`,
-            )
-            .join("");
-        } catch (e) {
-          console.error("Error Fetching Leaderboard: " + e.message);
-        }
+              </div>`).join("");
+        } catch (e) { console.error("Error Fetching Leaderboard: " + e.message); }
       }
 
       async function fetchPendingStaff() {
         try {
-          const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/pending-staff?role=${userRole}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`,
-          );
+          const res = await fetch(`https://voxa-pi-three.vercel.app/api/pending-staff?role=${userRole}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`);
           const pendingUsers = await res.json();
           const section = document.getElementById("approvals-section");
           const tbody = document.getElementById("pendingTableBody");
-          if (pendingUsers.length === 0)
-            return (section.style.display = "none");
+          if (pendingUsers.length === 0) return section.style.display = "none";
           section.style.display = "block";
-          tbody.innerHTML = pendingUsers
-            .map((p) => {
-              let placement = p.unit || "Direct Report";
-              if (p.team) placement += ` / ${p.team}`;
-              return `<tr style="border-bottom: 1px solid var(--border-color);"><td style="padding: 12px 10px; font-weight: 500;">${p.name} <br><span style="font-size: 0.8rem; color: var(--text-muted);">${p.email}</span></td><td style="padding: 12px 10px; color: var(--primary-color);">${p.role}</td><td style="padding: 12px 10px; color: var(--text-muted);">${placement}</td><td style="padding: 12px 10px; display: flex; gap: 10px;"><button type="button" class="btn-approve" data-id="${p.id}" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-check"></i> Accept</button><button type="button" class="btn-reject" data-id="${p.id}" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-times"></i> Reject</button></td></tr>`;
-            })
-            .join("");
-        } catch (e) {
-          console.error("Error Fetching Pending: " + e.message);
-        }
+          tbody.innerHTML = pendingUsers.map((p) => {
+            let placement = p.unit || "Direct Report"; if (p.team) placement += ` / ${p.team}`;
+            return `<tr style="border-bottom: 1px solid var(--border-color);"><td style="padding: 12px 10px; font-weight: 500;">${p.name} <br><span style="font-size: 0.8rem; color: var(--text-muted);">${p.email}</span></td><td style="padding: 12px 10px; color: var(--primary-color);">${p.role}</td><td style="padding: 12px 10px; color: var(--text-muted);">${placement}</td><td style="padding: 12px 10px; display: flex; gap: 10px;"><button type="button" class="btn-approve" data-id="${p.id}" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-check"></i> Accept</button><button type="button" class="btn-reject" data-id="${p.id}" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-times"></i> Reject</button></td></tr>`;
+          }).join("");
+        } catch (e) { console.error("Error Fetching Pending: " + e.message); }
       }
 
       async function fetchStaffDirectory() {
         try {
-          const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/agency/staff?email=${user.email}`,
-          );
+          const res = await fetch(`https://voxa-pi-three.vercel.app/api/agency/staff?email=${user.email}`);
           allStaff = await res.json();
-
+          
           // POPULATE THE SMART DROPDOWNS
           populateStructureDropdowns();
 
           const tbody = document.getElementById("staffDirectoryBody");
-          if (allStaff.length === 0)
-            return (tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No staff found under your management.</td></tr>`);
-
-          tbody.innerHTML = allStaff
-            .map((s) => {
-              const safeStaffId = s.id || "0";
-              let roleBadges = s.role
-                .split(",")
-                .map(
-                  (r) =>
-                    `<span style="background:rgba(0, 229, 255, 0.1); color:var(--primary-color); padding:2px 6px; border-radius:4px; font-size:0.75rem; border:1px solid var(--primary-color); margin-right:4px; display:inline-block; margin-bottom:4px;">${r.trim()}</span>`,
-                )
-                .join("");
-              let placement = s.unit || "None";
-              if (s.team) placement += ` / ${s.team}`;
-
-              return `<tr style="border-bottom: 1px solid var(--border-color);">
+          if (allStaff.length === 0) return tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No staff found under your management.</td></tr>`;
+          
+          tbody.innerHTML = allStaff.map((s) => {
+            const safeStaffId = s.id || "0";
+            let roleBadges = s.role.split(",").map(r => `<span style="background:rgba(0, 229, 255, 0.1); color:var(--primary-color); padding:2px 6px; border-radius:4px; font-size:0.75rem; border:1px solid var(--primary-color); margin-right:4px; display:inline-block; margin-bottom:4px;">${r.trim()}</span>`).join("");
+            let placement = s.unit || "None"; if (s.team) placement += ` / ${s.team}`;
+            
+            return `<tr style="border-bottom: 1px solid var(--border-color);">
                 <td style="padding: 12px 10px; font-weight: bold;">${s.name}<br><small style="color:var(--text-muted); font-weight:normal;">${s.email}</small></td>
                 <td style="padding: 12px 10px;">${roleBadges}</td>
                 <td style="padding: 12px 10px; font-size:0.85rem; color:var(--text-muted);">${placement}</td>
                 <td style="padding: 12px 10px;"><button type="button" class="btn-action-promote btn-promote" data-id="${safeStaffId}"><i class="fas fa-edit"></i> Edit / Promote</button></td>
             </tr>`;
-            })
-            .join("");
-        } catch (e) {
-          console.error("Error Fetching Staff: " + e.message);
-        }
+          }).join("");
+        } catch(e) { console.error("Error Fetching Staff: " + e.message); }
       }
 
       // --- MODAL LOGIC ---
       function calculateAge(dobString) {
-        if (!dobString || dobString === "None" || dobString === "null")
-          return "N/A";
+        if (!dobString || dobString === "None" || dobString === "null") return "N/A";
         const dob = new Date(dobString);
         if (isNaN(dob.getTime())) return "N/A";
-        return Math.abs(
-          new Date(Date.now() - dob.getTime()).getUTCFullYear() - 1970,
-        );
+        return Math.abs(new Date(Date.now() - dob.getTime()).getUTCFullYear() - 1970);
       }
 
-      window.openViewPanel = function (appId) {
+      window.openViewPanel = function(appId) {
         try {
-          const app = allCandidates.find(
-            (a) => String(a.ApplicationID || a.id) === String(appId),
-          );
-          if (!app) {
-            alert("Candidate data not found locally. ID: " + appId);
-            return;
-          }
-
+          const app = allCandidates.find(a => String(a.ApplicationID || a.id) === String(appId));
+          if(!app) { alert("Candidate data not found locally. ID: " + appId); return; }
+          
           const age = calculateAge(app.DateOfBirth);
-          const aiSum =
-            app.ClientPanel || app.AI_Summary || "Pending AI Assessment...";
+          const aiSum = app.ClientPanel || app.AI_Summary || "Pending AI Assessment...";
           const valNotes = app.ValidatorFeedback || "No notes yet.";
 
           const panelText = `Candidate: ${app.FullName}\nEmail: ${app.Email}\nPhone: ${app.Phone}\nWhatsApp: ${app.WhatsApp || "N/A"}\nAge: ${age}\nLocation: ${app.Address || "N/A"}\n\nAI Assessment:\n${aiSum}\n\nHR Validator Notes:\n${valNotes}`;
-
+          
           document.getElementById("viewPanelContent").innerText = panelText;
           forceShowModal("viewPanelModal");
-        } catch (error) {
-          console.error("CRASH in openViewPanel: " + error.message);
-        }
-      };
+          
+        } catch (error) { console.error("CRASH in openViewPanel: " + error.message); }
+      }
 
-      window.openPromoteModal = function (staffId) {
+      window.openPromoteModal = function(staffId) {
         try {
-          const s = allStaff.find(
-            (staff) => String(staff.id) === String(staffId),
-          );
-          if (!s) {
-            alert("Staff data not found locally. ID: " + staffId);
-            return;
-          }
+          const s = allStaff.find(staff => String(staff.id) === String(staffId));
+          if(!s) { alert("Staff data not found locally. ID: " + staffId); return; }
 
           document.getElementById("editStaffId").value = s.id;
-          document.getElementById("editStaffName").innerText =
-            "Managing: " + s.name;
+          document.getElementById("editStaffName").innerText = "Managing: " + s.name;
           document.getElementById("editStaffUnit").value = s.unit || "";
           document.getElementById("editStaffTeam").value = s.team || "";
 
           const roleBoxes = document.querySelectorAll(".role-cb");
-          roleBoxes.forEach((cb) => (cb.checked = false));
-          const rolesArray = (s.role || "").split(",").map((r) => r.trim());
-          roleBoxes.forEach((cb) => {
-            if (rolesArray.includes(cb.value)) cb.checked = true;
-          });
+          roleBoxes.forEach(cb => cb.checked = false);
+          const rolesArray = (s.role || "").split(",").map(r => r.trim());
+          roleBoxes.forEach(cb => { if(rolesArray.includes(cb.value)) cb.checked = true; });
 
           forceShowModal("promoteModal");
-        } catch (error) {
-          console.error("CRASH in openPromoteModal: " + error.message);
-        }
-      };
+        } catch (error) { console.error("CRASH in openPromoteModal: " + error.message); }
+      }
 
-      window.openScheduleModal = function (appId) {
+      window.openScheduleModal = function(appId) {
         try {
           document.getElementById("modalAppId").value = appId;
           forceShowModal("scheduleModal");
-        } catch (error) {
-          console.error("CRASH in openScheduleModal: " + error.message);
-        }
-      };
+        } catch (error) { console.error("CRASH in openScheduleModal: " + error.message); }
+      }
 
       // --- ACTION SUBMISSIONS ---
-      window.submitPromotion = async function () {
+      window.submitPromotion = async function() {
         const id = document.getElementById("editStaffId").value;
         const unit = document.getElementById("editStaffUnit").value;
         const team = document.getElementById("editStaffTeam").value;
-        const selectedRoles = Array.from(
-          document.querySelectorAll(".role-cb:checked"),
-        )
-          .map((cb) => cb.value)
-          .join(", ");
-
-        if (selectedRoles === "")
-          return alert("Staff must have at least one role!");
+        const selectedRoles = Array.from(document.querySelectorAll(".role-cb:checked")).map(cb => cb.value).join(", ");
+        
+        if(selectedRoles === "") return alert("Staff must have at least one role!");
 
         try {
-          const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/agency/staff/${id}`,
-            {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                role: selectedRoles,
-                unit: unit,
-                team: team,
-              }),
-            },
-          );
-          if (res.ok) {
-            alert("✅ Profile updated successfully!");
-            forceHideModal("promoteModal");
-            fetchStaffDirectory();
-          } else {
-            alert("Failed to update profile.");
-          }
-        } catch (e) {
-          console.error("Promotion Error: " + e.message);
-        }
-      };
+          const res = await fetch(`https://voxa-pi-three.vercel.app/api/agency/staff/${id}`, {
+            method: "PUT", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ role: selectedRoles, unit: unit, team: team })
+          });
+          if(res.ok) {
+              alert("✅ Profile updated successfully!");
+              forceHideModal('promoteModal');
+              fetchStaffDirectory();
+          } else { alert("Failed to update profile."); }
+        } catch(e) { console.error("Promotion Error: " + e.message); }
+      }
 
-      window.submitSchedule = async function () {
+      window.submitSchedule = async function() {
         const payload = {
           application_id: document.getElementById("modalAppId").value,
           date: document.getElementById("modalDate").value,
@@ -1002,58 +513,37 @@
           link: document.getElementById("modalLink").value,
         };
         try {
-          const res = await fetch(
-            "https://voxa-pi-three.vercel.app/api/schedule-interview",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            },
-          );
+          const res = await fetch("https://voxa-pi-three.vercel.app/api/schedule-interview", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
           if (res.ok) {
             alert("✅ Interview Scheduled!");
-            forceHideModal("scheduleModal");
-            fetchCandidates();
-          } else {
-            alert("❌ Error scheduling interview.");
-          }
-        } catch (e) {
-          console.error("Schedule Error: " + e.message);
-        }
-      };
+            forceHideModal('scheduleModal');
+            fetchCandidates(); 
+          } else { alert("❌ Error scheduling interview."); }
+        } catch (e) { console.error("Schedule Error: " + e.message); }
+      }
 
-      window.processApproval = async function (userId, action) {
-        if (!confirm(`Are you sure you want to ${action} this staff member?`))
-          return;
+      window.processApproval = async function(userId, action) {
+        if (!confirm(`Are you sure you want to ${action} this staff member?`)) return;
         try {
-          const res = await fetch(
-            "https://voxa-pi-three.vercel.app/api/approve-staff",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ user_id: userId, action: action }),
-            },
-          );
-          if (res.ok) {
-            alert(`✅ Staff member ${action}d!`);
-            fetchPendingStaff();
-            fetchStaffDirectory();
-          } else alert("❌ Error processing request.");
-        } catch (e) {
-          console.error(e);
-        }
-      };
+          const res = await fetch("https://voxa-pi-three.vercel.app/api/approve-staff", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: userId, action: action }) });
+          if (res.ok) { alert(`✅ Staff member ${action}d!`); fetchPendingStaff(); fetchStaffDirectory(); }
+          else alert("❌ Error processing request.");
+        } catch (e) { console.error(e); }
+      }
 
-      window.copyReferralLink = function () {
+      window.copyReferralLink = function() {
         const link = `https://voxa-pi-three.vercel.app/apply.html?recruiter=${encodeURIComponent(user.fullName)}&agency=${encodeURIComponent(user.agencyName)}&unit=${encodeURIComponent(user.unitName || "")}&team=${encodeURIComponent(user.teamName || "")}`;
         navigator.clipboard.writeText(link);
         alert("✅ Invite link copied! Send this to your candidates.");
-      };
+      }
 
-      window.logout = function () {
+      window.logout = function() {
         localStorage.removeItem("user");
         window.location.href = "login.html";
-      };
+      }
     </script>
   </body>
 </html>
