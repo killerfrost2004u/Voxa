@@ -731,7 +731,6 @@
           tbody.innerHTML = appData
             .map((app) => {
               const appId = app.ApplicationID || app.id;
-
               const hasAudio =
                 app.VoiceRecordPath &&
                 app.VoiceRecordPath !== "null" &&
@@ -739,7 +738,6 @@
               const audioContent1 = hasAudio
                 ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:2px;">EN Intro:</div><audio controls src="https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath}" class="custom-audio"></audio>`
                 : '<span style="color:var(--text-muted); font-style:italic;">No Audio</span>';
-
               const hasAudio2 =
                 app.VoiceRecordPath2 &&
                 app.VoiceRecordPath2 !== "null" &&
@@ -747,6 +745,7 @@
               const audioContent2 = hasAudio2
                 ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:8px; margin-bottom:2px;">2nd Language:</div><audio controls src="https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath2}" class="custom-audio"></audio>`
                 : "";
+              const finalAudioContent = audioContent1 + audioContent2;
 
               let aiContent =
                 '<span style="color:var(--text-muted);">N/A</span>';
@@ -777,16 +776,16 @@
                 statusBadge = `<span class="status-btn" style="background:rgba(0, 229, 255, 0.1); color:var(--primary-color); border: 1px solid var(--primary-color);">Analyzed</span>`;
 
               return `<tr>
-                  <td>#${appId}</td>
-                  <td><b>${app.FullName}</b><br><small><span style="color: var(--primary-color); font-weight: 600;">${app.Company || "N/A"}</span> • ${app.JobTitle}</small></td>
-                  <td>${audioContent1 + audioContent2}</td>
-                  <td>${aiContent}</td>
-                  <td>${humanGradeBadge}</td>
-                  <td>${statusBadge}</td> 
-                  <td>${app.Email}<br>${app.Phone}</td>
-                  <td><div class="exp-cell">${app.Experience}</div><div style="margin-top:5px; font-size:0.75rem; color:var(--primary-color);"><i class="fas fa-link"></i> Ref: ${app.RecruiterSource || "Direct"}</div></td>
-                  <td>${app.SubmittedAt}</td>
-              </tr>`;
+                <td>#${appId}</td>
+                <td><b>${app.FullName}</b><br><small><span style="color: var(--primary-color); font-weight: 600;">${app.Company || "N/A"}</span> • ${app.JobTitle}</small></td>
+                <td>${finalAudioContent}</td>
+                <td>${aiContent}</td>
+                <td>${humanGradeBadge}</td>
+                <td>${statusBadge}</td> 
+                <td>${app.Email}<br>${app.Phone}</td>
+                <td><div class="exp-cell">${app.Experience}</div><div style="margin-top:5px; font-size:0.75rem; color:var(--primary-color);"><i class="fas fa-link"></i> Ref: ${app.RecruiterSource || "Direct"}</div></td>
+                <td>${app.SubmittedAt}</td>
+            </tr>`;
             })
             .join("");
         } catch (err) {
@@ -835,17 +834,16 @@
               <div style="background: var(--bg-input); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);"><h4 style="margin:0 0 8px 0; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Grammar</h4><p style="color: var(--text-main); font-size: 1.25rem; font-weight: 700; margin:0;">${app.Grammar_Rating || "N/A"}</p></div>
           </div>
           <div style="margin-bottom: 20px;">
-              <h3 style="color: var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;"><i class="fas fa-file-alt" style="color:var(--primary-color);"></i> Executive Summary</h3>
+              <h3 style="color: var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;"><i class="fas fa-file-alt" style="color:var(--primary-color); margin-right:5px;"></i> Executive Summary</h3>
               <p style="background: var(--bg-input); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); line-height: 1.6;">${app.AI_Summary || "Analysis in progress..."}</p>
           </div>
           <div>
-              <h3 style="color: var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;"><i class="fas fa-quote-left" style="color:var(--primary-color);"></i> Raw Transcription</h3>
+              <h3 style="color: var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;"><i class="fas fa-quote-left" style="color:var(--primary-color); margin-right:5px;"></i> Raw Transcription</h3>
               <p style="font-style: italic; color: var(--text-muted);">"${app.Transcription || "Processing..."}"</p>
           </div>`;
         document.getElementById("ai-modal").style.display = "flex";
       };
 
-      // --- NEW SAFE COPY FUNCTIONS ---
       window.copyClientPanel = function (id) {
         const app = appData.find(
           (a) => String(a.ApplicationID || a.id) === String(id),
@@ -916,7 +914,6 @@
                       <button id="send-wa-btn" onclick="sendWhatsAppDecision('${appId}')" style="background: #25D366; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 700; transition: 0.2s; display: ${["Accepted", "Alternative Offered", "Rejected"].includes(app.Status) ? "block" : "none"};"><i class="fab fa-whatsapp"></i> Send WhatsApp</button>
                   </div>
               </div>
-              
               <div style="background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2); padding: 12px; border-radius: 6px; margin-top: 15px;">
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                       <strong style="color: var(--primary-color); font-size: 0.85rem;"><i class="fas fa-file-export"></i> Client Panel (Ready to send)</strong>
@@ -924,7 +921,6 @@
                   </div>
                   <p style="color: var(--text-main); font-size: 0.85rem; line-height: 1.6; font-family: monospace; background: var(--bg-body); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">${displayPanel}</p>
               </div>
-              
               <div style="background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2); padding: 12px; border-radius: 6px; margin-top: 10px;">
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                       <strong style="color: var(--primary-color); font-size: 0.85rem;"><i class="fas fa-file-export"></i> AI Client Panel (Ready to send)</strong>
@@ -1029,12 +1025,12 @@
               closeHumanModal();
             }, 1500);
           } else {
-            alert("Failed to send.");
+            alert("Failed to send WhatsApp message.");
             btn.innerHTML = originalText;
             btn.disabled = false;
           }
         } catch (e) {
-          alert("Server Error.");
+          alert("Server Error while sending message.");
           btn.innerHTML = originalText;
           btn.disabled = false;
         }
