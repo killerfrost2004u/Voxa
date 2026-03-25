@@ -713,6 +713,7 @@
       function calculateAge(dobString) {
         if (!dobString) return "N/A";
         const dob = new Date(dobString);
+        if (isNaN(dob.getTime())) return "N/A";
         return Math.abs(
           new Date(Date.now() - dob.getTime()).getUTCFullYear() - 1970,
         );
@@ -729,6 +730,8 @@
 
           tbody.innerHTML = appData
             .map((app) => {
+              const appId = app.ApplicationID || app.id;
+
               const hasAudio =
                 app.VoiceRecordPath &&
                 app.VoiceRecordPath !== "null" &&
@@ -736,6 +739,7 @@
               const audioContent1 = hasAudio
                 ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:2px;">EN Intro:</div><audio controls src="https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath}" class="custom-audio"></audio>`
                 : '<span style="color:var(--text-muted); font-style:italic;">No Audio</span>';
+
               const hasAudio2 =
                 app.VoiceRecordPath2 &&
                 app.VoiceRecordPath2 !== "null" &&
@@ -747,29 +751,40 @@
               let aiContent =
                 '<span style="color:var(--text-muted);">N/A</span>';
               if (app.AI_Rating && app.AI_Rating !== "null") {
-                aiContent = `<div class="ai-actions"><span class="badge-ai-grade">${app.AI_Rating}</span><button onclick="openAIModal(${app.ApplicationID})" class="btn-view-report"><i class="fas fa-file-alt"></i> View</button><button onclick="startAnalysis(${app.ApplicationID})" class="btn-revalidate"><i class="fas fa-redo"></i></button></div>`;
+                aiContent = `<div class="ai-actions"><span class="badge-ai-grade">${app.AI_Rating}</span><button onclick="openAIModal('${appId}')" class="btn-view-report"><i class="fas fa-file-alt"></i> View</button><button onclick="startAnalysis('${appId}')" class="btn-revalidate"><i class="fas fa-redo"></i></button></div>`;
               } else if (hasAudio) {
-                aiContent = `<button id="btn-${app.ApplicationID}" onclick="startAnalysis(${app.ApplicationID})" class="btn-analyze" style="padding: 6px 12px; font-size: 0.8rem;"><i class="fas fa-magic"></i> Start AI</button>`;
+                aiContent = `<button id="btn-${appId}" onclick="startAnalysis('${appId}')" class="btn-analyze" style="padding: 6px 12px; font-size: 0.8rem;"><i class="fas fa-magic"></i> Start AI</button>`;
               }
 
               const humanGradeBadge = app.Human_Rating
-                ? `<button class="btn-assign" onclick="openHumanModal(${app.ApplicationID})">${app.Human_Rating} <i class="fas fa-edit"></i></button>`
-                : `<button class="btn-assign-empty" onclick="openHumanModal(${app.ApplicationID})">+ Assign</button>`;
+                ? `<button class="btn-assign" onclick="openHumanModal('${appId}')">${app.Human_Rating} <i class="fas fa-edit"></i></button>`
+                : `<button class="btn-assign-empty" onclick="openHumanModal('${appId}')">+ Assign</button>`;
+
               const currentStatus =
                 app.Status ||
                 (app.AI_Rating && app.AI_Rating !== "null"
                   ? "Analyzed"
                   : "In Review");
+              let statusBadge = `<span class="status-btn" style="background:var(--bg-input); border:1px solid var(--border-color); color:white;">${currentStatus}</span>`;
+
+              if (currentStatus === "Accepted")
+                statusBadge = `<span class="status-btn" style="background:rgba(16, 185, 129, 0.1); color:#10b981; border: 1px solid #10b981;">Accepted</span>`;
+              if (currentStatus === "Rejected")
+                statusBadge = `<span class="status-btn" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border: 1px solid #ef4444;">Rejected</span>`;
+              if (currentStatus === "Alternative Offered")
+                statusBadge = `<span class="status-btn" style="background:rgba(245, 158, 11, 0.1); color:#f59e0b; border: 1px solid #f59e0b;">Alternative</span>`;
+              if (currentStatus === "Analyzed")
+                statusBadge = `<span class="status-btn" style="background:rgba(0, 229, 255, 0.1); color:var(--primary-color); border: 1px solid var(--primary-color);">Analyzed</span>`;
 
               return `<tr>
-                  <td>#${app.ApplicationID}</td>
+                  <td>#${appId}</td>
                   <td><b>${app.FullName}</b><br><small><span style="color: var(--primary-color); font-weight: 600;">${app.Company || "N/A"}</span> • ${app.JobTitle}</small></td>
                   <td>${audioContent1 + audioContent2}</td>
                   <td>${aiContent}</td>
                   <td>${humanGradeBadge}</td>
-                  <td><span class="status-btn" style="background:var(--bg-input); border:1px solid var(--border-color); color:white;">${currentStatus}</span></td> 
+                  <td>${statusBadge}</td> 
                   <td>${app.Email}<br>${app.Phone}</td>
-                  <td><div class="exp-cell">${app.Experience}</div><div style="font-size:0.75rem; color:var(--primary-color);"><i class="fas fa-link"></i> Ref: ${app.RecruiterSource || "Direct"}</div></td>
+                  <td><div class="exp-cell">${app.Experience}</div><div style="margin-top:5px; font-size:0.75rem; color:var(--primary-color);"><i class="fas fa-link"></i> Ref: ${app.RecruiterSource || "Direct"}</div></td>
                   <td>${app.SubmittedAt}</td>
               </tr>`;
             })
@@ -806,87 +821,125 @@
       };
 
       window.openAIModal = function (id) {
-        const app = appData.find((a) => String(a.ApplicationID) === String(id));
+        const app = appData.find(
+          (a) => String(a.ApplicationID || a.id) === String(id),
+        );
         if (!app) return;
+
         document.getElementById("modal-content").innerHTML = `
           <div style="text-align: center; margin-bottom: 20px;"><span class="badge-ai-grade" style="font-size: 1rem;"><i class="fas fa-globe"></i> ${app.Accent_Profile || "Accent Analysis Pending..."}</span></div>
           <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; text-align: center;">
-              <div style="background: var(--bg-input); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);"><h4 style="color: var(--text-muted);">Overall</h4><p style="color: var(--primary-color); font-size: 1.5rem; font-weight: 800; margin:0;">${app.AI_Rating || "N/A"}</p></div>
-              <div style="background: var(--bg-input); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);"><h4 style="color: var(--text-muted);">Fluency</h4><p style="font-size: 1.25rem; font-weight: 700; margin:0;">${app.Fluency_Rating || "N/A"}</p></div>
-              <div style="background: var(--bg-input); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);"><h4 style="color: var(--text-muted);">Pronunciation</h4><p style="font-size: 1.25rem; font-weight: 700; margin:0;">${app.Pronunciation_Rating || "N/A"}</p></div>
-              <div style="background: var(--bg-input); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);"><h4 style="color: var(--text-muted);">Grammar</h4><p style="font-size: 1.25rem; font-weight: 700; margin:0;">${app.Grammar_Rating || "N/A"}</p></div>
+              <div style="background: var(--bg-input); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);"><h4 style="margin:0 0 8px 0; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Overall</h4><p style="color: var(--primary-color); font-size: 1.5rem; font-weight: 800; margin:0;">${app.AI_Rating || "N/A"}</p></div>
+              <div style="background: var(--bg-input); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);"><h4 style="margin:0 0 8px 0; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Fluency</h4><p style="color: var(--text-main); font-size: 1.25rem; font-weight: 700; margin:0;">${app.Fluency_Rating || "N/A"}</p></div>
+              <div style="background: var(--bg-input); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);"><h4 style="margin:0 0 8px 0; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Pronunciation</h4><p style="color: var(--text-main); font-size: 1.25rem; font-weight: 700; margin:0;">${app.Pronunciation_Rating || "N/A"}</p></div>
+              <div style="background: var(--bg-input); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);"><h4 style="margin:0 0 8px 0; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">Grammar</h4><p style="color: var(--text-main); font-size: 1.25rem; font-weight: 700; margin:0;">${app.Grammar_Rating || "N/A"}</p></div>
           </div>
           <div style="margin-bottom: 20px;">
-              <h3 style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;"><i class="fas fa-file-alt" style="color:var(--primary-color);"></i> Executive Summary</h3>
+              <h3 style="color: var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;"><i class="fas fa-file-alt" style="color:var(--primary-color);"></i> Executive Summary</h3>
               <p style="background: var(--bg-input); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); line-height: 1.6;">${app.AI_Summary || "Analysis in progress..."}</p>
           </div>
           <div>
-              <h3 style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;"><i class="fas fa-quote-left" style="color:var(--primary-color);"></i> Raw Transcription</h3>
+              <h3 style="color: var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;"><i class="fas fa-quote-left" style="color:var(--primary-color);"></i> Raw Transcription</h3>
               <p style="font-style: italic; color: var(--text-muted);">"${app.Transcription || "Processing..."}"</p>
           </div>`;
         document.getElementById("ai-modal").style.display = "flex";
       };
 
-      // NEW SAFE COPY FUNCTIONS
+      // --- NEW SAFE COPY FUNCTIONS ---
       window.copyClientPanel = function (id) {
-        const app = appData.find((a) => String(a.ApplicationID) === String(id));
+        const app = appData.find(
+          (a) => String(a.ApplicationID || a.id) === String(id),
+        );
         if (!app) return;
-        const text = `Quadruple Name: ${app.FullName}\nEmail: ${app.Email}\nPhone number: ${app.Phone}\nAge: ${calculateAge(app.DateOfBirth)}\nGraduation status: ${app.GraduationStatus}\nFaculty and university: ${app.FacultyUniversity || "N/A"}\nMilitary status: ${app.MilitaryStatus || "N/A"}\nDate of birth: ${app.DateOfBirth || "N/A"}\nNationality: ${app.Nationality}\nNational ID: ${app.NationalID}\n\nAI Assessment:\n${app.ClientPanel || "Pending AI Assessment..."}`;
+        const text = `Quadruple Name: ${app.FullName}\nEmail: ${app.Email}\nPhone number: ${app.Phone}\nAge: ${calculateAge(app.DateOfBirth)}\nGraduation status: ${app.GraduationStatus}\nFaculty and university: ${app.FacultyUniversity || "N/A"}\nMilitary status: ${app.MilitaryStatus || "N/A"}\nDate of birth: ${app.DateOfBirth || "N/A"}\nNationality: ${app.Nationality}\nNational ID: ${app.NationalID}\n\nAI Assessment:\n${app.ClientPanel || app.AI_Summary || "Pending AI Assessment..."}`;
         navigator.clipboard.writeText(text);
         alert("Panel Copied to Clipboard!");
       };
 
       window.copyAIPanel = function (id) {
-        const app = appData.find((a) => String(a.ApplicationID) === String(id));
+        const app = appData.find(
+          (a) => String(a.ApplicationID || a.id) === String(id),
+        );
         if (!app) return;
         navigator.clipboard.writeText(
-          app.ClientPanel || "No panel generated yet.",
+          app.ClientPanel || app.AI_Summary || "No panel generated yet.",
         );
         alert("AI Panel Copied to Clipboard!");
       };
 
       window.openHumanModal = function (id) {
-        const app = appData.find((a) => String(a.ApplicationID) === String(id));
-        if (!app) return;
-        const age = calculateAge(app.DateOfBirth);
-        const panelText = `Quadruple Name: ${app.FullName}\nEmail: ${app.Email}\nPhone number: ${app.Phone}\nAge: ${age}\nGraduation status: ${app.GraduationStatus}\nFaculty and university: ${app.FacultyUniversity || "N/A"}\nMilitary status: ${app.MilitaryStatus || "N/A"}\nDate of birth: ${app.DateOfBirth || "N/A"}\nNationality: ${app.Nationality}\nNational ID: ${app.NationalID}\n\nAI Assessment:\n${app.ClientPanel || "Pending AI Assessment..."}`;
-        const displayPanel = panelText.replace(/\n/g, "<br>");
+        try {
+          const app = appData.find(
+            (a) => String(a.ApplicationID || a.id) === String(id),
+          );
+          if (!app) return alert("Candidate not found.");
 
-        document.getElementById("human-modal-content").innerHTML = `
-          <div style="display: flex; flex-direction: column; gap: 15px;">
-              <div style="background: var(--bg-input); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
-                  <strong style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Candidate:</strong>
-                  <div style="color: var(--text-main); font-size: 1.1rem; margin-top: 4px;">${app.FullName} <span style="color:var(--primary-color); font-size:0.9rem;">(${app.JobTitle})</span></div>
+          const appId = app.ApplicationID || app.id;
+          const age = calculateAge(app.DateOfBirth);
+
+          const panelText = `Quadruple Name: ${app.FullName}\nEmail: ${app.Email}\nPhone number: ${app.Phone}\nAge: ${age}\nGraduation status: ${app.GraduationStatus}\nFaculty and university: ${app.FacultyUniversity || "N/A"}\nMilitary status: ${app.MilitaryStatus || "N/A"}\nDate of birth: ${app.DateOfBirth || "N/A"}\nNationality: ${app.Nationality}\nNational ID: ${app.NationalID}\n\nAI Assessment:\n${app.ClientPanel || app.AI_Summary || "Pending AI Assessment..."}`;
+          const displayPanel = panelText.replace(/\n/g, "<br>");
+
+          document.getElementById("human-modal-content").innerHTML = `
+              <div style="display: flex; flex-direction: column; gap: 15px;">
+                  <div style="background: var(--bg-input); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                      <strong style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Candidate:</strong>
+                      <div style="color: var(--text-main); font-size: 1.1rem; margin-top: 4px;">${app.FullName} <span style="color:var(--primary-color); font-size:0.9rem;">(${app.JobTitle})</span></div>
+                  </div>
+                  <textarea id="val-feedback" placeholder="Write internal HR notes and validator feedback here... (The candidate will never see this)" style="padding: 12px; border-radius: 6px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); font-family: inherit; resize: vertical; min-height: 100px; outline:none;">${app.ValidatorFeedback || ""}</textarea>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                      <select id="human-grade" style="padding: 10px; border-radius: 6px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); outline:none;">
+                          <option value="" ${!app.Human_Rating ? "selected" : ""}>-- Assign Human Grade --</option>
+                          <option value="A1" ${app.Human_Rating === "A1" ? "selected" : ""}>A1 (Beginner)</option>
+                          <option value="A2" ${app.Human_Rating === "A2" ? "selected" : ""}>A2 (Pre-Int)</option>
+                          <option value="B1" ${app.Human_Rating === "B1" ? "selected" : ""}>B1 (Intermediate)</option>
+                          <option value="B1+" ${app.Human_Rating === "B1+" ? "selected" : ""}>B1+ (Strong Int)</option>
+                          <option value="B2" ${app.Human_Rating === "B2" ? "selected" : ""}>B2 (Upper Int)</option>
+                          <option value="B2+" ${app.Human_Rating === "B2+" ? "selected" : ""}>B2+ (Advanced Int)</option>
+                          <option value="C1" ${app.Human_Rating === "C1" ? "selected" : ""}>C1 (Advanced)</option>
+                          <option value="C1+" ${app.Human_Rating === "C1+" ? "selected" : ""}>C1+ (Fluent)</option>
+                          <option value="C2" ${app.Human_Rating === "C2" ? "selected" : ""}>C2 (Mastery)</option>
+                          <option value="Rejected" ${app.Human_Rating === "Rejected" ? "selected" : ""}>Failed / Rejected</option>
+                      </select>
+                      <select id="offer-decision" onchange="toggleCustomJob()" style="padding: 10px; border-radius: 6px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); outline:none;">
+                          <option value="none" ${app.Status === "In Review" || !app.Status ? "selected" : ""}>-- Validation Status --</option>
+                          <option value="accept_original" ${app.Status === "Accepted" ? "selected" : ""}>Accept for Role</option>
+                          <option value="offer_alternative" ${app.Status === "Alternative Offered" ? "selected" : ""}>Offer Alternative</option>
+                          <option value="reject" ${app.Status === "Rejected" ? "selected" : ""}>Reject Candidate</option>
+                      </select>
+                  </div>
+                  <div id="custom-job-container" style="display: ${app.Status === "Alternative Offered" ? "flex" : "none"}; flex-direction: column; gap: 5px;">
+                      <input type="text" id="custom-job-input" placeholder="Type suggested new job title" style="padding: 10px; border-radius: 6px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); outline:none;">
+                  </div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                      <button id="save-val-btn" onclick="saveValidation('${appId}')" class="btn-analyze" style="width: 100%;"><i class="fas fa-save"></i> Save Validation</button>
+                      <button id="send-wa-btn" onclick="sendWhatsAppDecision('${appId}')" style="background: #25D366; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 700; transition: 0.2s; display: ${["Accepted", "Alternative Offered", "Rejected"].includes(app.Status) ? "block" : "none"};"><i class="fab fa-whatsapp"></i> Send WhatsApp</button>
+                  </div>
               </div>
-              <textarea id="val-feedback" placeholder="Write internal HR notes and validator feedback here... (The candidate will never see this)" style="padding: 12px; border-radius: 6px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); font-family: inherit; resize: vertical; min-height: 100px; outline:none;"></textarea>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                  <select id="human-grade" style="padding: 10px; border-radius: 6px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); outline:none;">
-                      <option value="" ${!app.Human_Rating ? "selected" : ""}>-- Assign Human Grade --</option>
-                      <option value="A1" ${app.Human_Rating === "A1" ? "selected" : ""}>A1 (Beginner)</option><option value="B2" ${app.Human_Rating === "B2" ? "selected" : ""}>B2 (Upper Int)</option><option value="C1" ${app.Human_Rating === "C1" ? "selected" : ""}>C1 (Advanced)</option><option value="Rejected" ${app.Human_Rating === "Rejected" ? "selected" : ""}>Failed / Rejected</option>
-                  </select>
-                  <select id="offer-decision" onchange="toggleCustomJob()" style="padding: 10px; border-radius: 6px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); outline:none;">
-                      <option value="none" ${app.Status === "In Review" || !app.Status ? "selected" : ""}>-- Validation Status --</option>
-                      <option value="accept_original" ${app.Status === "Accepted" ? "selected" : ""}>Accept for Role</option>
-                      <option value="offer_alternative" ${app.Status === "Alternative Offered" ? "selected" : ""}>Offer Alternative</option>
-                      <option value="reject" ${app.Status === "Rejected" ? "selected" : ""}>Reject Candidate</option>
-                  </select>
+              
+              <div style="background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2); padding: 12px; border-radius: 6px; margin-top: 15px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                      <strong style="color: var(--primary-color); font-size: 0.85rem;"><i class="fas fa-file-export"></i> Client Panel (Ready to send)</strong>
+                      <button onclick="copyClientPanel('${appId}')" class="btn-assign-empty"><i class="fas fa-copy"></i> Copy Panel</button>
+                  </div>
+                  <p style="color: var(--text-main); font-size: 0.85rem; line-height: 1.6; font-family: monospace; background: var(--bg-body); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">${displayPanel}</p>
               </div>
-              <div id="custom-job-container" style="display: ${app.Status === "Alternative Offered" ? "flex" : "none"}; flex-direction: column; gap: 5px;">
-                  <input type="text" id="custom-job-input" placeholder="Type suggested new job title" style="padding: 10px; border-radius: 6px; background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); outline:none;">
-              </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                  <button id="save-val-btn" onclick="saveValidation(${app.ApplicationID})" class="btn-analyze" style="width: 100%;"><i class="fas fa-save"></i> Save Validation</button>
-                  <button id="send-wa-btn" onclick="sendWhatsAppDecision(${app.ApplicationID})" style="background: #25D366; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 700; transition: 0.2s; display: ${["Accepted", "Alternative Offered", "Rejected"].includes(app.Status) ? "block" : "none"};"><i class="fab fa-whatsapp"></i> Send WhatsApp</button>
-              </div>
-          </div>
-          <div style="background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2); padding: 12px; border-radius: 6px; margin-top: 15px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <strong style="color: var(--primary-color); font-size: 0.85rem;"><i class="fas fa-file-export"></i> Client Panel (Ready to send)</strong>
-                  <button onclick="copyClientPanel(${app.ApplicationID})" class="btn-assign-empty"><i class="fas fa-copy"></i> Copy Panel</button>
-              </div>
-              <p style="color: var(--text-main); font-size: 0.85rem; line-height: 1.6; font-family: monospace; background: var(--bg-body); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">${displayPanel}</p>
-          </div>`;
-        document.getElementById("human-modal").style.display = "flex";
+              
+              <div style="background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2); padding: 12px; border-radius: 6px; margin-top: 10px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                      <strong style="color: var(--primary-color); font-size: 0.85rem;"><i class="fas fa-file-export"></i> AI Client Panel (Ready to send)</strong>
+                      <button onclick="copyAIPanel('${appId}')" class="btn-assign-empty"><i class="fas fa-copy"></i> Copy AI Panel</button>
+                  </div>
+                  <p style="color: var(--text-main); font-size: 0.9rem; line-height: 1.5; margin: 0; font-style: italic; padding: 10px; background: var(--bg-body); border-radius: 4px; border: 1px solid var(--border-color);">
+                      "${app.ClientPanel || app.AI_Summary || "No panel generated yet."}"
+                  </p>
+              </div>`;
+
+          document.getElementById("human-modal").style.display = "flex";
+        } catch (e) {
+          console.error(e);
+          alert("Error opening modal. Check console.");
+        }
       };
 
       window.closeAIModal = function () {
@@ -1161,6 +1214,7 @@
           !payload.target_agency
         )
           return alert("Fill Name, Email, Password, Agency.");
+
         const btn = document.getElementById("btn-create-user");
         const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
