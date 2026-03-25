@@ -570,48 +570,37 @@
           }
 
           apps.forEach((app) => {
-            // Tally KPIs
             let status = app.Status || "Pending Review";
-            if (status === "Accepted") countAccepted++;
-            else if (status === "Rejected") countRejected++;
-            else countPending++;
-
-            // Create Visual Badge
-            let badgeClass = "status-pending";
-            if (status === "Accepted") badgeClass = "status-accepted";
-            if (status === "Rejected") badgeClass = "status-rejected";
-            let visualBadge = `<span class="status-badge ${badgeClass}">${status}</span>`;
-
-            // Schedule Logic
             let scheduleText = app.InterviewDate
               ? `<span style="color:var(--primary-color); font-weight:bold;">${app.InterviewDate} @ ${app.InterviewTime}</span>`
               : "<span style='color:var(--text-muted);'>Not Scheduled</span>";
 
-            let actionBtn =
-              "<span style='color:var(--text-muted); font-size:0.8rem;'>No Action</span>";
+            // Determine Lineage Tags
+            let lineageHtml = "";
+            if (app.RecruiterUnit)
+              lineageHtml += `<span style="font-size: 0.75rem; background: rgba(0, 229, 255, 0.05); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 2px 6px; border-radius: 4px; margin-right: 5px; display: inline-block; margin-top: 5px;"><i class="fas fa-building"></i> ${app.RecruiterUnit}</span>`;
+            if (app.RecruiterTeam)
+              lineageHtml += `<span style="font-size: 0.75rem; background: rgba(0, 229, 255, 0.05); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 2px 6px; border-radius: 4px; margin-right: 5px; display: inline-block; margin-top: 5px;"><i class="fas fa-users"></i> ${app.RecruiterTeam}</span>`;
 
-            // Managers can schedule interviews
-            if (
-              !app.InterviewDate &&
-              ["Leader", "UnitManager", "CEO"].includes(user.role)
-            ) {
-              actionBtn = `<button onclick="openModal(${app.ApplicationID})" style="background:var(--primary-color); color:#000; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Schedule Call</button>`;
-            } else if (app.InterviewLink) {
-              actionBtn = `<a href="${app.InterviewLink}" target="_blank" style="background:#10b981; color:white; padding:5px 12px; border-radius:4px; font-size: 0.8rem; font-weight:bold; text-decoration:none;">Join Call</a>`;
+            let actionBtn = "";
+            if (!app.InterviewDate && (isLeader || isUM || isCEO)) {
+              actionBtn += `<button onclick="openModal('scheduleModal', ${app.ApplicationID})" style="background:var(--primary-color); color:#000; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Schedule Call</button> `;
             }
+            actionBtn += `<button onclick="openViewPanel(${app.ApplicationID})" style="background:transparent; color:var(--text-main); border:1px solid var(--border-color); padding:4px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; margin-top:5px;"><i class="fas fa-eye"></i> Details</button>`;
 
             tbody.innerHTML += `
               <tr style="border-bottom: 1px solid var(--border-color);">
                   <td style="padding: 15px 10px;">
                     <div style="font-weight:bold; color:var(--text-main);">${app.FullName}</div>
-                    <div style="font-size:0.8rem; color:var(--text-muted);">${app.JobTitle}</div>
                   </td>
-                  <td style="padding: 15px 10px; color: var(--primary-color); font-weight: 500;">${app.RecruiterSource || "Direct"}</td>
-                  <td style="padding: 15px 10px;">${visualBadge}</td>
+                  <td style="padding: 15px 10px;">
+                    <div style="color: var(--primary-color); font-weight: 500;">${app.RecruiterSource || "Direct"}</div>
+                    ${lineageHtml}
+                  </td>
+                  <td style="padding: 15px 10px;">${status}</td>
                   <td style="padding: 15px 10px; font-size: 0.9rem;">${scheduleText}</td>
                   <td style="padding: 15px 10px;">${actionBtn}</td>
-              </tr>
-            `;
+              </tr>`;
           });
 
           // Write KPIs to the DOM
@@ -759,6 +748,119 @@
         } else {
           alert("❌ Error scheduling interview.");
         }
+      }
+
+      async function fetchStaffDirectory() {
+        try {
+          const res = await fetch(
+            `https://voxa-pi-three.vercel.app/api/agency/staff?email=${user.email}`,
+          );
+          const staff = await res.json();
+          const tbody = document.getElementById("staffDirectoryBody");
+          if (staff.length === 0)
+            return (tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No staff found under your management.</td></tr>`);
+
+          tbody.innerHTML = staff
+            .map((s) => {
+              let roleBadges = s.role
+                .split(",")
+                .map(
+                  (r) =>
+                    `<span style="background:rgba(0, 229, 255, 0.1); color:var(--primary-color); padding:2px 6px; border-radius:4px; font-size:0.75rem; border:1px solid var(--primary-color); margin-right:4px; display:inline-block; margin-bottom:4px;">${r.trim()}</span>`,
+                )
+                .join("");
+              let placement = s.unit || "N/A";
+              if (s.team) placement += ` / ${s.team}`;
+
+              return `<tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 12px 10px; font-weight: bold;">${s.name}<br><small style="color:var(--text-muted); font-weight:normal;">${s.email}</small></td>
+                <td style="padding: 12px 10px;">${roleBadges}</td>
+                <td style="padding: 12px 10px; font-size:0.85rem; color:var(--text-muted);">${placement}</td>
+                <td style="padding: 12px 10px;">
+                    <button onclick="openPromoteModal(${s.id}, '${s.name}', '${s.role}', '${s.unit || ""}', '${s.team || ""}')" style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color); padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;"><i class="fas fa-edit"></i> Edit / Promote</button>
+                </td>
+            </tr>`;
+            })
+            .join("");
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      function openViewPanel(appId) {
+        const app = allCandidates.find(
+          (a) => String(a.ApplicationID) === String(appId),
+        );
+        if (!app) return;
+        // Strip out the age calculator logic to keep it purely raw data for the recruiter
+        const panelText = `Candidate: ${app.FullName}\nEmail: ${app.Email}\nPhone: ${app.Phone}\nWhatsApp: ${app.WhatsApp || "N/A"}\nLocation: ${app.Address}\n\nAI Assessment:\n${app.ClientPanel || app.AI_Summary || "Pending AI Assessment..."}\n\nHR Validator Notes:\n${app.ValidatorFeedback || "No notes yet."}`;
+
+        document.getElementById("viewPanelContent").innerText = panelText;
+        document.getElementById("viewPanelModal").style.display = "flex";
+      }
+
+      function openPromoteModal(id, name, currentRoles, unit, team) {
+        document.getElementById("editStaffId").value = id;
+        document.getElementById("editStaffName").innerText =
+          "Managing: " + name;
+        document.getElementById("editStaffUnit").value = unit;
+        document.getElementById("editStaffTeam").value = team;
+
+        const roleBoxes = document.querySelectorAll(".role-cb");
+        roleBoxes.forEach((cb) => (cb.checked = false)); // Reset checkboxes
+        const rolesArray = currentRoles.split(",").map((r) => r.trim());
+        roleBoxes.forEach((cb) => {
+          if (rolesArray.includes(cb.value)) cb.checked = true;
+        });
+
+        document.getElementById("promoteModal").style.display = "flex";
+      }
+
+      async function submitPromotion() {
+        const id = document.getElementById("editStaffId").value;
+        const unit = document.getElementById("editStaffUnit").value;
+        const team = document.getElementById("editStaffTeam").value;
+
+        const selectedRoles = Array.from(
+          document.querySelectorAll(".role-cb:checked"),
+        )
+          .map((cb) => cb.value)
+          .join(", ");
+        if (selectedRoles === "")
+          return alert("Staff must have at least one role!");
+
+        try {
+          const res = await fetch(
+            `https://voxa-pi-three.vercel.app/api/agency/staff/${id}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                role: selectedRoles,
+                unit: unit,
+                team: team,
+              }),
+            },
+          );
+          if (res.ok) {
+            alert("✅ Profile updated successfully!");
+            closeModal("promoteModal");
+            fetchStaffDirectory();
+          } else {
+            alert("Failed to update profile.");
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      // Update your existing open/close modals to handle strings
+      function openModal(modalId, appId) {
+        if (appId) document.getElementById("modalAppId").value = appId;
+        document.getElementById(modalId).style.display = "flex";
+      }
+      function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
       }
 
       function logout() {
