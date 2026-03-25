@@ -86,6 +86,8 @@
         width: 40px;
         text-align: right;
       }
+
+      /* Modals */
       .modal-overlay {
         position: fixed;
         top: 0;
@@ -120,6 +122,8 @@
         border-radius: 6px;
         outline: none;
       }
+
+      /* Buttons */
       .btn-schedule {
         background: #10b981;
         color: white;
@@ -154,6 +158,8 @@
         color: #ef4444;
         background: rgba(239, 68, 68, 0.1);
       }
+
+      /* Tags */
       .status-badge {
         padding: 4px 8px;
         border-radius: 4px;
@@ -218,7 +224,7 @@
             margin-bottom: 10px;
           "></p>
         <button
-          onclick="copyReferralLink()"
+          onclick="window.copyReferralLink()"
           style="
             background: var(--bg-input);
             color: var(--primary-color);
@@ -231,7 +237,10 @@
           <i class="fas fa-link"></i> Copy My Candidate Invite Link
         </button>
       </div>
-      <button onclick="logout()" class="btn-outline" style="padding: 8px 15px">
+      <button
+        onclick="window.logout()"
+        class="btn-outline"
+        style="padding: 8px 15px">
         Logout
       </button>
     </div>
@@ -413,10 +422,10 @@
           type="url"
           id="modalLink"
           placeholder="https://zoom.us/j/123..." />
-        <button onclick="submitSchedule()" class="btn-schedule">
+        <button onclick="window.submitSchedule()" class="btn-schedule">
           Confirm Slot
         </button>
-        <button onclick="closeModal('scheduleModal')" class="btn-cancel">
+        <button onclick="window.closeModal('scheduleModal')" class="btn-cancel">
           Cancel
         </button>
       </div>
@@ -467,12 +476,12 @@
           >Team Name</label
         ><input type="text" id="editStaffTeam" placeholder="E.g. Team Wolves" />
         <button
-          onclick="submitPromotion()"
+          onclick="window.submitPromotion()"
           class="btn-schedule"
           style="background: var(--primary-color); color: black">
           Save Changes
         </button>
-        <button onclick="closeModal('promoteModal')" class="btn-cancel">
+        <button onclick="window.closeModal('promoteModal')" class="btn-cancel">
           Cancel
         </button>
       </div>
@@ -500,7 +509,7 @@
             overflow-y: auto;
           "></div>
         <button
-          onclick="closeModal('viewPanelModal')"
+          onclick="window.closeModal('viewPanelModal')"
           class="btn-cancel"
           style="
             background: var(--bg-input);
@@ -514,15 +523,22 @@
     </div>
 
     <script>
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (!user || user.role === "Candidate")
-        window.location.href = "login.html";
+      // 1. Global Variables & Auth Check
+      let allCandidates = [];
+      let allStaff = [];
 
-      const isCEO = user.role.includes("CEO");
-      const isUM = user.role.includes("UnitManager");
-      const isLeader = user.role.includes("Leader");
+      const userStr = localStorage.getItem("user");
+      if (!userStr) window.location.href = "login.html";
+      const user = JSON.parse(userStr);
+      if (user.role === "Candidate") window.location.href = "login.html";
+
+      const userRole = user.role || "";
+      const isCEO = userRole.includes("CEO");
+      const isUM = userRole.includes("UnitManager");
+      const isLeader = userRole.includes("Leader");
       const isRecruiterOnly = !isCEO && !isUM && !isLeader;
 
+      // 2. Setup Headers
       document.getElementById("dashboardTitle").innerText = isCEO
         ? "Agency Command Center"
         : isUM
@@ -531,7 +547,7 @@
             ? "Team Workspace"
             : "My Recruitment Dashboard";
 
-      let roleString = `${user.role} | ${user.agencyName}`;
+      let roleString = `${userRole} | ${user.agencyName}`;
       if (user.unitName) roleString += ` | ${user.unitName}`;
       if (user.teamName) roleString += ` | ${user.teamName}`;
       document.getElementById("roleBadge").innerText = roleString;
@@ -542,10 +558,7 @@
         document.getElementById("staff-directory-section").style.display =
           "block";
 
-      // Global Arrays
-      let allCandidates = [];
-      let allStaff = [];
-
+      // 3. Initialize Data
       window.onload = async () => {
         await fetchCandidates();
         if (!isRecruiterOnly) {
@@ -557,7 +570,7 @@
         }
       };
 
-      // --- 1. CANDIDATE PIPELINE & KPI FIX ---
+      // 4. Data Fetching
       async function fetchCandidates() {
         try {
           const res = await fetch(
@@ -576,16 +589,13 @@
           }
 
           allCandidates.forEach((app) => {
-            // Safe IDs
             const safeAppId = app.ApplicationID || app.id || "0";
-
             let status =
               app.Status ||
               (app.AI_Rating && app.AI_Rating !== "null"
                 ? "Analyzed"
                 : "In Review");
 
-            // Accurately tally KPIs based on status
             if (status === "Accepted") countAccepted++;
             else if (status === "Rejected") countRejected++;
             else countPending++;
@@ -606,13 +616,12 @@
 
             let actionBtn = "";
             if (!app.InterviewDate && (isLeader || isUM || isCEO)) {
-              actionBtn += `<button onclick="openScheduleModal('${safeAppId}')" style="background:var(--primary-color); color:#000; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Schedule Call</button> `;
+              actionBtn += `<button onclick="window.openScheduleModal('${safeAppId}')" style="background:var(--primary-color); color:#000; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">Schedule Call</button> `;
             } else if (app.InterviewLink) {
               actionBtn += `<a href="${app.InterviewLink}" target="_blank" style="background:#10b981; color:white; padding:5px 12px; border-radius:4px; font-size: 0.8rem; font-weight:bold; text-decoration:none;">Join Call</a> `;
             }
 
-            // Standardized onclick call (Bulletproof!)
-            actionBtn += `<button onclick="openViewPanel('${safeAppId}')" style="background:transparent; color:var(--text-main); border:1px solid var(--border-color); padding:4px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; margin-top:5px;"><i class="fas fa-eye"></i> Details</button>`;
+            actionBtn += `<button onclick="window.openViewPanel('${safeAppId}')" style="background:transparent; color:var(--text-main); border:1px solid var(--border-color); padding:4px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; margin-top:5px;"><i class="fas fa-eye"></i> Details</button>`;
 
             tbody.innerHTML += `
               <tr style="border-bottom: 1px solid var(--border-color);">
@@ -630,7 +639,6 @@
               </tr>`;
           });
 
-          // Inject correctly calculated KPIs into the boxes
           document.getElementById("kpi-total").innerText = allCandidates.length;
           document.getElementById("kpi-accepted").innerText = countAccepted;
           document.getElementById("kpi-rejected").innerText = countRejected;
@@ -640,11 +648,10 @@
         }
       }
 
-      // --- 2. LEADERBOARD ---
       async function fetchLeaderboard() {
         try {
           const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/team-stats?role=${user.role}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`,
+            `https://voxa-pi-three.vercel.app/api/team-stats?role=${userRole}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`,
           );
           const stats = await res.json();
           const container = document.getElementById("leaderboardContent");
@@ -666,11 +673,10 @@
         }
       }
 
-      // --- 3. PENDING APPROVALS ---
       async function fetchPendingStaff() {
         try {
           const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/pending-staff?role=${user.role}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`,
+            `https://voxa-pi-three.vercel.app/api/pending-staff?role=${userRole}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`,
           );
           const pendingUsers = await res.json();
           const section = document.getElementById("approvals-section");
@@ -682,7 +688,7 @@
             .map((p) => {
               let placement = p.unit || "Direct Report";
               if (p.team) placement += ` / ${p.team}`;
-              return `<tr style="border-bottom: 1px solid var(--border-color);"><td style="padding: 12px 10px; font-weight: 500;">${p.name} <br><span style="font-size: 0.8rem; color: var(--text-muted);">${p.email}</span></td><td style="padding: 12px 10px; color: var(--primary-color);">${p.role}</td><td style="padding: 12px 10px; color: var(--text-muted);">${placement}</td><td style="padding: 12px 10px; display: flex; gap: 10px;"><button onclick="processApproval(${p.id}, 'approve')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-check"></i> Accept</button><button onclick="processApproval(${p.id}, 'reject')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-times"></i> Reject</button></td></tr>`;
+              return `<tr style="border-bottom: 1px solid var(--border-color);"><td style="padding: 12px 10px; font-weight: 500;">${p.name} <br><span style="font-size: 0.8rem; color: var(--text-muted);">${p.email}</span></td><td style="padding: 12px 10px; color: var(--primary-color);">${p.role}</td><td style="padding: 12px 10px; color: var(--text-muted);">${placement}</td><td style="padding: 12px 10px; display: flex; gap: 10px;"><button onclick="window.processApproval(${p.id}, 'approve')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-check"></i> Accept</button><button onclick="window.processApproval(${p.id}, 'reject')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-times"></i> Reject</button></td></tr>`;
             })
             .join("");
         } catch (e) {
@@ -690,29 +696,6 @@
         }
       }
 
-      async function processApproval(userId, action) {
-        if (!confirm(`Are you sure you want to ${action} this staff member?`))
-          return;
-        try {
-          const res = await fetch(
-            "https://voxa-pi-three.vercel.app/api/approve-staff",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ user_id: userId, action: action }),
-            },
-          );
-          if (res.ok) {
-            alert(`✅ Staff member ${action}d!`);
-            fetchPendingStaff();
-            fetchStaffDirectory();
-          } else alert("❌ Error processing request.");
-        } catch (e) {
-          console.error(e);
-        }
-      }
-
-      // --- 4. STAFF DIRECTORY ---
       async function fetchStaffDirectory() {
         try {
           const res = await fetch(
@@ -733,15 +716,14 @@
                     `<span style="background:rgba(0, 229, 255, 0.1); color:var(--primary-color); padding:2px 6px; border-radius:4px; font-size:0.75rem; border:1px solid var(--primary-color); margin-right:4px; display:inline-block; margin-bottom:4px;">${r.trim()}</span>`,
                 )
                 .join("");
-              let placement = s.unit || "N/A";
+              let placement = s.unit || "None";
               if (s.team) placement += ` / ${s.team}`;
 
-              // Standardized onclick call
               return `<tr style="border-bottom: 1px solid var(--border-color);">
                 <td style="padding: 12px 10px; font-weight: bold;">${s.name}<br><small style="color:var(--text-muted); font-weight:normal;">${s.email}</small></td>
                 <td style="padding: 12px 10px;">${roleBadges}</td>
                 <td style="padding: 12px 10px; font-size:0.85rem; color:var(--text-muted);">${placement}</td>
-                <td style="padding: 12px 10px;"><button onclick="openPromoteModal('${safeStaffId}')" style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color); padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;"><i class="fas fa-edit"></i> Edit / Promote</button></td>
+                <td style="padding: 12px 10px;"><button onclick="window.openPromoteModal('${safeStaffId}')" style="background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-color); padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;"><i class="fas fa-edit"></i> Edit / Promote</button></td>
             </tr>`;
             })
             .join("");
@@ -750,7 +732,28 @@
         }
       }
 
-      // --- 5. SECURE MODAL FUNCTIONS ---
+      // 5. Global Action Functions
+      window.processApproval = async function (userId, action) {
+        if (!confirm(`Are you sure you want to ${action} this staff member?`))
+          return;
+        try {
+          const res = await fetch(
+            "https://voxa-pi-three.vercel.app/api/approve-staff",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ user_id: userId, action: action }),
+            },
+          );
+          if (res.ok) {
+            alert(`✅ Staff member ${action}d!`);
+            fetchPendingStaff();
+            fetchStaffDirectory();
+          } else alert("❌ Error processing request.");
+        } catch (e) {
+          console.error(e);
+        }
+      };
 
       function calculateAge(dobString) {
         if (!dobString) return "N/A";
@@ -761,8 +764,7 @@
         );
       }
 
-      function openViewPanel(appId) {
-        // Look up by safe string matching
+      window.openViewPanel = function (appId) {
         const app = allCandidates.find(
           (a) => String(a.ApplicationID || a.id) === String(appId),
         );
@@ -779,12 +781,10 @@
         const panelText = `Candidate: ${app.FullName}\nEmail: ${app.Email}\nPhone: ${app.Phone}\nWhatsApp: ${app.WhatsApp || "N/A"}\nAge: ${age}\nLocation: ${app.Address}\n\nAI Assessment:\n${aiSum}\n\nHR Validator Notes:\n${valNotes}`;
 
         document.getElementById("viewPanelContent").innerText = panelText;
-        document
-          .getElementById("viewPanelModal")
-          .style.setProperty("display", "flex", "important");
-      }
+        document.getElementById("viewPanelModal").style.display = "flex";
+      };
 
-      function openPromoteModal(staffId) {
+      window.openPromoteModal = function (staffId) {
         const s = allStaff.find(
           (staff) => String(staff.id) === String(staffId),
         );
@@ -800,18 +800,16 @@
         document.getElementById("editStaffTeam").value = s.team || "";
 
         const roleBoxes = document.querySelectorAll(".role-cb");
-        roleBoxes.forEach((cb) => (cb.checked = false)); // Reset all
+        roleBoxes.forEach((cb) => (cb.checked = false));
         const rolesArray = (s.role || "").split(",").map((r) => r.trim());
         roleBoxes.forEach((cb) => {
           if (rolesArray.includes(cb.value)) cb.checked = true;
         });
 
-        document
-          .getElementById("promoteModal")
-          .style.setProperty("display", "flex", "important");
-      }
+        document.getElementById("promoteModal").style.display = "flex";
+      };
 
-      async function submitPromotion() {
+      window.submitPromotion = async function () {
         const id = document.getElementById("editStaffId").value;
         const unit = document.getElementById("editStaffUnit").value;
         const team = document.getElementById("editStaffTeam").value;
@@ -839,7 +837,7 @@
           );
           if (res.ok) {
             alert("✅ Profile updated successfully!");
-            closeModal("promoteModal");
+            window.closeModal("promoteModal");
             fetchStaffDirectory();
           } else {
             alert("Failed to update profile.");
@@ -847,22 +845,18 @@
         } catch (e) {
           console.error(e);
         }
-      }
+      };
 
-      function openScheduleModal(appId) {
+      window.openScheduleModal = function (appId) {
         document.getElementById("modalAppId").value = appId;
-        document
-          .getElementById("scheduleModal")
-          .style.setProperty("display", "flex", "important");
-      }
+        document.getElementById("scheduleModal").style.display = "flex";
+      };
 
-      function closeModal(modalId) {
-        document
-          .getElementById(modalId)
-          .style.setProperty("display", "none", "important");
-      }
+      window.closeModal = function (modalId) {
+        document.getElementById(modalId).style.display = "none";
+      };
 
-      async function submitSchedule() {
+      window.submitSchedule = async function () {
         const payload = {
           application_id: document.getElementById("modalAppId").value,
           date: document.getElementById("modalDate").value,
@@ -881,23 +875,23 @@
 
         if (res.ok) {
           alert("✅ Interview Scheduled!");
-          closeModal("scheduleModal");
+          window.closeModal("scheduleModal");
           fetchCandidates();
         } else {
           alert("❌ Error scheduling interview.");
         }
-      }
+      };
 
-      function logout() {
+      window.logout = function () {
         localStorage.removeItem("user");
         window.location.href = "login.html";
-      }
+      };
 
-      function copyReferralLink() {
+      window.copyReferralLink = function () {
         const link = `https://voxa-pi-three.vercel.app/apply.html?recruiter=${encodeURIComponent(user.fullName)}&agency=${encodeURIComponent(user.agencyName)}&unit=${encodeURIComponent(user.unitName || "")}&team=${encodeURIComponent(user.teamName || "")}`;
         navigator.clipboard.writeText(link);
         alert("✅ Invite link copied! Send this to your candidates.");
-      }
+      };
     </script>
   </body>
 </html>
