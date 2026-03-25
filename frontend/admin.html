@@ -8,97 +8,438 @@
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/admin.css" />
     <link rel="stylesheet" href="css/dashboard.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet" />
     <style>
-      .dashboard-header { background: var(--bg-card); padding: 20px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-      .admin-card { background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 30px; }
-      .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-      .kpi-box { background: var(--bg-input); border: 1px solid var(--border-color); padding: 20px; border-radius: 10px; text-align: center; }
-      .kpi-value { font-size: 2.5rem; font-weight: 700; color: var(--primary-color); margin: 10px 0; }
-      .kpi-label { color: var(--text-muted); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-      .admin-tabs { display: flex; gap: 20px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; overflow-x: auto; white-space: nowrap; }
-      .tab-btn { background: none; border: none; color: var(--text-muted); font-size: 1rem; cursor: pointer; padding: 5px 10px; font-weight: 600; transition: 0.3s; }
-      .tab-btn.active { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); }
-      .job-form { background: var(--bg-card); padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
-      .job-form input, .job-form select, .job-form textarea { background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); padding: 10px; border-radius: 5px; width: 100%; outline: none; font-family: inherit; }
-      .job-form input:focus, .job-form select:focus, .job-form textarea:focus { border-color: var(--primary-color); }
-      .btn-analyze { background: var(--primary-color); color: #000; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 700; transition: 0.3s; }
-      .btn-analyze:hover { background: var(--primary-dark); transform: translateY(-1px); }
-      .btn-outline { background: transparent; color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-      .btn-outline:hover { border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.1); }
-      .btn-primary { width: 100%; padding: 12px; border: none; background: var(--primary-color); color: #000; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; }
-      .btn-primary:hover { opacity: 0.9; }
-      .status-btn { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; border: none; font-weight: bold; }
-      .status-active { background: rgba(0, 229, 255, 0.1); color: var(--primary-color); border: 1px solid var(--primary-color); }
-      .status-hold { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid #f59e0b; }
-      .custom-audio { height: 36px; width: 180px; border-radius: 20px; outline: none; color-scheme: dark; vertical-align: middle; }
-      .badge-ai-grade { background: rgba(0, 229, 255, 0.1); color: var(--primary-color); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 800; border: 1px solid var(--primary-color); display: inline-flex; align-items: center; }
-      .btn-view-report { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; }
-      .btn-revalidate { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-muted); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s ease; }
-      .btn-assign { background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
-      .btn-assign-empty { background: rgba(0, 229, 255, 0.05); border: 1px dashed var(--primary-color); color: var(--primary-color); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
-      .ai-actions { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; white-space: nowrap; }
+      .dashboard-header {
+        background: var(--bg-card);
+        padding: 20px 30px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .admin-card {
+        background: var(--bg-card);
+        padding: 25px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 30px;
+      }
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+      .kpi-box {
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+      }
+      .kpi-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin: 10px 0;
+      }
+      .kpi-label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .admin-tabs {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 10px;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+      .tab-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1rem;
+        cursor: pointer;
+        padding: 5px 10px;
+        font-weight: 600;
+        transition: 0.3s;
+      }
+      .tab-btn.active {
+        color: var(--primary-color);
+        border-bottom: 3px solid var(--primary-color);
+      }
+      .job-form {
+        background: var(--bg-card);
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 15px;
+      }
+      .job-form input,
+      .job-form select,
+      .job-form textarea {
+        background: var(--bg-input);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 10px;
+        border-radius: 5px;
+        width: 100%;
+        outline: none;
+        font-family: inherit;
+      }
+      .job-form input:focus,
+      .job-form select:focus,
+      .job-form textarea:focus {
+        border-color: var(--primary-color);
+      }
+      .btn-analyze {
+        background: var(--primary-color);
+        color: #000;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 700;
+        transition: 0.3s;
+      }
+      .btn-analyze:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+      }
+      .btn-outline {
+        background: transparent;
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 8px 15px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.2s;
+      }
+      .btn-outline:hover {
+        border-color: #ef4444;
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+      }
+      .btn-primary {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        background: var(--primary-color);
+        color: #000;
+        font-weight: bold;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .btn-primary:hover {
+        opacity: 0.9;
+      }
+      .status-btn {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        border: none;
+        font-weight: bold;
+      }
+      .status-active {
+        background: rgba(0, 229, 255, 0.1);
+        color: var(--primary-color);
+        border: 1px solid var(--primary-color);
+      }
+      .status-hold {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+        border: 1px solid #f59e0b;
+      }
+      .custom-audio {
+        height: 36px;
+        width: 180px;
+        border-radius: 20px;
+        outline: none;
+        color-scheme: dark;
+        vertical-align: middle;
+      }
+      .badge-ai-grade {
+        background: rgba(0, 229, 255, 0.1);
+        color: var(--primary-color);
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        border: 1px solid var(--primary-color);
+        display: inline-flex;
+        align-items: center;
+      }
+      .btn-view-report {
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .btn-revalidate {
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        padding: 4px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: all 0.2s ease;
+      }
+      .btn-assign {
+        background: var(--bg-input);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .btn-assign-empty {
+        background: rgba(0, 229, 255, 0.05);
+        border: 1px dashed var(--primary-color);
+        color: var(--primary-color);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .ai-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+      }
 
       /* Modals */
-      .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
-      .modal-card { background: var(--bg-card); padding: 30px; border-radius: 12px; width: 90%; max-width: 600px; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; }
-      .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
-      .close-btn { background: transparent; color: white; border: none; font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
-      .close-btn:hover { color: #ef4444; }
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      .modal-card {
+        background: var(--bg-card);
+        padding: 30px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 600px;
+        border: 1px solid var(--border-color);
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 10px;
+      }
+      .close-btn {
+        background: transparent;
+        color: white;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .close-btn:hover {
+        color: #ef4444;
+      }
 
       @media (max-width: 768px) {
-        .job-form { grid-template-columns: 1fr; }
-        .job-form input, .job-form select, .job-form textarea, .job-form button { grid-column: span 1 !important; }
+        .job-form {
+          grid-template-columns: 1fr;
+        }
+        .job-form input,
+        .job-form select,
+        .job-form textarea,
+        .job-form button {
+          grid-column: span 1 !important;
+        }
       }
     </style>
   </head>
   <body style="background: var(--bg-main); color: var(--text-main)">
     <nav class="navbar">
-      <div class="container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-        <a href="index.html" class="logo" style="display: flex; align-items: center; gap: 10px; font-weight: 700; color: white; text-decoration: none;">
-          <img src="images/voxa-logo.png" alt="Voxa Logo" style="height: 40px; width: auto; border-radius: 8px" /> Voxa
+      <div
+        class="container"
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 100%;
+        ">
+        <a
+          href="index.html"
+          class="logo"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+          ">
+          <img
+            src="images/voxa-logo.png"
+            alt="Voxa Logo"
+            style="height: 40px; width: auto; border-radius: 8px" />
+          Voxa
         </a>
-        <div style="background: rgba(0, 229, 255, 0.1); color: var(--primary-color); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; border: 1px solid var(--primary-color);">
+        <div
+          style="
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--primary-color);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border: 1px solid var(--primary-color);
+          ">
           <i class="fas fa-shield-alt"></i> SUPER ADMIN
         </div>
       </div>
     </nav>
 
     <div class="admin-container">
-      <div class="admin-header" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; margin-bottom: 20px;">
+      <div
+        class="admin-header"
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 20px;
+          margin-bottom: 20px;
+        ">
         <div>
           <h1 id="welcomeMsg">SuperAdmin HQ</h1>
           <p>Manage system analytics, applications, job postings, and users.</p>
         </div>
         <div>
-          <button class="btn-analyze" onclick="loadData()" style="margin-right: 10px"><i class="fas fa-sync-alt"></i> Refresh Data</button>
+          <button
+            class="btn-analyze"
+            onclick="loadData()"
+            style="margin-right: 10px">
+            <i class="fas fa-sync-alt"></i> Refresh Data
+          </button>
           <button onclick="logout()" class="btn-outline">Logout</button>
         </div>
       </div>
 
       <div class="admin-tabs">
-        <button class="tab-btn active" onclick="switchTab('dashboard')" id="tab-dashboard"><i class="fas fa-chart-line"></i> Dashboard</button>
-        <button class="tab-btn" onclick="switchTab('apps')" id="tab-apps"><i class="fas fa-file-alt"></i> Applications</button>
-        <button class="tab-btn" onclick="switchTab('jobs')" id="tab-jobs"><i class="fas fa-briefcase"></i> Job Management</button>
-        <button class="tab-btn" onclick="switchTab('agency')" id="tab-agency"><i class="fas fa-building"></i> Agency Feedback</button>
-        <button class="tab-btn" onclick="switchTab('users')" id="tab-users"><i class="fas fa-user-shield"></i> Force-Create User</button>
+        <button
+          class="tab-btn active"
+          onclick="switchTab('dashboard')"
+          id="tab-dashboard">
+          <i class="fas fa-chart-line"></i> Dashboard
+        </button>
+        <button class="tab-btn" onclick="switchTab('apps')" id="tab-apps">
+          <i class="fas fa-file-alt"></i> Applications
+        </button>
+        <button class="tab-btn" onclick="switchTab('jobs')" id="tab-jobs">
+          <i class="fas fa-briefcase"></i> Job Management
+        </button>
+        <button class="tab-btn" onclick="switchTab('agency')" id="tab-agency">
+          <i class="fas fa-building"></i> Agency Feedback
+        </button>
+        <button class="tab-btn" onclick="switchTab('users')" id="tab-users">
+          <i class="fas fa-user-shield"></i> Force-Create User
+        </button>
       </div>
 
       <div id="section-dashboard">
         <div class="kpi-grid">
-          <div class="kpi-box"><i class="fas fa-building" style="font-size: 1.5rem; color: var(--text-muted)"></i><div class="kpi-value" id="kpi-agencies">-</div><div class="kpi-label">Active Agencies</div></div>
-          <div class="kpi-box"><i class="fas fa-users" style="font-size: 1.5rem; color: var(--text-muted)"></i><div class="kpi-value" id="kpi-users">-</div><div class="kpi-label">Total Staff Accounts</div></div>
-          <div class="kpi-box"><i class="fas fa-briefcase" style="font-size: 1.5rem; color: var(--text-muted)"></i><div class="kpi-value" id="kpi-jobs">-</div><div class="kpi-label">Live Job Posts</div></div>
-          <div class="kpi-box"><i class="fas fa-file-audio" style="font-size: 1.5rem; color: var(--text-muted)"></i><div class="kpi-value" id="kpi-apps">-</div><div class="kpi-label">Total Candidates</div></div>
+          <div class="kpi-box">
+            <i
+              class="fas fa-building"
+              style="font-size: 1.5rem; color: var(--text-muted)"></i>
+            <div class="kpi-value" id="kpi-agencies">-</div>
+            <div class="kpi-label">Active Agencies</div>
+          </div>
+          <div class="kpi-box">
+            <i
+              class="fas fa-users"
+              style="font-size: 1.5rem; color: var(--text-muted)"></i>
+            <div class="kpi-value" id="kpi-users">-</div>
+            <div class="kpi-label">Total Staff Accounts</div>
+          </div>
+          <div class="kpi-box">
+            <i
+              class="fas fa-briefcase"
+              style="font-size: 1.5rem; color: var(--text-muted)"></i>
+            <div class="kpi-value" id="kpi-jobs">-</div>
+            <div class="kpi-label">Live Job Posts</div>
+          </div>
+          <div class="kpi-box">
+            <i
+              class="fas fa-file-audio"
+              style="font-size: 1.5rem; color: var(--text-muted)"></i>
+            <div class="kpi-value" id="kpi-apps">-</div>
+            <div class="kpi-label">Total Candidates</div>
+          </div>
         </div>
 
         <div class="admin-card">
-          <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;"><i class="fas fa-chart-bar" style="color: var(--primary-color)"></i> Global Agency Performance</h3>
-          <table class="data-table" style="width: 100%; text-align: left; border-collapse: collapse">
+          <h3
+            style="
+              margin-bottom: 20px;
+              border-bottom: 1px solid var(--border-color);
+              padding-bottom: 10px;
+            ">
+            <i class="fas fa-chart-bar" style="color: var(--primary-color)"></i>
+            Global Agency Performance
+          </h3>
+          <table
+            class="data-table"
+            style="width: 100%; text-align: left; border-collapse: collapse">
             <thead>
-              <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
-                <th style="padding: 10px">Agency Name</th><th style="padding: 10px; text-align: right">Total Candidates Sourced</th>
+              <tr
+                style="
+                  border-bottom: 1px solid var(--border-color);
+                  color: var(--text-muted);
+                ">
+                <th style="padding: 10px">Agency Name</th>
+                <th style="padding: 10px; text-align: right">
+                  Total Candidates Sourced
+                </th>
               </tr>
             </thead>
             <tbody id="agencyTableBody"></tbody>
@@ -110,7 +451,15 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th width="50">ID</th><th width="180">Candidate</th><th width="220">Voice Intro</th><th width="150">AI Grade</th><th width="150">Human Grade</th><th width="100">Status</th><th width="200">Contact</th><th>Experience</th><th width="120">Date</th>
+              <th width="50">ID</th>
+              <th width="180">Candidate</th>
+              <th width="220">Voice Intro</th>
+              <th width="150">AI Grade</th>
+              <th width="150">Human Grade</th>
+              <th width="100">Status</th>
+              <th width="200">Contact</th>
+              <th>Experience</th>
+              <th width="120">Date</th>
             </tr>
           </thead>
           <tbody id="admin-table-body"></tbody>
@@ -119,35 +468,81 @@
 
       <div id="section-jobs" class="data-table-container" style="display: none">
         <div class="job-form">
-          <input type="text" id="jCompany" placeholder="Company Name (e.g. Voxa)" />
+          <input
+            type="text"
+            id="jCompany"
+            placeholder="Company Name (e.g. Voxa)" />
           <input type="text" id="jTitle" placeholder="Job Title" />
-          <input type="text" id="jAccount" placeholder="Account Type (e.g. Real Estate)" />
+          <input
+            type="text"
+            id="jAccount"
+            placeholder="Account Type (e.g. Real Estate)" />
           <input type="text" id="jHours" placeholder="Working Hours" />
           <input type="text" id="jInterview" placeholder="Interview Time" />
           <input type="text" id="jSalary" placeholder="Salary Package" />
-          <input type="text" id="jTarget" placeholder="Who can apply & Max age" />
+          <input
+            type="text"
+            id="jTarget"
+            placeholder="Who can apply & Max age" />
           <input type="text" id="jLocation" placeholder="Location" />
           <input type="text" id="jTraining" placeholder="Training Details" />
-          <textarea id="jOffer" placeholder="Extra OFFER 🎙️ details..." style="grid-column: span 3; resize: vertical; min-height: 60px;"></textarea>
-          <select id="jBilingual" style="grid-column: span 3; font-weight: bold; background: rgba(0, 229, 255, 0.05); border: 1px solid var(--primary-color);">
+          <textarea
+            id="jOffer"
+            placeholder="Extra OFFER 🎙️ details..."
+            style="
+              grid-column: span 3;
+              resize: vertical;
+              min-height: 60px;
+            "></textarea>
+          <select
+            id="jBilingual"
+            style="
+              grid-column: span 3;
+              font-weight: bold;
+              background: rgba(0, 229, 255, 0.05);
+              border: 1px solid var(--primary-color);
+            ">
             <option value="0">🇺🇸 English Only (1 Voice Note Required)</option>
-            <option value="1">🌍 Bilingual Role (2 Voice Notes Required)</option>
+            <option value="1">
+              🌍 Bilingual Role (2 Voice Notes Required)
+            </option>
           </select>
-          <button id="btn-submit-job" onclick="saveJobData()" class="btn-analyze" style="grid-column: span 3">+ Create New Job Posting</button>
+          <button
+            id="btn-submit-job"
+            onclick="saveJobData()"
+            class="btn-analyze"
+            style="grid-column: span 3">
+            + Create New Job Posting
+          </button>
         </div>
         <table class="data-table">
           <thead>
-            <tr><th>ID</th><th>Job Title</th><th>Account & Hours</th><th>Salary Package</th><th>Status</th><th>Actions</th></tr>
+            <tr>
+              <th>ID</th>
+              <th>Job Title</th>
+              <th>Account & Hours</th>
+              <th>Salary Package</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
           </thead>
           <tbody id="jobs-table-body"></tbody>
         </table>
       </div>
 
-      <div id="section-agency" class="data-table-container" style="display: none">
+      <div
+        id="section-agency"
+        class="data-table-container"
+        style="display: none">
         <table class="data-table">
           <thead>
             <tr>
-              <th width="180">Candidate</th><th width="180">Job Title</th><th width="150">Agency Name</th><th width="150">Agency Grade</th><th>Validator Notes</th><th width="150">Date Graded</th>
+              <th width="180">Candidate</th>
+              <th width="180">Job Title</th>
+              <th width="150">Agency Name</th>
+              <th width="150">Agency Grade</th>
+              <th>Validator Notes</th>
+              <th width="150">Date Graded</th>
             </tr>
           </thead>
           <tbody id="agency-feedback-body"></tbody>
@@ -155,18 +550,61 @@
       </div>
 
       <div id="section-users" class="admin-card" style="display: none">
-        <h3 style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;"><i class="fas fa-user-shield" style="color: #10b981"></i> Force-Create User</h3>
-        <div class="job-form" style="grid-template-columns: 1fr 1fr; margin-bottom: 0">
-          <input type="text" id="newUser-name" placeholder="Full Name (e.g. Ziyad)" style="grid-column: 1 / -1" />
-          <input type="email" id="newUser-email" placeholder="ziyad@darkwolves.com" style="grid-column: 1 / -1" />
-          <input type="password" id="newUser-password" placeholder="Temporary Password" style="grid-column: 1 / -1" />
+        <h3
+          style="
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+          ">
+          <i class="fas fa-user-shield" style="color: #10b981"></i> Force-Create
+          User
+        </h3>
+        <div
+          class="job-form"
+          style="grid-template-columns: 1fr 1fr; margin-bottom: 0">
+          <input
+            type="text"
+            id="newUser-name"
+            placeholder="Full Name (e.g. Ziyad)"
+            style="grid-column: 1 / -1" />
+          <input
+            type="email"
+            id="newUser-email"
+            placeholder="ziyad@darkwolves.com"
+            style="grid-column: 1 / -1" />
+          <input
+            type="password"
+            id="newUser-password"
+            placeholder="Temporary Password"
+            style="grid-column: 1 / -1" />
           <select id="newUser-role" style="grid-column: 1 / -1">
-            <option value="CEO">CEO / Agency Owner</option><option value="UnitManager">Unit Manager</option><option value="Leader">Team Leader</option><option value="Recruiter">Recruiter</option><option value="Validator">Validator (Agency Partner)</option><option value="Admin">System Admin</option>
+            <option value="CEO">CEO / Agency Owner</option>
+            <option value="UnitManager">Unit Manager</option>
+            <option value="Leader">Team Leader</option>
+            <option value="Recruiter">Recruiter</option>
+            <option value="Validator">Validator (Agency Partner)</option>
+            <option value="Admin">System Admin</option>
           </select>
-          <input type="text" id="newUser-agency" placeholder="Agency Name (e.g. Dark Wolves)" />
-          <input type="text" id="newUser-unit" placeholder="Unit Name (Leave blank if N/A)" />
-          <input type="text" id="newUser-team" placeholder="Team Name (Leave blank if N/A)" style="grid-column: 1 / -1" />
-          <button id="btn-create-user" onclick="createNewUser()" class="btn-primary" style="grid-column: 1 / -1"><i class="fas fa-check-circle"></i> Create Account</button>
+          <input
+            type="text"
+            id="newUser-agency"
+            placeholder="Agency Name (e.g. Dark Wolves)" />
+          <input
+            type="text"
+            id="newUser-unit"
+            placeholder="Unit Name (Leave blank if N/A)" />
+          <input
+            type="text"
+            id="newUser-team"
+            placeholder="Team Name (Leave blank if N/A)"
+            style="grid-column: 1 / -1" />
+          <button
+            id="btn-create-user"
+            onclick="createNewUser()"
+            class="btn-primary"
+            style="grid-column: 1 / -1">
+            <i class="fas fa-check-circle"></i> Create Account
+          </button>
         </div>
       </div>
     </div>
@@ -184,7 +622,12 @@
     <div id="human-modal" class="modal-overlay">
       <div class="modal-card">
         <div class="modal-header">
-          <h2 style="color: var(--text-main)"><i class="fas fa-user-check" style="color: var(--primary-color)"></i> Human Validation</h2>
+          <h2 style="color: var(--text-main)">
+            <i
+              class="fas fa-user-check"
+              style="color: var(--primary-color)"></i>
+            Human Validation
+          </h2>
           <button onclick="closeHumanModal()" class="close-btn">&times;</button>
         </div>
         <div id="human-modal-content" class="modal-body"></div>
@@ -201,7 +644,10 @@
 
       async function checkAuthAndLoad() {
         currentUser = JSON.parse(localStorage.getItem("user"));
-        if (!currentUser || (currentUser.role !== "SuperAdmin" && currentUser.role !== "Admin")) {
+        if (
+          !currentUser ||
+          (currentUser.role !== "SuperAdmin" && currentUser.role !== "Admin")
+        ) {
           alert("Unauthorized Access.");
           window.location.href = "login.html";
           return;
@@ -209,7 +655,7 @@
         fetchAdminStats();
       }
 
-      function switchTab(tab) {
+      window.switchTab = function (tab) {
         ["dashboard", "apps", "jobs", "users", "agency"].forEach((t) => {
           document.getElementById(`section-${t}`).style.display = "none";
           document.getElementById(`tab-${t}`).classList.remove("active");
@@ -221,66 +667,101 @@
         if (tab === "apps") loadApplications();
         if (tab === "jobs") loadAdminJobs();
         if (tab === "agency") loadAgencyFeedback();
-      }
+      };
 
-      function loadData() {
-        if (document.getElementById("section-dashboard").style.display === "block") fetchAdminStats();
-        if (document.getElementById("section-apps").style.display === "block") loadApplications();
-        if (document.getElementById("section-jobs").style.display === "block") loadAdminJobs();
-        if (document.getElementById("section-agency").style.display === "block") loadAgencyFeedback();
-      }
+      window.loadData = function () {
+        if (
+          document.getElementById("section-dashboard").style.display === "block"
+        )
+          fetchAdminStats();
+        if (document.getElementById("section-apps").style.display === "block")
+          loadApplications();
+        if (document.getElementById("section-jobs").style.display === "block")
+          loadAdminJobs();
+        if (document.getElementById("section-agency").style.display === "block")
+          loadAgencyFeedback();
+      };
 
       async function fetchAdminStats() {
         try {
-          const res = await fetch("https://voxa-pi-three.vercel.app/api/admin/stats");
+          const res = await fetch(
+            "https://voxa-pi-three.vercel.app/api/admin/stats",
+          );
           const stats = await res.json();
-          document.getElementById("kpi-agencies").innerText = stats.total_agencies || 0;
-          document.getElementById("kpi-users").innerText = stats.total_users || 0;
+          document.getElementById("kpi-agencies").innerText =
+            stats.total_agencies || 0;
+          document.getElementById("kpi-users").innerText =
+            stats.total_users || 0;
           document.getElementById("kpi-jobs").innerText = stats.total_jobs || 0;
           document.getElementById("kpi-apps").innerText = stats.total_apps || 0;
 
           const tbody = document.getElementById("agencyTableBody");
           tbody.innerHTML = "";
           if (stats.agency_breakdown.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="2" style="padding: 15px; color: var(--text-muted); text-align: center;">No agency data yet.</td></tr>';
+            tbody.innerHTML =
+              '<tr><td colspan="2" style="padding: 15px; color: var(--text-muted); text-align: center;">No agency data yet.</td></tr>';
           } else {
             stats.agency_breakdown.forEach((a) => {
               tbody.innerHTML += `<tr style="border-bottom: 1px solid var(--border-color);"><td style="padding: 15px 10px; font-weight: bold; color: var(--primary-color);">${a.agency}</td><td style="padding: 15px 10px; text-align: right; font-size: 1.1rem; font-weight: 600;">${a.count}</td></tr>`;
             });
           }
-        } catch (e) { console.error(e); }
+        } catch (e) {
+          console.error(e);
+        }
       }
 
       function calculateAge(dobString) {
         if (!dobString) return "N/A";
         const dob = new Date(dobString);
-        return Math.abs(new Date(Date.now() - dob.getTime()).getUTCFullYear() - 1970);
+        return Math.abs(
+          new Date(Date.now() - dob.getTime()).getUTCFullYear() - 1970,
+        );
       }
 
       async function loadApplications() {
         const tbody = document.getElementById("admin-table-body");
         try {
           if (!currentUser || !currentUser.email) return;
-          const res = await fetch(`https://voxa-pi-three.vercel.app/api/admin/applications?email=${currentUser.email}`);
+          const res = await fetch(
+            `https://voxa-pi-three.vercel.app/api/admin/applications?email=${currentUser.email}`,
+          );
           appData = await res.json();
 
-          tbody.innerHTML = appData.map((app) => {
-            const hasAudio = app.VoiceRecordPath && app.VoiceRecordPath !== "null" && app.VoiceRecordPath !== "No_File";
-            const audioContent1 = hasAudio ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:2px;">EN Intro:</div><audio controls src="https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath}" class="custom-audio"></audio>` : '<span style="color:var(--text-muted); font-style:italic;">No Audio</span>';
-            const hasAudio2 = app.VoiceRecordPath2 && app.VoiceRecordPath2 !== "null" && app.VoiceRecordPath2 !== "No_File";
-            const audioContent2 = hasAudio2 ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:8px; margin-bottom:2px;">2nd Language:</div><audio controls src="https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath2}" class="custom-audio"></audio>` : "";
-            
-            let aiContent = '<span style="color:var(--text-muted);">N/A</span>';
-            if (app.AI_Rating && app.AI_Rating !== "null") {
-              aiContent = `<div class="ai-actions"><span class="badge-ai-grade">${app.AI_Rating}</span><button onclick="openAIModal(${app.ApplicationID})" class="btn-view-report"><i class="fas fa-file-alt"></i> View</button><button onclick="startAnalysis(${app.ApplicationID})" class="btn-revalidate"><i class="fas fa-redo"></i></button></div>`;
-            } else if (hasAudio) {
-              aiContent = `<button id="btn-${app.ApplicationID}" onclick="startAnalysis(${app.ApplicationID})" class="btn-analyze" style="padding: 6px 12px; font-size: 0.8rem;"><i class="fas fa-magic"></i> Start AI</button>`;
-            }
+          tbody.innerHTML = appData
+            .map((app) => {
+              const hasAudio =
+                app.VoiceRecordPath &&
+                app.VoiceRecordPath !== "null" &&
+                app.VoiceRecordPath !== "No_File";
+              const audioContent1 = hasAudio
+                ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:2px;">EN Intro:</div><audio controls src="https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath}" class="custom-audio"></audio>`
+                : '<span style="color:var(--text-muted); font-style:italic;">No Audio</span>';
+              const hasAudio2 =
+                app.VoiceRecordPath2 &&
+                app.VoiceRecordPath2 !== "null" &&
+                app.VoiceRecordPath2 !== "No_File";
+              const audioContent2 = hasAudio2
+                ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:8px; margin-bottom:2px;">2nd Language:</div><audio controls src="https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath2}" class="custom-audio"></audio>`
+                : "";
 
-            const humanGradeBadge = app.Human_Rating ? `<button class="btn-assign" onclick="openHumanModal(${app.ApplicationID})">${app.Human_Rating} <i class="fas fa-edit"></i></button>` : `<button class="btn-assign-empty" onclick="openHumanModal(${app.ApplicationID})">+ Assign</button>`;
-            const currentStatus = app.Status || (app.AI_Rating && app.AI_Rating !== "null" ? "Analyzed" : "In Review");
+              let aiContent =
+                '<span style="color:var(--text-muted);">N/A</span>';
+              if (app.AI_Rating && app.AI_Rating !== "null") {
+                aiContent = `<div class="ai-actions"><span class="badge-ai-grade">${app.AI_Rating}</span><button onclick="openAIModal(${app.ApplicationID})" class="btn-view-report"><i class="fas fa-file-alt"></i> View</button><button onclick="startAnalysis(${app.ApplicationID})" class="btn-revalidate"><i class="fas fa-redo"></i></button></div>`;
+              } else if (hasAudio) {
+                aiContent = `<button id="btn-${app.ApplicationID}" onclick="startAnalysis(${app.ApplicationID})" class="btn-analyze" style="padding: 6px 12px; font-size: 0.8rem;"><i class="fas fa-magic"></i> Start AI</button>`;
+              }
 
-            return `<tr>
+              const humanGradeBadge = app.Human_Rating
+                ? `<button class="btn-assign" onclick="openHumanModal(${app.ApplicationID})">${app.Human_Rating} <i class="fas fa-edit"></i></button>`
+                : `<button class="btn-assign-empty" onclick="openHumanModal(${app.ApplicationID})">+ Assign</button>`;
+              const currentStatus =
+                app.Status ||
+                (app.AI_Rating && app.AI_Rating !== "null"
+                  ? "Analyzed"
+                  : "In Review");
+
+              return `<tr>
                   <td>#${app.ApplicationID}</td>
                   <td><b>${app.FullName}</b><br><small><span style="color: var(--primary-color); font-weight: 600;">${app.Company || "N/A"}</span> • ${app.JobTitle}</small></td>
                   <td>${audioContent1 + audioContent2}</td>
@@ -291,24 +772,41 @@
                   <td><div class="exp-cell">${app.Experience}</div><div style="font-size:0.75rem; color:var(--primary-color);"><i class="fas fa-link"></i> Ref: ${app.RecruiterSource || "Direct"}</div></td>
                   <td>${app.SubmittedAt}</td>
               </tr>`;
-          }).join("");
-        } catch (err) { console.error("Failed to load apps:", err); }
+            })
+            .join("");
+        } catch (err) {
+          console.error("Failed to load apps:", err);
+        }
       }
 
-      async function startAnalysis(id) {
+      window.startAnalysis = async function (id) {
         const btn = document.getElementById(`btn-${id}`);
         const originalText = btn.innerHTML;
-        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         try {
-          const res = await fetch(`https://voxa-pi-three.vercel.app/api/admin/analyze/${id}`, { method: "POST" });
+          const res = await fetch(
+            `https://voxa-pi-three.vercel.app/api/admin/analyze/${id}`,
+            { method: "POST" },
+          );
           if (res.ok) {
-            setTimeout(() => { loadApplications(); }, 2000);
-          } else { alert("Failed to start analysis."); btn.disabled = false; btn.innerHTML = originalText; }
-        } catch (e) { alert("Server Error"); btn.disabled = false; btn.innerHTML = originalText; }
-      }
+            setTimeout(() => {
+              loadApplications();
+            }, 2000);
+          } else {
+            alert("Failed to start analysis.");
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+          }
+        } catch (e) {
+          alert("Server Error");
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      };
 
-      function openAIModal(id) {
-        const app = appData.find((a) => a.ApplicationID === id);
+      window.openAIModal = function (id) {
+        const app = appData.find((a) => String(a.ApplicationID) === String(id));
         if (!app) return;
         document.getElementById("modal-content").innerHTML = `
           <div style="text-align: center; margin-bottom: 20px;"><span class="badge-ai-grade" style="font-size: 1rem;"><i class="fas fa-globe"></i> ${app.Accent_Profile || "Accent Analysis Pending..."}</span></div>
@@ -327,26 +825,28 @@
               <p style="font-style: italic; color: var(--text-muted);">"${app.Transcription || "Processing..."}"</p>
           </div>`;
         document.getElementById("ai-modal").style.display = "flex";
-      }
+      };
 
       // NEW SAFE COPY FUNCTIONS
-      window.copyClientPanel = function(id) {
-        const app = appData.find((a) => a.ApplicationID === id);
-        if(!app) return;
+      window.copyClientPanel = function (id) {
+        const app = appData.find((a) => String(a.ApplicationID) === String(id));
+        if (!app) return;
         const text = `Quadruple Name: ${app.FullName}\nEmail: ${app.Email}\nPhone number: ${app.Phone}\nAge: ${calculateAge(app.DateOfBirth)}\nGraduation status: ${app.GraduationStatus}\nFaculty and university: ${app.FacultyUniversity || "N/A"}\nMilitary status: ${app.MilitaryStatus || "N/A"}\nDate of birth: ${app.DateOfBirth || "N/A"}\nNationality: ${app.Nationality}\nNational ID: ${app.NationalID}\n\nAI Assessment:\n${app.ClientPanel || "Pending AI Assessment..."}`;
         navigator.clipboard.writeText(text);
-        alert('Panel Copied to Clipboard!');
+        alert("Panel Copied to Clipboard!");
       };
 
-      window.copyAIPanel = function(id) {
-        const app = appData.find((a) => a.ApplicationID === id);
-        if(!app) return;
-        navigator.clipboard.writeText(app.ClientPanel || "No panel generated yet.");
-        alert('AI Panel Copied to Clipboard!');
+      window.copyAIPanel = function (id) {
+        const app = appData.find((a) => String(a.ApplicationID) === String(id));
+        if (!app) return;
+        navigator.clipboard.writeText(
+          app.ClientPanel || "No panel generated yet.",
+        );
+        alert("AI Panel Copied to Clipboard!");
       };
 
-      function openHumanModal(id) {
-        const app = appData.find((a) => a.ApplicationID === id);
+      window.openHumanModal = function (id) {
+        const app = appData.find((a) => String(a.ApplicationID) === String(id));
         if (!app) return;
         const age = calculateAge(app.DateOfBirth);
         const panelText = `Quadruple Name: ${app.FullName}\nEmail: ${app.Email}\nPhone number: ${app.Phone}\nAge: ${age}\nGraduation status: ${app.GraduationStatus}\nFaculty and university: ${app.FacultyUniversity || "N/A"}\nMilitary status: ${app.MilitaryStatus || "N/A"}\nDate of birth: ${app.DateOfBirth || "N/A"}\nNationality: ${app.Nationality}\nNational ID: ${app.NationalID}\n\nAI Assessment:\n${app.ClientPanel || "Pending AI Assessment..."}`;
@@ -387,18 +887,24 @@
               <p style="color: var(--text-main); font-size: 0.85rem; line-height: 1.6; font-family: monospace; background: var(--bg-body); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">${displayPanel}</p>
           </div>`;
         document.getElementById("human-modal").style.display = "flex";
-      }
+      };
 
-      function closeAIModal() { document.getElementById("ai-modal").style.display = "none"; }
-      function closeHumanModal() { document.getElementById("human-modal").style.display = "none"; }
+      window.closeAIModal = function () {
+        document.getElementById("ai-modal").style.display = "none";
+      };
+      window.closeHumanModal = function () {
+        document.getElementById("human-modal").style.display = "none";
+      };
 
-      function toggleCustomJob() {
+      window.toggleCustomJob = function () {
         const decision = document.getElementById("offer-decision").value;
-        document.getElementById("custom-job-container").style.display = decision === "offer_alternative" ? "flex" : "none";
-        document.getElementById("send-wa-btn").style.display = decision === "none" ? "none" : "block";
-      }
+        document.getElementById("custom-job-container").style.display =
+          decision === "offer_alternative" ? "flex" : "none";
+        document.getElementById("send-wa-btn").style.display =
+          decision === "none" ? "none" : "block";
+      };
 
-      async function saveValidation(id) {
+      window.saveValidation = async function (id) {
         const decision = document.getElementById("offer-decision").value;
         const feedback = document.getElementById("val-feedback").value;
         const humanGrade = document.getElementById("human-grade").value;
@@ -413,46 +919,85 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
         try {
-          const res = await fetch(`https://voxa-pi-three.vercel.app/api/admin/applications/${id}/status`, {
-            method: "PUT", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: newStatus, feedback: feedback, humanGrade: humanGrade }),
-          });
+          const res = await fetch(
+            `https://voxa-pi-three.vercel.app/api/admin/applications/${id}/status`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                status: newStatus,
+                feedback: feedback,
+                humanGrade: humanGrade,
+              }),
+            },
+          );
           if (res.ok) {
             btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
             loadApplications();
-            setTimeout(() => { closeHumanModal(); }, 1000);
-          } else { alert("Failed to save validation."); btn.innerHTML = originalText; }
-        } catch (e) { alert("Server error."); btn.innerHTML = originalText; }
-      }
+            setTimeout(() => {
+              closeHumanModal();
+            }, 1000);
+          } else {
+            alert("Failed to save validation.");
+            btn.innerHTML = originalText;
+          }
+        } catch (e) {
+          alert("Server error.");
+          btn.innerHTML = originalText;
+        }
+      };
 
-      async function sendWhatsAppDecision(id) {
+      window.sendWhatsAppDecision = async function (id) {
         const decision = document.getElementById("offer-decision").value;
         const customJob = document.getElementById("custom-job-input").value;
-        if (decision === "offer_alternative" && customJob.trim() === "") return alert("Please enter the Alternative Job Title!");
+        if (decision === "offer_alternative" && customJob.trim() === "")
+          return alert("Please enter the Alternative Job Title!");
 
         const btn = document.getElementById("send-wa-btn");
         const originalText = btn.innerHTML;
-        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
         try {
-          const res = await fetch(`https://voxa-pi-three.vercel.app/api/admin/send-offer/${id}`, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ decision: decision, customJob: customJob }),
-          });
+          const res = await fetch(
+            `https://voxa-pi-three.vercel.app/api/admin/send-offer/${id}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                decision: decision,
+                customJob: customJob,
+              }),
+            },
+          );
           if (res.ok) {
             btn.innerHTML = '<i class="fas fa-check"></i> Sent!';
-            setTimeout(() => { closeHumanModal(); }, 1500);
-          } else { alert("Failed to send."); btn.innerHTML = originalText; btn.disabled = false; }
-        } catch (e) { alert("Server Error."); btn.innerHTML = originalText; btn.disabled = false; }
-      }
+            setTimeout(() => {
+              closeHumanModal();
+            }, 1500);
+          } else {
+            alert("Failed to send.");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }
+        } catch (e) {
+          alert("Server Error.");
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }
+      };
 
       // --- JOBS: JOB MANAGEMENT ---
-      async function loadAdminJobs() {
+      window.loadAdminJobs = async function () {
         const tbody = document.getElementById("jobs-table-body");
         try {
-          const res = await fetch("https://voxa-pi-three.vercel.app/api/admin/jobs");
+          const res = await fetch(
+            "https://voxa-pi-three.vercel.app/api/admin/jobs",
+          );
           adminJobsData = await res.json();
-          tbody.innerHTML = adminJobsData.map((j) => `
+          tbody.innerHTML = adminJobsData
+            .map(
+              (j) => `
             <tr>
                 <td>#${j.JobID}</td>
                 <td><b>${j.JobTitle}</b> <br><small style="color:var(--primary-color);">${j.CompanyName}</small></td>
@@ -463,60 +1008,123 @@
                     <button onclick="editJob(${j.JobID})" style="background:none; border:none; color:var(--primary-color); cursor:pointer; margin-right: 12px; font-size: 1.1rem;"><i class="fas fa-edit"></i></button>
                     <button onclick="deleteJob(${j.JobID})" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size: 1.1rem;"><i class="fas fa-trash"></i></button>
                 </td>
-            </tr>`).join("");
-        } catch (err) { console.error(err); }
-      }
+            </tr>`,
+            )
+            .join("");
+        } catch (err) {
+          console.error(err);
+        }
+      };
 
-      function editJob(id) {
+      window.editJob = function (id) {
         const job = adminJobsData.find((j) => j.JobID === id);
         if (!job) return;
         editingJobId = id;
-        document.getElementById("jCompany").value = job.CompanyName || ""; document.getElementById("jTitle").value = job.JobTitle || ""; document.getElementById("jAccount").value = job.AccountType || ""; document.getElementById("jHours").value = job.WorkingHours || ""; document.getElementById("jInterview").value = job.InterviewTime || ""; document.getElementById("jSalary").value = job.SalaryPackage || ""; document.getElementById("jTarget").value = job.TargetAudience || ""; document.getElementById("jLocation").value = job.Location || ""; document.getElementById("jTraining").value = job.Training || ""; document.getElementById("jOffer").value = job.OfferDetails || ""; document.getElementById("jBilingual").value = job.RequiresSecondLanguage ? "1" : "0";
+        document.getElementById("jCompany").value = job.CompanyName || "";
+        document.getElementById("jTitle").value = job.JobTitle || "";
+        document.getElementById("jAccount").value = job.AccountType || "";
+        document.getElementById("jHours").value = job.WorkingHours || "";
+        document.getElementById("jInterview").value = job.InterviewTime || "";
+        document.getElementById("jSalary").value = job.SalaryPackage || "";
+        document.getElementById("jTarget").value = job.TargetAudience || "";
+        document.getElementById("jLocation").value = job.Location || "";
+        document.getElementById("jTraining").value = job.Training || "";
+        document.getElementById("jOffer").value = job.OfferDetails || "";
+        document.getElementById("jBilingual").value = job.RequiresSecondLanguage
+          ? "1"
+          : "0";
         const submitBtn = document.getElementById("btn-submit-job");
-        submitBtn.innerHTML = `<i class="fas fa-save"></i> Update Job #${id}`; submitBtn.style.background = "#f59e0b";
-        document.getElementById("section-jobs").scrollIntoView({ behavior: "smooth" });
-      }
+        submitBtn.innerHTML = `<i class="fas fa-save"></i> Update Job #${id}`;
+        submitBtn.style.background = "#f59e0b";
+        document
+          .getElementById("section-jobs")
+          .scrollIntoView({ behavior: "smooth" });
+      };
 
-      async function saveJobData() {
+      window.saveJobData = async function () {
         const payload = {
-          companyName: document.getElementById("jCompany").value, jobTitle: document.getElementById("jTitle").value, accountType: document.getElementById("jAccount").value, workingHours: document.getElementById("jHours").value, interviewTime: document.getElementById("jInterview").value, salaryPackage: document.getElementById("jSalary").value, targetAudience: document.getElementById("jTarget").value, location: document.getElementById("jLocation").value, training: document.getElementById("jTraining").value, offerDetails: document.getElementById("jOffer").value, requiresSecondLanguage: document.getElementById("jBilingual").value,
+          companyName: document.getElementById("jCompany").value,
+          jobTitle: document.getElementById("jTitle").value,
+          accountType: document.getElementById("jAccount").value,
+          workingHours: document.getElementById("jHours").value,
+          interviewTime: document.getElementById("jInterview").value,
+          salaryPackage: document.getElementById("jSalary").value,
+          targetAudience: document.getElementById("jTarget").value,
+          location: document.getElementById("jLocation").value,
+          training: document.getElementById("jTraining").value,
+          offerDetails: document.getElementById("jOffer").value,
+          requiresSecondLanguage: document.getElementById("jBilingual").value,
         };
         if (!payload.jobTitle) return alert("Job Title is required!");
-        const submitBtn = document.getElementById("btn-submit-job"); const originalText = submitBtn.innerHTML; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        const submitBtn = document.getElementById("btn-submit-job");
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Saving...';
         try {
           if (editingJobId) {
-            await fetch(`https://voxa-pi-three.vercel.app/api/admin/jobs/${editingJobId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), });
+            await fetch(
+              `https://voxa-pi-three.vercel.app/api/admin/jobs/${editingJobId}`,
+              {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              },
+            );
           } else {
-            await fetch("https://voxa-pi-three.vercel.app/api/admin/jobs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), });
+            await fetch("https://voxa-pi-three.vercel.app/api/admin/jobs", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
           }
-          editingJobId = null; document.querySelectorAll(".job-form input, .job-form textarea").forEach((el) => (el.value = ""));
-          submitBtn.innerHTML = `+ Create New Job Posting`; submitBtn.style.background = "var(--primary-color)";
+          editingJobId = null;
+          document
+            .querySelectorAll(".job-form input, .job-form textarea")
+            .forEach((el) => (el.value = ""));
+          submitBtn.innerHTML = `+ Create New Job Posting`;
+          submitBtn.style.background = "var(--primary-color)";
           loadAdminJobs();
-        } catch (e) { alert("Failed to save."); submitBtn.innerHTML = originalText; }
-      }
+        } catch (e) {
+          alert("Failed to save.");
+          submitBtn.innerHTML = originalText;
+        }
+      };
 
-      async function toggleJobStatus(id, currentStatus) {
+      window.toggleJobStatus = async function (id, currentStatus) {
         const newStatus = currentStatus === "Active" ? "On Hold" : "Active";
-        await fetch(`https://voxa-pi-three.vercel.app/api/admin/jobs/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus }) });
+        await fetch(`https://voxa-pi-three.vercel.app/api/admin/jobs/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus }),
+        });
         loadAdminJobs();
-      }
+      };
 
-      async function deleteJob(id) {
+      window.deleteJob = async function (id) {
         if (confirm("Are you sure you want to delete this job posting?")) {
-          await fetch(`https://voxa-pi-three.vercel.app/api/admin/jobs/${id}`, { method: "DELETE" });
+          await fetch(`https://voxa-pi-three.vercel.app/api/admin/jobs/${id}`, {
+            method: "DELETE",
+          });
           loadAdminJobs();
         }
-      }
+      };
 
       // --- AGENCY: FEEDBACK TABLE ---
-      async function loadAgencyFeedback() {
+      window.loadAgencyFeedback = async function () {
         const tbody = document.getElementById("agency-feedback-body");
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+        tbody.innerHTML =
+          '<tr><td colspan="6" style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
         try {
-          const res = await fetch("https://voxa-pi-three.vercel.app/api/admin/all-agency-grades");
+          const res = await fetch(
+            "https://voxa-pi-three.vercel.app/api/admin/all-agency-grades",
+          );
           const data = await res.json();
-          if (data.length === 0) return tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No external agency feedback submitted yet.</td></tr>';
-          tbody.innerHTML = data.map((row) => `
+          if (data.length === 0)
+            return (tbody.innerHTML =
+              '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No external agency feedback submitted yet.</td></tr>');
+          tbody.innerHTML = data
+            .map(
+              (row) => `
             <tr>
                 <td><b>${row.FullName}</b><br><small style="color:var(--text-muted);">${row.Email}</small></td>
                 <td>${row.JobTitle}</td>
@@ -524,27 +1132,67 @@
                 <td><b style="font-size: 1.1rem; color: var(--text-main);">${row.HumanGrade}</b></td>
                 <td style="font-style: italic; color: var(--text-muted);">"${row.ValidatorNotes || "No notes provided"}"</td>
                 <td style="font-size: 0.85rem; color: var(--text-muted);">${row.GradedAt}</td>
-            </tr>`).join("");
-        } catch (err) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#ef4444;">Failed to load data.</td></tr>'; }
-      }
+            </tr>`,
+            )
+            .join("");
+        } catch (err) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" style="text-align:center; color:#ef4444;">Failed to load data.</td></tr>';
+        }
+      };
 
       // --- USERS: FORCE CREATE ---
-      async function createNewUser() {
+      window.createNewUser = async function () {
         const payload = {
-          fullName: document.getElementById("newUser-name").value, email: document.getElementById("newUser-email").value, password: document.getElementById("newUser-password").value, target_role: document.getElementById("newUser-role").value, target_agency: document.getElementById("newUser-agency").value, target_unit: document.getElementById("newUser-unit").value || null, target_team: document.getElementById("newUser-team").value || null, creator_role: currentUser.isAdmin ? "SuperAdmin" : currentUser.role, creator_agency: currentUser.agencyName || "HQ",
+          fullName: document.getElementById("newUser-name").value,
+          email: document.getElementById("newUser-email").value,
+          password: document.getElementById("newUser-password").value,
+          target_role: document.getElementById("newUser-role").value,
+          target_agency: document.getElementById("newUser-agency").value,
+          target_unit: document.getElementById("newUser-unit").value || null,
+          target_team: document.getElementById("newUser-team").value || null,
+          creator_role: currentUser.isAdmin ? "SuperAdmin" : currentUser.role,
+          creator_agency: currentUser.agencyName || "HQ",
         };
-        if (!payload.email || !payload.password || !payload.fullName || !payload.target_agency) return alert("Fill Name, Email, Password, Agency.");
-        const btn = document.getElementById("btn-create-user"); const originalText = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+        if (
+          !payload.email ||
+          !payload.password ||
+          !payload.fullName ||
+          !payload.target_agency
+        )
+          return alert("Fill Name, Email, Password, Agency.");
+        const btn = document.getElementById("btn-create-user");
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
         try {
-          const res = await fetch("https://voxa-pi-three.vercel.app/api/admin/users", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+          const res = await fetch(
+            "https://voxa-pi-three.vercel.app/api/admin/users",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            },
+          );
           const data = await res.json();
           if (res.ok) {
-            alert("✅ " + data.message); document.getElementById("newUser-name").value = ""; document.getElementById("newUser-email").value = ""; document.getElementById("newUser-password").value = "";
-          } else { alert("❌ Error: " + data.error); }
-        } catch (e) { alert("Failed to connect to server."); } finally { btn.innerHTML = originalText; }
-      }
+            alert("✅ " + data.message);
+            document.getElementById("newUser-name").value = "";
+            document.getElementById("newUser-email").value = "";
+            document.getElementById("newUser-password").value = "";
+          } else {
+            alert("❌ Error: " + data.error);
+          }
+        } catch (e) {
+          alert("Failed to connect to server.");
+        } finally {
+          btn.innerHTML = originalText;
+        }
+      };
 
-      function logout() { localStorage.removeItem("user"); window.location.href = "login.html"; }
+      window.logout = function () {
+        localStorage.removeItem("user");
+        window.location.href = "login.html";
+      };
     </script>
   </body>
 </html>
