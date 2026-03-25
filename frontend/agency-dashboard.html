@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Agency Workspace | Voxa</title>
+    <title>Agency Workspace | Voxa (Diagnostic Mode)</title>
     <link rel="icon" type="image/png" href="images/voxa-logo.png" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/dashboard.css" />
@@ -100,6 +100,9 @@
         align-items: center;
         z-index: 1000;
       }
+      .active-modal {
+        display: flex !important;
+      }
       .modal-card {
         background: var(--bg-card);
         padding: 30px;
@@ -123,38 +126,7 @@
         outline: none;
       }
 
-      /* Dynamic Buttons */
-      .btn-action-schedule {
-        background: var(--primary-color);
-        color: #000;
-        border: none;
-        padding: 5px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.8rem;
-        font-weight: bold;
-        margin-right: 5px;
-      }
-      .btn-action-details {
-        background: transparent;
-        color: var(--text-main);
-        border: 1px solid var(--border-color);
-        padding: 4px 10px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.8rem;
-      }
-      .btn-action-promote {
-        background: var(--bg-input);
-        color: var(--text-main);
-        border: 1px solid var(--border-color);
-        padding: 5px 10px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.8rem;
-      }
-
-      /* Standard Buttons */
+      /* Buttons */
       .btn-schedule {
         background: #10b981;
         color: white;
@@ -559,13 +531,23 @@
     </div>
 
     <script>
-      // 1. GLOBAL VARIABLES & AUTH
+      // --- DIAGNOSTIC ERROR CATCHER ---
+      window.onerror = function (msg, url, lineNo, columnNo, error) {
+        console.error("🔥 GLOBAL JS ERROR:", msg, "at line", lineNo);
+        alert(`JS Crash! Line ${lineNo}: ${msg}`);
+        return false;
+      };
+
       let allCandidates = [];
       let allStaff = [];
+
+      console.log("🚀 Initializing Diagnostic Mode...");
 
       const userStr = localStorage.getItem("user");
       if (!userStr) window.location.href = "login.html";
       const user = JSON.parse(userStr);
+      console.log("👤 Logged in as:", user);
+
       if (user.role === "Candidate") window.location.href = "login.html";
 
       const userRole = user.role || "";
@@ -574,7 +556,6 @@
       const isLeader = userRole.includes("Leader");
       const isRecruiterOnly = !isCEO && !isUM && !isLeader;
 
-      // 2. SETUP UI
       document.getElementById("dashboardTitle").innerText = isCEO
         ? "Agency Command Center"
         : isUM
@@ -594,8 +575,8 @@
         document.getElementById("staff-directory-section").style.display =
           "block";
 
-      // 3. INITIALIZE DATA
       window.onload = async () => {
+        console.log("🔄 Window loaded. Starting fetches...");
         await fetchCandidates();
         if (!isRecruiterOnly) {
           await fetchPendingStaff();
@@ -606,48 +587,55 @@
         }
       };
 
-      // --- BULLETPROOF EVENT DELEGATION ---
-      // This guarantees buttons will click, regardless of browser security stripping HTML elements
+      // --- EVENT DELEGATION (TRIPWIRES ADDED) ---
       document.addEventListener("click", function (e) {
-        // Details Button Listener
+        console.log(
+          "👆 Click intercepted on:",
+          e.target.tagName,
+          e.target.className,
+        );
+
         const detailsBtn = e.target.closest(".btn-details");
         if (detailsBtn) {
           e.preventDefault();
-          openViewPanel(detailsBtn.getAttribute("data-id"));
+          const id = detailsBtn.getAttribute("data-id");
+          console.log("✅ View Details Clicked for ID:", id);
+          openViewPanel(id);
+          return;
         }
-        // Schedule Button Listener
+
         const scheduleBtn = e.target.closest(".btn-schedule-call");
         if (scheduleBtn) {
           e.preventDefault();
-          openScheduleModal(scheduleBtn.getAttribute("data-id"));
+          const id = scheduleBtn.getAttribute("data-id");
+          console.log("✅ Schedule Clicked for ID:", id);
+          openScheduleModal(id);
+          return;
         }
-        // Promote Button Listener
+
         const promoteBtn = e.target.closest(".btn-promote");
         if (promoteBtn) {
           e.preventDefault();
-          openPromoteModal(promoteBtn.getAttribute("data-id"));
-        }
-        // Approve Staff Listener
-        const approveBtn = e.target.closest(".btn-approve");
-        if (approveBtn) {
-          e.preventDefault();
-          processApproval(approveBtn.getAttribute("data-id"), "approve");
-        }
-        // Reject Staff Listener
-        const rejectBtn = e.target.closest(".btn-reject");
-        if (rejectBtn) {
-          e.preventDefault();
-          processApproval(rejectBtn.getAttribute("data-id"), "reject");
+          const id = promoteBtn.getAttribute("data-id");
+          console.log("✅ Promote Clicked for ID:", id);
+          openPromoteModal(id);
+          return;
         }
       });
 
-      // --- DATA FETCHING FUNCTIONS ---
       async function fetchCandidates() {
         try {
+          console.log("📡 Fetching Candidates...");
           const res = await fetch(
             `https://voxa-pi-three.vercel.app/api/admin/applications?email=${user.email}`,
           );
           allCandidates = await res.json();
+          console.log(
+            "📦 Candidates received:",
+            allCandidates.length,
+            allCandidates,
+          );
+
           const tbody = document.getElementById("candidateTableBody");
           tbody.innerHTML = "";
 
@@ -660,7 +648,7 @@
           }
 
           allCandidates.forEach((app) => {
-            const safeAppId = app.ApplicationID || app.id || "0";
+            const safeAppId = app.ApplicationID || app.id;
             let status =
               app.Status ||
               (app.AI_Rating && app.AI_Rating !== "null"
@@ -692,7 +680,6 @@
               actionBtn += `<a href="${app.InterviewLink}" target="_blank" style="background:#10b981; color:white; padding:5px 12px; border-radius:4px; font-size: 0.8rem; font-weight:bold; text-decoration:none; margin-right: 5px;">Join Call</a>`;
             }
 
-            // Notice we use data-id instead of onclick here
             actionBtn += `<button type="button" class="btn-action-details btn-details" data-id="${safeAppId}"><i class="fas fa-eye"></i> Details</button>`;
 
             tbody.innerHTML += `
@@ -716,7 +703,46 @@
           document.getElementById("kpi-rejected").innerText = countRejected;
           document.getElementById("kpi-pending").innerText = countPending;
         } catch (e) {
-          console.error(e);
+          console.error("❌ Candidate Fetch Failed:", e);
+        }
+      }
+
+      async function fetchStaffDirectory() {
+        try {
+          console.log("📡 Fetching Staff...");
+          const res = await fetch(
+            `https://voxa-pi-three.vercel.app/api/agency/staff?email=${user.email}`,
+          );
+          allStaff = await res.json();
+          console.log("📦 Staff received:", allStaff.length, allStaff);
+
+          const tbody = document.getElementById("staffDirectoryBody");
+          if (allStaff.length === 0)
+            return (tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No staff found under your management.</td></tr>`);
+
+          tbody.innerHTML = allStaff
+            .map((s) => {
+              const safeStaffId = s.id;
+              let roleBadges = s.role
+                .split(",")
+                .map(
+                  (r) =>
+                    `<span style="background:rgba(0, 229, 255, 0.1); color:var(--primary-color); padding:2px 6px; border-radius:4px; font-size:0.75rem; border:1px solid var(--primary-color); margin-right:4px; display:inline-block; margin-bottom:4px;">${r.trim()}</span>`,
+                )
+                .join("");
+              let placement = s.unit || "None";
+              if (s.team) placement += ` / ${s.team}`;
+
+              return `<tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 12px 10px; font-weight: bold;">${s.name}<br><small style="color:var(--text-muted); font-weight:normal;">${s.email}</small></td>
+                <td style="padding: 12px 10px;">${roleBadges}</td>
+                <td style="padding: 12px 10px; font-size:0.85rem; color:var(--text-muted);">${placement}</td>
+                <td style="padding: 12px 10px;"><button type="button" class="btn-action-promote btn-promote" data-id="${safeStaffId}"><i class="fas fa-edit"></i> Edit / Promote</button></td>
+            </tr>`;
+            })
+            .join("");
+        } catch (e) {
+          console.error("❌ Staff Fetch Failed:", e);
         }
       }
 
@@ -760,7 +786,7 @@
             .map((p) => {
               let placement = p.unit || "Direct Report";
               if (p.team) placement += ` / ${p.team}`;
-              return `<tr style="border-bottom: 1px solid var(--border-color);"><td style="padding: 12px 10px; font-weight: 500;">${p.name} <br><span style="font-size: 0.8rem; color: var(--text-muted);">${p.email}</span></td><td style="padding: 12px 10px; color: var(--primary-color);">${p.role}</td><td style="padding: 12px 10px; color: var(--text-muted);">${placement}</td><td style="padding: 12px 10px; display: flex; gap: 10px;"><button type="button" class="btn-approve" data-id="${p.id}" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-check"></i> Accept</button><button type="button" class="btn-reject" data-id="${p.id}" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-times"></i> Reject</button></td></tr>`;
+              return `<tr style="border-bottom: 1px solid var(--border-color);"><td style="padding: 12px 10px; font-weight: 500;">${p.name} <br><span style="font-size: 0.8rem; color: var(--text-muted);">${p.email}</span></td><td style="padding: 12px 10px; color: var(--primary-color);">${p.role}</td><td style="padding: 12px 10px; color: var(--text-muted);">${placement}</td><td style="padding: 12px 10px; display: flex; gap: 10px;"><button type="button" onclick="processApproval(${p.id}, 'approve')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-check"></i> Accept</button><button type="button" onclick="processApproval(${p.id}, 'reject')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-times"></i> Reject</button></td></tr>`;
             })
             .join("");
         } catch (e) {
@@ -768,43 +794,6 @@
         }
       }
 
-      async function fetchStaffDirectory() {
-        try {
-          const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/agency/staff?email=${user.email}`,
-          );
-          allStaff = await res.json();
-          const tbody = document.getElementById("staffDirectoryBody");
-          if (allStaff.length === 0)
-            return (tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No staff found under your management.</td></tr>`);
-
-          tbody.innerHTML = allStaff
-            .map((s) => {
-              const safeStaffId = s.id || "0";
-              let roleBadges = s.role
-                .split(",")
-                .map(
-                  (r) =>
-                    `<span style="background:rgba(0, 229, 255, 0.1); color:var(--primary-color); padding:2px 6px; border-radius:4px; font-size:0.75rem; border:1px solid var(--primary-color); margin-right:4px; display:inline-block; margin-bottom:4px;">${r.trim()}</span>`,
-                )
-                .join("");
-              let placement = s.unit || "None";
-              if (s.team) placement += ` / ${s.team}`;
-
-              return `<tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 12px 10px; font-weight: bold;">${s.name}<br><small style="color:var(--text-muted); font-weight:normal;">${s.email}</small></td>
-                <td style="padding: 12px 10px;">${roleBadges}</td>
-                <td style="padding: 12px 10px; font-size:0.85rem; color:var(--text-muted);">${placement}</td>
-                <td style="padding: 12px 10px;"><button type="button" class="btn-action-promote btn-promote" data-id="${safeStaffId}"><i class="fas fa-edit"></i> Edit / Promote</button></td>
-            </tr>`;
-            })
-            .join("");
-        } catch (e) {
-          console.error(e);
-        }
-      }
-
-      // --- MODAL ACTION FUNCTIONS ---
       function calculateAge(dobString) {
         if (!dobString || dobString === "None" || dobString === "null")
           return "N/A";
@@ -816,12 +805,19 @@
       }
 
       function openViewPanel(appId) {
+        console.log("🔍 Trying to open view panel for ID:", appId);
         try {
           const app = allCandidates.find(
             (a) => String(a.ApplicationID || a.id) === String(appId),
           );
           if (!app) {
-            alert("Candidate data not found locally. ID: " + appId);
+            alert(
+              `Candidate ID ${appId} not found in array! Array length: ${allCandidates.length}`,
+            );
+            console.log(
+              "Available IDs:",
+              allCandidates.map((a) => a.ApplicationID || a.id),
+            );
             return;
           }
 
@@ -833,19 +829,28 @@
           const panelText = `Candidate: ${app.FullName}\nEmail: ${app.Email}\nPhone: ${app.Phone}\nWhatsApp: ${app.WhatsApp || "N/A"}\nAge: ${age}\nLocation: ${app.Address || "N/A"}\n\nAI Assessment:\n${aiSum}\n\nHR Validator Notes:\n${valNotes}`;
 
           document.getElementById("viewPanelContent").innerText = panelText;
-          document.getElementById("viewPanelModal").style.display = "flex";
+          document
+            .getElementById("viewPanelModal")
+            .classList.add("active-modal");
+          console.log("✅ View Panel Rendered Successfully");
         } catch (error) {
-          alert("Error rendering Details: " + error.message);
+          console.error("🔥 Error in openViewPanel:", error);
+          alert("Error opening Details: " + error.message);
         }
       }
 
       function openPromoteModal(staffId) {
+        console.log("🔍 Trying to open promote modal for ID:", staffId);
         try {
           const s = allStaff.find(
             (staff) => String(staff.id) === String(staffId),
           );
           if (!s) {
-            alert("Staff data not found locally. ID: " + staffId);
+            alert(`Staff ID ${staffId} not found in array!`);
+            console.log(
+              "Available Staff IDs:",
+              allStaff.map((a) => a.id),
+            );
             return;
           }
 
@@ -856,32 +861,38 @@
           document.getElementById("editStaffTeam").value = s.team || "";
 
           const roleBoxes = document.querySelectorAll(".role-cb");
-          roleBoxes.forEach((cb) => (cb.checked = false));
+          roleBoxes.forEach((cb) => (cb.checked = false)); // Reset all
           const rolesArray = (s.role || "").split(",").map((r) => r.trim());
           roleBoxes.forEach((cb) => {
             if (rolesArray.includes(cb.value)) cb.checked = true;
           });
 
-          document.getElementById("promoteModal").style.display = "flex";
+          document.getElementById("promoteModal").classList.add("active-modal");
+          console.log("✅ Promote Panel Rendered Successfully");
         } catch (error) {
+          console.error("🔥 Error in openPromoteModal:", error);
           alert("Error opening Promotions: " + error.message);
         }
       }
 
       function openScheduleModal(appId) {
+        console.log("🔍 Trying to open scheduler for ID:", appId);
         try {
           document.getElementById("modalAppId").value = appId;
-          document.getElementById("scheduleModal").style.display = "flex";
+          document
+            .getElementById("scheduleModal")
+            .classList.add("active-modal");
+          console.log("✅ Schedule Panel Rendered Successfully");
         } catch (error) {
+          console.error("🔥 Error in openScheduleModal:", error);
           alert("Error opening Scheduler: " + error.message);
         }
       }
 
       function closeModal(modalId) {
-        document.getElementById(modalId).style.display = "none";
+        document.getElementById(modalId).classList.remove("active-modal");
       }
 
-      // --- SUBMIT FUNCTIONS ---
       async function processApproval(userId, action) {
         if (!confirm(`Are you sure you want to ${action} this staff member?`))
           return;
