@@ -87,11 +87,10 @@
         text-align: right;
       }
 
-      /* Base Modal Style (Hidden by default) */
+      /* Modals (Default state) */
       .modal-overlay {
         display: none;
       }
-
       .modal-card {
         background: var(--bg-card);
         padding: 30px;
@@ -101,6 +100,7 @@
         border: 1px solid var(--border-color);
         max-height: 90vh;
         overflow-y: auto;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       }
       .modal-card input,
       .modal-card select {
@@ -115,7 +115,7 @@
         outline: none;
       }
 
-      /* BUTTONS */
+      /* Dynamic Buttons */
       .btn-action-schedule {
         background: var(--primary-color);
         color: #000;
@@ -146,6 +146,7 @@
         font-size: 0.8rem;
       }
 
+      /* Standard Buttons */
       .btn-schedule {
         background: #10b981;
         color: white;
@@ -181,7 +182,7 @@
         background: rgba(239, 68, 68, 0.1);
       }
 
-      /* TAGS */
+      /* Tags */
       .status-badge {
         padding: 4px 8px;
         border-radius: 4px;
@@ -233,7 +234,6 @@
         cursor: pointer;
       }
 
-      /* 🚀 LIVE DEBUG CONSOLE */
       #diagnostic-terminal {
         position: fixed;
         bottom: 20px;
@@ -589,11 +589,6 @@
         console.log("[DEBUG] " + msg);
       }
 
-      // --- THE NUCLEAR CSS STRING (Un-overrideable) ---
-      const nuclearModalStyle =
-        "display: flex !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0,0,0,0.85) !important; z-index: 2147483647 !important; justify-content: center !important; align-items: center !important;";
-      const hideModalStyle = "display: none !important;";
-
       // --- 1. GLOBAL VARIABLES ---
       let allCandidates = [];
       let allStaff = [];
@@ -641,6 +636,39 @@
         printLog("System Ready.", "success");
       };
 
+      // --- THE NUCLEAR FIX: FORCING VISIBILITY ---
+      function forceShowModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) {
+          printLog("FATAL: Modal element not found!", "error");
+          return;
+        }
+        // Absolute explicit override of EVERY display property
+        modal.style.cssText = `
+              display: flex !important;
+              position: fixed !important;
+              top: 0 !important;
+              left: 0 !important;
+              width: 100vw !important;
+              height: 100vh !important;
+              background-color: rgba(0, 0, 0, 0.85) !important;
+              z-index: 9999999 !important;
+              justify-content: center !important;
+              align-items: center !important;
+              opacity: 1 !important;
+              visibility: visible !important;
+              pointer-events: auto !important;
+          `;
+        printLog(`Force injected CSS into ${modalId}`);
+      }
+
+      function forceHideModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+          modal.style.cssText = "display: none !important;";
+        }
+      }
+
       // --- BULLETPROOF EVENT DELEGATION ---
       document.addEventListener("click", function (e) {
         const target = e.target.closest("button") || e.target;
@@ -666,7 +694,7 @@
         else if (target.classList.contains("btn-close")) {
           e.preventDefault();
           const modalId = target.getAttribute("data-modal");
-          window.closeModal(modalId);
+          forceHideModal(modalId);
         }
         // Submit Forms
         else if (target.classList.contains("btn-submit-promote")) {
@@ -777,7 +805,6 @@
 
       async function fetchLeaderboard() {
         try {
-          printLog("Fetching Leaderboard...");
           const res = await fetch(
             `https://voxa-pi-three.vercel.app/api/team-stats?role=${userRole}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`,
           );
@@ -862,7 +889,7 @@
         }
       }
 
-      // --- MODAL LOGIC ---
+      // --- MODAL POPUP LOGIC ---
       function calculateAge(dobString) {
         if (!dobString || dobString === "None" || dobString === "null")
           return "N/A";
@@ -875,13 +902,11 @@
 
       window.openViewPanel = function (appId) {
         try {
-          printLog("Running openViewPanel for ID: " + appId);
           const app = allCandidates.find(
             (a) => String(a.ApplicationID || a.id) === String(appId),
           );
           if (!app) {
-            printLog("Candidate not found in array", "error");
-            alert("Candidate data not found locally. ID: " + appId);
+            alert("Candidate data not found locally.");
             return;
           }
 
@@ -894,27 +919,20 @@
 
           document.getElementById("viewPanelContent").innerText = panelText;
 
-          // NUCLEAR OVERRIDE TO SHOW MODAL
-          document
-            .getElementById("viewPanelModal")
-            .setAttribute("style", nuclearModalStyle);
-
-          printLog("Details Modal Opened Successfully", "success");
+          // NUKE PREVIOUS CSS AND FORCE RENDER
+          forceShowModal("viewPanelModal");
         } catch (error) {
           printLog("CRASH in openViewPanel: " + error.message, "error");
-          alert("Error rendering Details: " + error.message);
         }
       };
 
       window.openPromoteModal = function (staffId) {
         try {
-          printLog("Running openPromoteModal for ID: " + staffId);
           const s = allStaff.find(
             (staff) => String(staff.id) === String(staffId),
           );
           if (!s) {
-            printLog("Staff not found in array", "error");
-            alert("Staff data not found locally. ID: " + staffId);
+            alert("Staff data not found locally.");
             return;
           }
 
@@ -931,36 +949,20 @@
             if (rolesArray.includes(cb.value)) cb.checked = true;
           });
 
-          // NUCLEAR OVERRIDE TO SHOW MODAL
-          document
-            .getElementById("promoteModal")
-            .setAttribute("style", nuclearModalStyle);
-          printLog("Promote Modal Opened Successfully", "success");
+          // NUKE PREVIOUS CSS AND FORCE RENDER
+          forceShowModal("promoteModal");
         } catch (error) {
           printLog("CRASH in openPromoteModal: " + error.message, "error");
-          alert("Error opening Promotions: " + error.message);
         }
       };
 
       window.openScheduleModal = function (appId) {
         try {
-          printLog("Running openScheduleModal for ID: " + appId);
           document.getElementById("modalAppId").value = appId;
-
-          // NUCLEAR OVERRIDE TO SHOW MODAL
-          document
-            .getElementById("scheduleModal")
-            .setAttribute("style", nuclearModalStyle);
-          printLog("Schedule Modal Opened Successfully", "success");
+          forceShowModal("scheduleModal");
         } catch (error) {
           printLog("CRASH in openScheduleModal: " + error.message, "error");
-          alert("Error opening Scheduler: " + error.message);
         }
-      };
-
-      window.closeModal = function (modalId) {
-        document.getElementById(modalId).setAttribute("style", hideModalStyle);
-        printLog("Closed Modal: " + modalId);
       };
 
       // --- ACTION SUBMISSIONS ---
@@ -976,7 +978,6 @@
 
         if (selectedRoles === "")
           return alert("Staff must have at least one role!");
-        printLog("Submitting Promotion to server...");
 
         try {
           const res = await fetch(
@@ -993,7 +994,7 @@
           );
           if (res.ok) {
             alert("✅ Profile updated successfully!");
-            window.closeModal("promoteModal");
+            forceHideModal("promoteModal");
             fetchStaffDirectory();
           } else {
             alert("Failed to update profile.");
@@ -1010,7 +1011,6 @@
           time: document.getElementById("modalTime").value,
           link: document.getElementById("modalLink").value,
         };
-        printLog("Submitting Schedule to server...");
         try {
           const res = await fetch(
             "https://voxa-pi-three.vercel.app/api/schedule-interview",
@@ -1022,7 +1022,7 @@
           );
           if (res.ok) {
             alert("✅ Interview Scheduled!");
-            window.closeModal("scheduleModal");
+            forceHideModal("scheduleModal");
             fetchCandidates();
           } else {
             alert("❌ Error scheduling interview.");
