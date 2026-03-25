@@ -87,22 +87,11 @@
         text-align: right;
       }
 
-      /* MODALS */
+      /* Base Modal Style (Hidden by default) */
       .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
         display: none;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
       }
-      .active-modal {
-        display: flex !important;
-      }
+
       .modal-card {
         background: var(--bg-card);
         padding: 30px;
@@ -244,7 +233,7 @@
         cursor: pointer;
       }
 
-      /* 🚀 NEW LIVE DEBUG CONSOLE */
+      /* 🚀 LIVE DEBUG CONSOLE */
       #diagnostic-terminal {
         position: fixed;
         bottom: 20px;
@@ -280,7 +269,7 @@
             margin-bottom: 10px;
           "></p>
         <button
-          onclick="window.copyReferralLink()"
+          class="btn-copy-link"
           style="
             background: var(--bg-input);
             color: var(--primary-color);
@@ -293,10 +282,7 @@
           <i class="fas fa-link"></i> Copy My Candidate Invite Link
         </button>
       </div>
-      <button
-        onclick="window.logout()"
-        class="btn-outline"
-        style="padding: 8px 15px">
+      <button class="btn-outline btn-logout" style="padding: 8px 15px">
         Logout
       </button>
     </div>
@@ -478,16 +464,13 @@
           type="url"
           id="modalLink"
           placeholder="https://zoom.us/j/123..." />
-        <button
-          type="button"
-          onclick="window.submitSchedule()"
-          class="btn-schedule">
+        <button type="button" class="btn-schedule btn-submit-schedule">
           Confirm Slot
         </button>
         <button
           type="button"
-          onclick="window.closeModal('scheduleModal')"
-          class="btn-cancel">
+          class="btn-cancel btn-close"
+          data-modal="scheduleModal">
           Cancel
         </button>
       </div>
@@ -539,15 +522,14 @@
         ><input type="text" id="editStaffTeam" placeholder="E.g. Team Wolves" />
         <button
           type="button"
-          onclick="window.submitPromotion()"
-          class="btn-schedule"
+          class="btn-schedule btn-submit-promote"
           style="background: var(--primary-color); color: black">
           Save Changes
         </button>
         <button
           type="button"
-          onclick="window.closeModal('promoteModal')"
-          class="btn-cancel">
+          class="btn-cancel btn-close"
+          data-modal="promoteModal">
           Cancel
         </button>
       </div>
@@ -573,11 +555,12 @@
             font-size: 0.85rem;
             max-height: 50vh;
             overflow-y: auto;
+            color: white;
           "></div>
         <button
           type="button"
-          onclick="window.closeModal('viewPanelModal')"
-          class="btn-cancel"
+          class="btn-cancel btn-close"
+          data-modal="viewPanelModal"
           style="
             background: var(--bg-input);
             padding: 10px;
@@ -605,6 +588,11 @@
         }
         console.log("[DEBUG] " + msg);
       }
+
+      // --- THE NUCLEAR CSS STRING (Un-overrideable) ---
+      const nuclearModalStyle =
+        "display: flex !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0,0,0,0.85) !important; z-index: 2147483647 !important; justify-content: center !important; align-items: center !important;";
+      const hideModalStyle = "display: none !important;";
 
       // --- 1. GLOBAL VARIABLES ---
       let allCandidates = [];
@@ -655,9 +643,9 @@
 
       // --- BULLETPROOF EVENT DELEGATION ---
       document.addEventListener("click", function (e) {
-        // If they click on an icon inside a button, target the parent button instead
         const target = e.target.closest("button") || e.target;
 
+        // Open Modals
         if (target.classList.contains("btn-details")) {
           e.preventDefault();
           const id = target.getAttribute("data-id");
@@ -673,6 +661,36 @@
           const id = target.getAttribute("data-id");
           printLog(`Clicked Promote for ID: ${id}`);
           window.openPromoteModal(id);
+        }
+        // Close Modals
+        else if (target.classList.contains("btn-close")) {
+          e.preventDefault();
+          const modalId = target.getAttribute("data-modal");
+          window.closeModal(modalId);
+        }
+        // Submit Forms
+        else if (target.classList.contains("btn-submit-promote")) {
+          e.preventDefault();
+          window.submitPromotion();
+        } else if (target.classList.contains("btn-submit-schedule")) {
+          e.preventDefault();
+          window.submitSchedule();
+        }
+        // Approve/Reject Actions
+        else if (target.classList.contains("btn-approve")) {
+          e.preventDefault();
+          window.processApproval(target.getAttribute("data-id"), "approve");
+        } else if (target.classList.contains("btn-reject")) {
+          e.preventDefault();
+          window.processApproval(target.getAttribute("data-id"), "reject");
+        }
+        // Static Buttons
+        else if (target.classList.contains("btn-copy-link")) {
+          e.preventDefault();
+          window.copyReferralLink();
+        } else if (target.classList.contains("btn-logout")) {
+          e.preventDefault();
+          window.logout();
         }
       });
 
@@ -725,13 +743,11 @@
 
             let actionBtn = "";
             if (!app.InterviewDate && (isLeader || isUM || isCEO)) {
-              // INJECTING DATA-ID AND CLASSES FOR EVENT DELEGATION
               actionBtn += `<button type="button" class="btn-action-schedule btn-schedule-call" data-id="${safeAppId}">Schedule Call</button> `;
             } else if (app.InterviewLink) {
               actionBtn += `<a href="${app.InterviewLink}" target="_blank" style="background:#10b981; color:white; padding:5px 12px; border-radius:4px; font-size: 0.8rem; font-weight:bold; text-decoration:none; margin-right: 5px;">Join Call</a> `;
             }
 
-            // INJECTING DATA-ID AND CLASSES FOR EVENT DELEGATION
             actionBtn += `<button type="button" class="btn-action-details btn-details" data-id="${safeAppId}"><i class="fas fa-eye"></i> Details</button>`;
 
             tbody.innerHTML += `
@@ -832,7 +848,6 @@
               let placement = s.unit || "None";
               if (s.team) placement += ` / ${s.team}`;
 
-              // INJECTING DATA-ID AND CLASSES FOR EVENT DELEGATION
               return `<tr style="border-bottom: 1px solid var(--border-color);">
                 <td style="padding: 12px 10px; font-weight: bold;">${s.name}<br><small style="color:var(--text-muted); font-weight:normal;">${s.email}</small></td>
                 <td style="padding: 12px 10px;">${roleBadges}</td>
@@ -878,9 +893,12 @@
           const panelText = `Candidate: ${app.FullName}\nEmail: ${app.Email}\nPhone: ${app.Phone}\nWhatsApp: ${app.WhatsApp || "N/A"}\nAge: ${age}\nLocation: ${app.Address || "N/A"}\n\nAI Assessment:\n${aiSum}\n\nHR Validator Notes:\n${valNotes}`;
 
           document.getElementById("viewPanelContent").innerText = panelText;
+
+          // NUCLEAR OVERRIDE TO SHOW MODAL
           document
             .getElementById("viewPanelModal")
-            .classList.add("active-modal");
+            .setAttribute("style", nuclearModalStyle);
+
           printLog("Details Modal Opened Successfully", "success");
         } catch (error) {
           printLog("CRASH in openViewPanel: " + error.message, "error");
@@ -913,7 +931,10 @@
             if (rolesArray.includes(cb.value)) cb.checked = true;
           });
 
-          document.getElementById("promoteModal").classList.add("active-modal");
+          // NUCLEAR OVERRIDE TO SHOW MODAL
+          document
+            .getElementById("promoteModal")
+            .setAttribute("style", nuclearModalStyle);
           printLog("Promote Modal Opened Successfully", "success");
         } catch (error) {
           printLog("CRASH in openPromoteModal: " + error.message, "error");
@@ -925,9 +946,11 @@
         try {
           printLog("Running openScheduleModal for ID: " + appId);
           document.getElementById("modalAppId").value = appId;
+
+          // NUCLEAR OVERRIDE TO SHOW MODAL
           document
             .getElementById("scheduleModal")
-            .classList.add("active-modal");
+            .setAttribute("style", nuclearModalStyle);
           printLog("Schedule Modal Opened Successfully", "success");
         } catch (error) {
           printLog("CRASH in openScheduleModal: " + error.message, "error");
@@ -936,7 +959,7 @@
       };
 
       window.closeModal = function (modalId) {
-        document.getElementById(modalId).classList.remove("active-modal");
+        document.getElementById(modalId).setAttribute("style", hideModalStyle);
         printLog("Closed Modal: " + modalId);
       };
 
@@ -1006,6 +1029,28 @@
           }
         } catch (e) {
           printLog("Schedule Error: " + e.message, "error");
+        }
+      };
+
+      window.processApproval = async function (userId, action) {
+        if (!confirm(`Are you sure you want to ${action} this staff member?`))
+          return;
+        try {
+          const res = await fetch(
+            "https://voxa-pi-three.vercel.app/api/approve-staff",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ user_id: userId, action: action }),
+            },
+          );
+          if (res.ok) {
+            alert(`✅ Staff member ${action}d!`);
+            fetchPendingStaff();
+            fetchStaffDirectory();
+          } else alert("❌ Error processing request.");
+        } catch (e) {
+          console.error(e);
         }
       };
 
