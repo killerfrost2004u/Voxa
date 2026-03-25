@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Agency Workspace | Voxa (Diagnostic Mode)</title>
+    <title>Agency Workspace | Voxa</title>
     <link rel="icon" type="image/png" href="images/voxa-logo.png" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/dashboard.css" />
@@ -87,7 +87,7 @@
         text-align: right;
       }
 
-      /* Modals */
+      /* MODALS */
       .modal-overlay {
         position: fixed;
         top: 0;
@@ -126,7 +126,37 @@
         outline: none;
       }
 
-      /* Buttons */
+      /* BUTTONS */
+      .btn-action-schedule {
+        background: var(--primary-color);
+        color: #000;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin-right: 5px;
+      }
+      .btn-action-details {
+        background: transparent;
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 4px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+      }
+      .btn-action-promote {
+        background: var(--bg-input);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+      }
+
       .btn-schedule {
         background: #10b981;
         color: white;
@@ -162,7 +192,7 @@
         background: rgba(239, 68, 68, 0.1);
       }
 
-      /* Tags */
+      /* TAGS */
       .status-badge {
         padding: 4px 8px;
         border-radius: 4px;
@@ -213,9 +243,32 @@
         font-size: 0.9rem;
         cursor: pointer;
       }
+
+      /* 🚀 NEW LIVE DEBUG CONSOLE */
+      #diagnostic-terminal {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 350px;
+        height: 250px;
+        background: #000;
+        color: #0f0;
+        border: 2px solid #0f0;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 12px;
+        padding: 10px;
+        overflow-y: auto;
+        z-index: 10000;
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+      }
     </style>
   </head>
   <body style="background: var(--bg-main); color: var(--text-main)">
+    <div id="diagnostic-terminal">
+      <div>[SYSTEM] Terminal Initialized...</div>
+    </div>
+
     <div class="dashboard-header">
       <div>
         <h2 id="dashboardTitle">Workspace</h2>
@@ -227,7 +280,7 @@
             margin-bottom: 10px;
           "></p>
         <button
-          onclick="copyReferralLink()"
+          onclick="window.copyReferralLink()"
           style="
             background: var(--bg-input);
             color: var(--primary-color);
@@ -240,7 +293,10 @@
           <i class="fas fa-link"></i> Copy My Candidate Invite Link
         </button>
       </div>
-      <button onclick="logout()" class="btn-outline" style="padding: 8px 15px">
+      <button
+        onclick="window.logout()"
+        class="btn-outline"
+        style="padding: 8px 15px">
         Logout
       </button>
     </div>
@@ -422,12 +478,15 @@
           type="url"
           id="modalLink"
           placeholder="https://zoom.us/j/123..." />
-        <button type="button" onclick="submitSchedule()" class="btn-schedule">
+        <button
+          type="button"
+          onclick="window.submitSchedule()"
+          class="btn-schedule">
           Confirm Slot
         </button>
         <button
           type="button"
-          onclick="closeModal('scheduleModal')"
+          onclick="window.closeModal('scheduleModal')"
           class="btn-cancel">
           Cancel
         </button>
@@ -449,7 +508,7 @@
             color: var(--primary-color);
           "></p>
         <label style="font-size: 0.85rem; color: var(--text-muted)"
-          >Assign Roles (Select Multiple)</label
+          >Assign Roles</label
         >
         <div class="multi-select-box">
           <label
@@ -480,14 +539,14 @@
         ><input type="text" id="editStaffTeam" placeholder="E.g. Team Wolves" />
         <button
           type="button"
-          onclick="submitPromotion()"
+          onclick="window.submitPromotion()"
           class="btn-schedule"
           style="background: var(--primary-color); color: black">
           Save Changes
         </button>
         <button
           type="button"
-          onclick="closeModal('promoteModal')"
+          onclick="window.closeModal('promoteModal')"
           class="btn-cancel">
           Cancel
         </button>
@@ -517,7 +576,7 @@
           "></div>
         <button
           type="button"
-          onclick="closeModal('viewPanelModal')"
+          onclick="window.closeModal('viewPanelModal')"
           class="btn-cancel"
           style="
             background: var(--bg-input);
@@ -531,23 +590,29 @@
     </div>
 
     <script>
-      // --- DIAGNOSTIC ERROR CATCHER ---
-      window.onerror = function (msg, url, lineNo, columnNo, error) {
-        console.error("🔥 GLOBAL JS ERROR:", msg, "at line", lineNo);
-        alert(`JS Crash! Line ${lineNo}: ${msg}`);
-        return false;
-      };
+      // --- LOGGING ENGINE ---
+      function printLog(msg, type = "info") {
+        const term = document.getElementById("diagnostic-terminal");
+        if (term) {
+          const color =
+            type === "error"
+              ? "#ff4444"
+              : type === "success"
+                ? "#10b981"
+                : "#0f0";
+          term.innerHTML += `<div style="color:${color}; margin-top:5px;">> ${msg}</div>`;
+          term.scrollTop = term.scrollHeight;
+        }
+        console.log("[DEBUG] " + msg);
+      }
 
+      // --- 1. GLOBAL VARIABLES ---
       let allCandidates = [];
       let allStaff = [];
-
-      console.log("🚀 Initializing Diagnostic Mode...");
 
       const userStr = localStorage.getItem("user");
       if (!userStr) window.location.href = "login.html";
       const user = JSON.parse(userStr);
-      console.log("👤 Logged in as:", user);
-
       if (user.role === "Candidate") window.location.href = "login.html";
 
       const userRole = user.role || "";
@@ -576,7 +641,7 @@
           "block";
 
       window.onload = async () => {
-        console.log("🔄 Window loaded. Starting fetches...");
+        printLog("System Booting...");
         await fetchCandidates();
         if (!isRecruiterOnly) {
           await fetchPendingStaff();
@@ -585,56 +650,41 @@
         if (isCEO || isUM) {
           await fetchStaffDirectory();
         }
+        printLog("System Ready.", "success");
       };
 
-      // --- EVENT DELEGATION (TRIPWIRES ADDED) ---
+      // --- BULLETPROOF EVENT DELEGATION ---
       document.addEventListener("click", function (e) {
-        console.log(
-          "👆 Click intercepted on:",
-          e.target.tagName,
-          e.target.className,
-        );
+        // If they click on an icon inside a button, target the parent button instead
+        const target = e.target.closest("button") || e.target;
 
-        const detailsBtn = e.target.closest(".btn-details");
-        if (detailsBtn) {
+        if (target.classList.contains("btn-details")) {
           e.preventDefault();
-          const id = detailsBtn.getAttribute("data-id");
-          console.log("✅ View Details Clicked for ID:", id);
-          openViewPanel(id);
-          return;
-        }
-
-        const scheduleBtn = e.target.closest(".btn-schedule-call");
-        if (scheduleBtn) {
+          const id = target.getAttribute("data-id");
+          printLog(`Clicked Details for ID: ${id}`);
+          window.openViewPanel(id);
+        } else if (target.classList.contains("btn-schedule-call")) {
           e.preventDefault();
-          const id = scheduleBtn.getAttribute("data-id");
-          console.log("✅ Schedule Clicked for ID:", id);
-          openScheduleModal(id);
-          return;
-        }
-
-        const promoteBtn = e.target.closest(".btn-promote");
-        if (promoteBtn) {
+          const id = target.getAttribute("data-id");
+          printLog(`Clicked Schedule for ID: ${id}`);
+          window.openScheduleModal(id);
+        } else if (target.classList.contains("btn-promote")) {
           e.preventDefault();
-          const id = promoteBtn.getAttribute("data-id");
-          console.log("✅ Promote Clicked for ID:", id);
-          openPromoteModal(id);
-          return;
+          const id = target.getAttribute("data-id");
+          printLog(`Clicked Promote for ID: ${id}`);
+          window.openPromoteModal(id);
         }
       });
 
+      // --- DATA FETCHING ---
       async function fetchCandidates() {
         try {
-          console.log("📡 Fetching Candidates...");
+          printLog("Fetching Candidates...");
           const res = await fetch(
             `https://voxa-pi-three.vercel.app/api/admin/applications?email=${user.email}`,
           );
           allCandidates = await res.json();
-          console.log(
-            "📦 Candidates received:",
-            allCandidates.length,
-            allCandidates,
-          );
+          printLog(`Found ${allCandidates.length} Candidates.`, "success");
 
           const tbody = document.getElementById("candidateTableBody");
           tbody.innerHTML = "";
@@ -648,7 +698,7 @@
           }
 
           allCandidates.forEach((app) => {
-            const safeAppId = app.ApplicationID || app.id;
+            const safeAppId = app.ApplicationID || app.id || "0";
             let status =
               app.Status ||
               (app.AI_Rating && app.AI_Rating !== "null"
@@ -675,11 +725,13 @@
 
             let actionBtn = "";
             if (!app.InterviewDate && (isLeader || isUM || isCEO)) {
-              actionBtn += `<button type="button" class="btn-action-schedule btn-schedule-call" data-id="${safeAppId}">Schedule Call</button>`;
+              // INJECTING DATA-ID AND CLASSES FOR EVENT DELEGATION
+              actionBtn += `<button type="button" class="btn-action-schedule btn-schedule-call" data-id="${safeAppId}">Schedule Call</button> `;
             } else if (app.InterviewLink) {
-              actionBtn += `<a href="${app.InterviewLink}" target="_blank" style="background:#10b981; color:white; padding:5px 12px; border-radius:4px; font-size: 0.8rem; font-weight:bold; text-decoration:none; margin-right: 5px;">Join Call</a>`;
+              actionBtn += `<a href="${app.InterviewLink}" target="_blank" style="background:#10b981; color:white; padding:5px 12px; border-radius:4px; font-size: 0.8rem; font-weight:bold; text-decoration:none; margin-right: 5px;">Join Call</a> `;
             }
 
+            // INJECTING DATA-ID AND CLASSES FOR EVENT DELEGATION
             actionBtn += `<button type="button" class="btn-action-details btn-details" data-id="${safeAppId}"><i class="fas fa-eye"></i> Details</button>`;
 
             tbody.innerHTML += `
@@ -703,51 +755,13 @@
           document.getElementById("kpi-rejected").innerText = countRejected;
           document.getElementById("kpi-pending").innerText = countPending;
         } catch (e) {
-          console.error("❌ Candidate Fetch Failed:", e);
-        }
-      }
-
-      async function fetchStaffDirectory() {
-        try {
-          console.log("📡 Fetching Staff...");
-          const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/agency/staff?email=${user.email}`,
-          );
-          allStaff = await res.json();
-          console.log("📦 Staff received:", allStaff.length, allStaff);
-
-          const tbody = document.getElementById("staffDirectoryBody");
-          if (allStaff.length === 0)
-            return (tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No staff found under your management.</td></tr>`);
-
-          tbody.innerHTML = allStaff
-            .map((s) => {
-              const safeStaffId = s.id;
-              let roleBadges = s.role
-                .split(",")
-                .map(
-                  (r) =>
-                    `<span style="background:rgba(0, 229, 255, 0.1); color:var(--primary-color); padding:2px 6px; border-radius:4px; font-size:0.75rem; border:1px solid var(--primary-color); margin-right:4px; display:inline-block; margin-bottom:4px;">${r.trim()}</span>`,
-                )
-                .join("");
-              let placement = s.unit || "None";
-              if (s.team) placement += ` / ${s.team}`;
-
-              return `<tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 12px 10px; font-weight: bold;">${s.name}<br><small style="color:var(--text-muted); font-weight:normal;">${s.email}</small></td>
-                <td style="padding: 12px 10px;">${roleBadges}</td>
-                <td style="padding: 12px 10px; font-size:0.85rem; color:var(--text-muted);">${placement}</td>
-                <td style="padding: 12px 10px;"><button type="button" class="btn-action-promote btn-promote" data-id="${safeStaffId}"><i class="fas fa-edit"></i> Edit / Promote</button></td>
-            </tr>`;
-            })
-            .join("");
-        } catch (e) {
-          console.error("❌ Staff Fetch Failed:", e);
+          printLog("Error Fetching Candidates: " + e.message, "error");
         }
       }
 
       async function fetchLeaderboard() {
         try {
+          printLog("Fetching Leaderboard...");
           const res = await fetch(
             `https://voxa-pi-three.vercel.app/api/team-stats?role=${userRole}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`,
           );
@@ -767,7 +781,7 @@
             )
             .join("");
         } catch (e) {
-          console.error(e);
+          printLog("Error Fetching Leaderboard: " + e.message, "error");
         }
       }
 
@@ -786,14 +800,54 @@
             .map((p) => {
               let placement = p.unit || "Direct Report";
               if (p.team) placement += ` / ${p.team}`;
-              return `<tr style="border-bottom: 1px solid var(--border-color);"><td style="padding: 12px 10px; font-weight: 500;">${p.name} <br><span style="font-size: 0.8rem; color: var(--text-muted);">${p.email}</span></td><td style="padding: 12px 10px; color: var(--primary-color);">${p.role}</td><td style="padding: 12px 10px; color: var(--text-muted);">${placement}</td><td style="padding: 12px 10px; display: flex; gap: 10px;"><button type="button" onclick="processApproval(${p.id}, 'approve')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-check"></i> Accept</button><button type="button" onclick="processApproval(${p.id}, 'reject')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-times"></i> Reject</button></td></tr>`;
+              return `<tr style="border-bottom: 1px solid var(--border-color);"><td style="padding: 12px 10px; font-weight: 500;">${p.name} <br><span style="font-size: 0.8rem; color: var(--text-muted);">${p.email}</span></td><td style="padding: 12px 10px; color: var(--primary-color);">${p.role}</td><td style="padding: 12px 10px; color: var(--text-muted);">${placement}</td><td style="padding: 12px 10px; display: flex; gap: 10px;"><button type="button" class="btn-approve" data-id="${p.id}" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-check"></i> Accept</button><button type="button" class="btn-reject" data-id="${p.id}" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-times"></i> Reject</button></td></tr>`;
             })
             .join("");
         } catch (e) {
-          console.error(e);
+          printLog("Error Fetching Pending: " + e.message, "error");
         }
       }
 
+      async function fetchStaffDirectory() {
+        try {
+          printLog("Fetching Staff Directory...");
+          const res = await fetch(
+            `https://voxa-pi-three.vercel.app/api/agency/staff?email=${user.email}`,
+          );
+          allStaff = await res.json();
+          const tbody = document.getElementById("staffDirectoryBody");
+          if (allStaff.length === 0)
+            return (tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No staff found under your management.</td></tr>`);
+
+          tbody.innerHTML = allStaff
+            .map((s) => {
+              const safeStaffId = s.id || "0";
+              let roleBadges = s.role
+                .split(",")
+                .map(
+                  (r) =>
+                    `<span style="background:rgba(0, 229, 255, 0.1); color:var(--primary-color); padding:2px 6px; border-radius:4px; font-size:0.75rem; border:1px solid var(--primary-color); margin-right:4px; display:inline-block; margin-bottom:4px;">${r.trim()}</span>`,
+                )
+                .join("");
+              let placement = s.unit || "None";
+              if (s.team) placement += ` / ${s.team}`;
+
+              // INJECTING DATA-ID AND CLASSES FOR EVENT DELEGATION
+              return `<tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 12px 10px; font-weight: bold;">${s.name}<br><small style="color:var(--text-muted); font-weight:normal;">${s.email}</small></td>
+                <td style="padding: 12px 10px;">${roleBadges}</td>
+                <td style="padding: 12px 10px; font-size:0.85rem; color:var(--text-muted);">${placement}</td>
+                <td style="padding: 12px 10px;"><button type="button" class="btn-action-promote btn-promote" data-id="${safeStaffId}"><i class="fas fa-edit"></i> Edit / Promote</button></td>
+            </tr>`;
+            })
+            .join("");
+          printLog(`Found ${allStaff.length} Staff.`, "success");
+        } catch (e) {
+          printLog("Error Fetching Staff: " + e.message, "error");
+        }
+      }
+
+      // --- MODAL LOGIC ---
       function calculateAge(dobString) {
         if (!dobString || dobString === "None" || dobString === "null")
           return "N/A";
@@ -804,20 +858,15 @@
         );
       }
 
-      function openViewPanel(appId) {
-        console.log("🔍 Trying to open view panel for ID:", appId);
+      window.openViewPanel = function (appId) {
         try {
+          printLog("Running openViewPanel for ID: " + appId);
           const app = allCandidates.find(
             (a) => String(a.ApplicationID || a.id) === String(appId),
           );
           if (!app) {
-            alert(
-              `Candidate ID ${appId} not found in array! Array length: ${allCandidates.length}`,
-            );
-            console.log(
-              "Available IDs:",
-              allCandidates.map((a) => a.ApplicationID || a.id),
-            );
+            printLog("Candidate not found in array", "error");
+            alert("Candidate data not found locally. ID: " + appId);
             return;
           }
 
@@ -832,25 +881,22 @@
           document
             .getElementById("viewPanelModal")
             .classList.add("active-modal");
-          console.log("✅ View Panel Rendered Successfully");
+          printLog("Details Modal Opened Successfully", "success");
         } catch (error) {
-          console.error("🔥 Error in openViewPanel:", error);
-          alert("Error opening Details: " + error.message);
+          printLog("CRASH in openViewPanel: " + error.message, "error");
+          alert("Error rendering Details: " + error.message);
         }
-      }
+      };
 
-      function openPromoteModal(staffId) {
-        console.log("🔍 Trying to open promote modal for ID:", staffId);
+      window.openPromoteModal = function (staffId) {
         try {
+          printLog("Running openPromoteModal for ID: " + staffId);
           const s = allStaff.find(
             (staff) => String(staff.id) === String(staffId),
           );
           if (!s) {
-            alert(`Staff ID ${staffId} not found in array!`);
-            console.log(
-              "Available Staff IDs:",
-              allStaff.map((a) => a.id),
-            );
+            printLog("Staff not found in array", "error");
+            alert("Staff data not found locally. ID: " + staffId);
             return;
           }
 
@@ -861,72 +907,53 @@
           document.getElementById("editStaffTeam").value = s.team || "";
 
           const roleBoxes = document.querySelectorAll(".role-cb");
-          roleBoxes.forEach((cb) => (cb.checked = false)); // Reset all
+          roleBoxes.forEach((cb) => (cb.checked = false));
           const rolesArray = (s.role || "").split(",").map((r) => r.trim());
           roleBoxes.forEach((cb) => {
             if (rolesArray.includes(cb.value)) cb.checked = true;
           });
 
           document.getElementById("promoteModal").classList.add("active-modal");
-          console.log("✅ Promote Panel Rendered Successfully");
+          printLog("Promote Modal Opened Successfully", "success");
         } catch (error) {
-          console.error("🔥 Error in openPromoteModal:", error);
+          printLog("CRASH in openPromoteModal: " + error.message, "error");
           alert("Error opening Promotions: " + error.message);
         }
-      }
+      };
 
-      function openScheduleModal(appId) {
-        console.log("🔍 Trying to open scheduler for ID:", appId);
+      window.openScheduleModal = function (appId) {
         try {
+          printLog("Running openScheduleModal for ID: " + appId);
           document.getElementById("modalAppId").value = appId;
           document
             .getElementById("scheduleModal")
             .classList.add("active-modal");
-          console.log("✅ Schedule Panel Rendered Successfully");
+          printLog("Schedule Modal Opened Successfully", "success");
         } catch (error) {
-          console.error("🔥 Error in openScheduleModal:", error);
+          printLog("CRASH in openScheduleModal: " + error.message, "error");
           alert("Error opening Scheduler: " + error.message);
         }
-      }
+      };
 
-      function closeModal(modalId) {
+      window.closeModal = function (modalId) {
         document.getElementById(modalId).classList.remove("active-modal");
-      }
+        printLog("Closed Modal: " + modalId);
+      };
 
-      async function processApproval(userId, action) {
-        if (!confirm(`Are you sure you want to ${action} this staff member?`))
-          return;
-        try {
-          const res = await fetch(
-            "https://voxa-pi-three.vercel.app/api/approve-staff",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ user_id: userId, action: action }),
-            },
-          );
-          if (res.ok) {
-            alert(`✅ Staff member ${action}d!`);
-            fetchPendingStaff();
-            fetchStaffDirectory();
-          } else alert("❌ Error processing request.");
-        } catch (e) {
-          console.error(e);
-        }
-      }
-
-      async function submitPromotion() {
+      // --- ACTION SUBMISSIONS ---
+      window.submitPromotion = async function () {
         const id = document.getElementById("editStaffId").value;
         const unit = document.getElementById("editStaffUnit").value;
         const team = document.getElementById("editStaffTeam").value;
-
         const selectedRoles = Array.from(
           document.querySelectorAll(".role-cb:checked"),
         )
           .map((cb) => cb.value)
           .join(", ");
+
         if (selectedRoles === "")
           return alert("Staff must have at least one role!");
+        printLog("Submitting Promotion to server...");
 
         try {
           const res = await fetch(
@@ -943,52 +970,55 @@
           );
           if (res.ok) {
             alert("✅ Profile updated successfully!");
-            closeModal("promoteModal");
+            window.closeModal("promoteModal");
             fetchStaffDirectory();
           } else {
             alert("Failed to update profile.");
           }
         } catch (e) {
-          console.error(e);
+          printLog("Promotion Error: " + e.message, "error");
         }
-      }
+      };
 
-      async function submitSchedule() {
+      window.submitSchedule = async function () {
         const payload = {
           application_id: document.getElementById("modalAppId").value,
           date: document.getElementById("modalDate").value,
           time: document.getElementById("modalTime").value,
           link: document.getElementById("modalLink").value,
         };
-
-        const res = await fetch(
-          "https://voxa-pi-three.vercel.app/api/schedule-interview",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          },
-        );
-
-        if (res.ok) {
-          alert("✅ Interview Scheduled!");
-          closeModal("scheduleModal");
-          fetchCandidates();
-        } else {
-          alert("❌ Error scheduling interview.");
+        printLog("Submitting Schedule to server...");
+        try {
+          const res = await fetch(
+            "https://voxa-pi-three.vercel.app/api/schedule-interview",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            },
+          );
+          if (res.ok) {
+            alert("✅ Interview Scheduled!");
+            window.closeModal("scheduleModal");
+            fetchCandidates();
+          } else {
+            alert("❌ Error scheduling interview.");
+          }
+        } catch (e) {
+          printLog("Schedule Error: " + e.message, "error");
         }
-      }
+      };
 
-      function logout() {
-        localStorage.removeItem("user");
-        window.location.href = "login.html";
-      }
-
-      function copyReferralLink() {
+      window.copyReferralLink = function () {
         const link = `https://voxa-pi-three.vercel.app/apply.html?recruiter=${encodeURIComponent(user.fullName)}&agency=${encodeURIComponent(user.agencyName)}&unit=${encodeURIComponent(user.unitName || "")}&team=${encodeURIComponent(user.teamName || "")}`;
         navigator.clipboard.writeText(link);
         alert("✅ Invite link copied! Send this to your candidates.");
-      }
+      };
+
+      window.logout = function () {
+        localStorage.removeItem("user");
+        window.location.href = "login.html";
+      };
     </script>
   </body>
 </html>
