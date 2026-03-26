@@ -554,9 +554,15 @@ def apps():
         if user_data:
             u_name, u_role, u_team, u_unit, u_agency = user_data
 
-            base_select = """SELECT a.*, u."UnitName" as "RecruiterUnit", u."TeamName" as "RecruiterTeam" 
+            # 🚀 THE FIX: We JOIN the ValidatorGrades table here!
+            base_select = """SELECT a.*, 
+                                    u."UnitName" as "RecruiterUnit", 
+                                    u."TeamName" as "RecruiterTeam",
+                                    v."HumanGrade" as "AgencyGrade",
+                                    v."ValidatorNotes"
                              FROM "JobApplications" a 
-                             LEFT JOIN "Users" u ON a."RecruiterSource" = u."FullName" """
+                             LEFT JOIN "Users" u ON a."RecruiterSource" = u."FullName" 
+                             LEFT JOIN "ValidatorGrades" v ON a."ApplicationID" = v."ApplicationID" """
 
             # Support Dual Roles by using "in u_role" instead of "u_role =="
             if 'Admin' in u_role or 'SuperAdmin' in u_role:
@@ -570,33 +576,49 @@ def apps():
             else:
                 c.execute(base_select + """WHERE a."RecruiterSource" = %s ORDER BY a."SubmittedAt" DESC""", (u_name,))
             
-
             cols = [x[0] for x in c.description]
             data = [dict(zip(cols, r)) for r in c.fetchall()]
             conn.close()
             return jsonify(data)
         return jsonify([])
-    except Exception as e: return jsonify([])
+    except Exception as e: 
+        print(f"Apps Error: {e}")
+        return jsonify([])
 
 @app.route('/api/validator/applications', methods=['GET'])
 def get_validator_applications():
-    agency = request.args.get('agency', 'Unknown')
+    agency = request.args.get('agency')
+    unit = request.args.get('unit', 'All') # Default to 'All' if not provided
+    
+    if not agency:
+        return jsonify({"error": "Agency is required"}), 400
+        
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        conn = get_db_connection()
-        c = conn.cursor()
-        c.execute("""
-            SELECT a."ApplicationID", a."FullName", a."Email", a."Phone", a."JobTitle", a."Company", a."RecruiterSource", 
-                   a."AI_Rating", a."AI_Summary", a."VoiceRecordPath", a."VoiceRecordPath2",
-                   v."HumanGrade" AS "AgencyGrade", v."ValidatorNotes"
-            FROM "JobApplications" a
-            LEFT JOIN "ValidatorGrades" v ON a."ApplicationID" = v."ApplicationID" AND v."AgencyName" = %s
-            ORDER BY a."SubmittedAt" DESC
-        """, (agency,))
-        cols = [column[0] for column in c.description]
-        data = [dict(zip(cols, row)) for row in c.fetchall()]
+        # If the Validator is assigned to a specific unit, filter by BOTH Agency and Unit
+        if unit and unit.lower() != 'all' and unit != 'None' and unit != '':
+            cur.execute('''
+                SELECT * FROM "JobApplications" 
+                WHERE "AgencyName" = %s AND "RecruiterUnit" = %s
+                ORDER BY "ApplicationID" DESC
+            ''', (agency, unit))
+            
+        # If the Validator is "All" (Agency-wide), just filter by Agency
+        else:
+            cur.execute('''
+                SELECT * FROM "JobApplications" 
+                WHERE "AgencyName" = %s
+                ORDER BY "ApplicationID" DESC
+            ''', (agency,))
+            
+        apps = cur.fetchall()
+        return jsonify(apps)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
         conn.close()
-        return jsonify(data)
-    except Exception as e: return jsonify({"error": str(e)}), 500
 
 @app.route('/api/validator/grade', methods=['POST'])
 def submit_validator_grade():
@@ -881,7 +903,7 @@ def get_pending_staff():
         if role in ['SuperAdmin', 'Admin']:
             pass # SuperAdmins see ALL pending users across the whole system
         elif role == 'CEO':
-            base_query += ' AND "AgencyName" = %s AND "Role" IN (\'UnitManager\', \'Validator\', \'Leader\', \'Recruiter\')'
+            base_query += ' AND "AgencyName" = %s AND "Role" IN (\'UnitManager\', \'Validator\', \'Leader\', \'Recruiter\', \'HR\')'
             params.append(agency)
         elif role == 'UnitManager':
             base_query += ' AND "AgencyName" = %s AND "UnitName" = %s AND "Role" IN (\'Leader\', \'Recruiter\')'

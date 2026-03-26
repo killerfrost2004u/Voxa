@@ -845,6 +845,20 @@
             if (status === "Accepted") badgeClass = "status-accepted";
             if (status === "Rejected") badgeClass = "status-rejected";
 
+            // Generate QA Grade Badge
+            let qaBadgeHtml = "";
+            if (app.AgencyGrade) {
+              let gradeColor =
+                app.AgencyGrade === "Failed" ? "#ef4444" : "#8b5cf6";
+              let gradeBg =
+                app.AgencyGrade === "Failed"
+                  ? "rgba(239, 68, 68, 0.1)"
+                  : "rgba(139, 92, 246, 0.1)";
+              qaBadgeHtml = `<div style="margin-top: 8px;"><span style="background: ${gradeBg}; color: ${gradeColor}; border: 1px solid ${gradeColor}; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;"><i class="fas fa-check-double"></i> QA: ${app.AgencyGrade}</span></div>`;
+            } else {
+              qaBadgeHtml = `<div style="margin-top: 8px;"><span style="background: rgba(107, 114, 128, 0.1); color: #9ca3af; border: 1px dashed #9ca3af; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem;"><i class="fas fa-hourglass-half"></i> QA: Pending</span></div>`;
+            }
+
             let scheduleText = app.InterviewDate
               ? `<span style="color:var(--primary-color); font-weight:bold;">${app.InterviewDate} @ ${app.InterviewTime}</span>`
               : "<span style='color:var(--text-muted);'>Not Scheduled</span>";
@@ -873,11 +887,15 @@
                     <div style="color: var(--primary-color); font-weight: 500;">${app.RecruiterSource || "Direct/Organic"}</div>
                     ${lineageHtml}
                   </td>
-                  <td style="padding: 15px 10px;"><span class="status-badge ${badgeClass}">${status}</span></td>
+                  <td style="padding: 15px 10px;">
+                    <span class="status-badge ${badgeClass}">${status}</span>
+                    ${qaBadgeHtml}
+                  </td>
                   <td style="padding: 15px 10px; font-size: 0.9rem;">${scheduleText}</td>
                   <td style="padding: 15px 10px;">${actionBtn}</td>
               </tr>`;
           });
+
           document.getElementById("kpi-total").innerText = allCandidates.length;
           document.getElementById("kpi-accepted").innerText = countAccepted;
           document.getElementById("kpi-rejected").innerText = countRejected;
@@ -997,9 +1015,17 @@
         const age = calculateAge(app.DateOfBirth);
         const aiSum =
           app.ClientPanel || app.AI_Summary || "Pending AI Assessment...";
-        const valNotes = app.ValidatorFeedback || "No notes yet.";
+
+        // Fetch Validator Grade and Notes
+        const valGrade = app.AgencyGrade || "Pending QA Validation";
+        const valNotes =
+          app.ValidatorNotes ||
+          app.ValidatorFeedback ||
+          "No notes provided yet.";
+
         document.getElementById("viewPanelContent").innerText =
-          `Candidate: ${app.FullName}\nEmail: ${app.Email}\nPhone: ${app.Phone}\nWhatsApp: ${app.WhatsApp || "N/A"}\nAge: ${age}\nLocation: ${app.Address || "N/A"}\n\nAI Assessment:\n${aiSum}\n\nHR Validator Notes:\n${valNotes}`;
+          `Candidate: ${app.FullName}\nEmail: ${app.Email}\nPhone: ${app.Phone}\nWhatsApp: ${app.WhatsApp || "N/A"}\nAge: ${age}\nLocation: ${app.Address || "N/A"}\n\n✅ OFFICIAL QA GRADE: ${valGrade}\n💬 QA Notes:\n${valNotes}\n\n🤖 AI Assessment:\n${aiSum}`;
+
         forceShowModal("viewPanelModal");
       };
 
