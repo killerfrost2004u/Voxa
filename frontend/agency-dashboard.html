@@ -521,27 +521,31 @@
         >
 
         <div class="role-checkbox-grid">
-          <label>
+          <label id="role-opt-ceo">
             <input type="checkbox" class="role-cb" value="CEO" />
             <div class="role-card"><i class="fas fa-crown"></i> CEO</div>
           </label>
-          <label>
-            <input type="checkbox" class="role-cb" value="UnitManager" />
-            <div class="role-card">
-              <i class="fas fa-building"></i> Unit Manager
-            </div>
+          <label id="role-opt-hr">
+            <input type="checkbox" class="role-cb" value="HR" />
+            <div class="role-card"><i class="fas fa-briefcase"></i> HR</div>
           </label>
-          <label>
-            <input type="checkbox" class="role-cb" value="Leader" />
-            <div class="role-card"><i class="fas fa-users"></i> Leader</div>
-          </label>
-          <label>
+          <label id="role-opt-validator">
             <input type="checkbox" class="role-cb" value="Validator" />
             <div class="role-card">
               <i class="fas fa-check-double"></i> Validator
             </div>
           </label>
-          <label>
+          <label id="role-opt-um">
+            <input type="checkbox" class="role-cb" value="UnitManager" />
+            <div class="role-card">
+              <i class="fas fa-building"></i> Unit Manager
+            </div>
+          </label>
+          <label id="role-opt-leader">
+            <input type="checkbox" class="role-cb" value="Leader" />
+            <div class="role-card"><i class="fas fa-users"></i> Leader</div>
+          </label>
+          <label id="role-opt-recruiter">
             <input type="checkbox" class="role-cb" value="Recruiter" />
             <div class="role-card">
               <i class="fas fa-user-plus"></i> Recruiter
@@ -1007,17 +1011,42 @@
           alert("Staff data not found locally.");
           return;
         }
+
+        // 1. Set standard user text data
         document.getElementById("editStaffId").value = s.id;
         document.getElementById("editStaffName").innerText =
           "Managing: " + s.name;
         document.getElementById("editStaffUnit").value = s.unit || "";
         document.getElementById("editStaffTeam").value = s.team || "";
+
+        // 2. Clear all checkboxes first
         const roleBoxes = document.querySelectorAll(".role-cb");
         roleBoxes.forEach((cb) => (cb.checked = false));
+
+        // Check the boxes the user currently has
         const rolesArray = (s.role || "").split(",").map((r) => r.trim());
         roleBoxes.forEach((cb) => {
           if (rolesArray.includes(cb.value)) cb.checked = true;
         });
+
+        // 🚀 3. ENFORCE STRICT RBAC VISIBILITY RULES
+        // Only CEOs see the top 4 roles
+        const showTopRoles = isCEO ? "block" : "none";
+        document.getElementById("role-opt-ceo").style.display = showTopRoles;
+        document.getElementById("role-opt-hr").style.display = showTopRoles;
+        document.getElementById("role-opt-validator").style.display =
+          showTopRoles;
+        document.getElementById("role-opt-um").style.display = showTopRoles;
+
+        // CEOs and Unit Managers can see the Leader role
+        document.getElementById("role-opt-leader").style.display =
+          isCEO || isUM ? "block" : "none";
+
+        // CEOs, Unit Managers, and Leaders can all see the Recruiter role
+        document.getElementById("role-opt-recruiter").style.display =
+          isCEO || isUM || isLeader ? "block" : "none";
+
+        // 4. Finally, show the modal
         forceShowModal("promoteModal");
       };
 
