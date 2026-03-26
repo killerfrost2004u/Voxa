@@ -107,15 +107,27 @@ if (loginForm) {
         );
 
         // SMART ROUTING BASED ON ROLE
-        if (data.user.role === "SuperAdmin" || data.user.role === "Admin") {
+        // 1. Split the user's role string into an array (e.g., ["UnitManager", "Validator"])
+        const userRoles = (data.user.role || "")
+          .split(",")
+          .map((r) => r.trim());
+
+        // 2. Route based on the highest-priority role they hold
+        if (userRoles.includes("SuperAdmin") || userRoles.includes("Admin")) {
           window.location.href = "admin.html";
+        } else if (userRoles.includes("HR")) {
+          window.location.href = "hr-dashboard.html";
         } else if (
-          ["CEO", "UnitManager", "Leader", "Recruiter"].includes(data.user.role)
+          userRoles.includes("CEO") ||
+          userRoles.includes("UnitManager") ||
+          userRoles.includes("Leader") ||
+          userRoles.includes("Recruiter")
         ) {
           window.location.href = "agency-dashboard.html";
-        } else if (data.user.role === "Validator") {
+        } else if (userRoles.includes("Validator")) {
           window.location.href = "validator.html";
         } else {
+          // Standard candidates fall here
           window.location.href = "dashboard.html";
         }
       } else {
