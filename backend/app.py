@@ -596,11 +596,11 @@ def get_validator_applications():
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        # If the Validator is assigned to a specific unit, filter by BOTH Agency and Unit
+        # 🚀 FIX: Changed "RecruiterUnit" to "UnitName" to match the database column exactly
         if unit and unit.lower() != 'all' and unit != 'None' and unit != '':
             cur.execute('''
                 SELECT * FROM "JobApplications" 
-                WHERE "AgencyName" = %s AND "RecruiterUnit" = %s
+                WHERE "AgencyName" = %s AND "UnitName" = %s
                 ORDER BY "ApplicationID" DESC
             ''', (agency, unit))
             
@@ -615,6 +615,7 @@ def get_validator_applications():
         apps = cur.fetchall()
         return jsonify(apps)
     except Exception as e:
+        print(f"Validator Route Error: {e}") # This will print the exact SQL error to your Vercel logs if it fails again
         return jsonify({"error": str(e)}), 500
     finally:
         cur.close()
