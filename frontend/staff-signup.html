@@ -157,6 +157,7 @@
               <option value="Leader">Team Leader</option>
               <option value="Recruiter" selected>Recruiter</option>
               <option value="Validator">Validator (QA)</option>
+              <option value="HR">HR</option> </select>
             </select>
           </div>
 
@@ -255,7 +256,7 @@
         const sUnit = document.getElementById("sUnit");
         const sTeam = document.getElementById("sTeam");
 
-        if (role === "Validator" || role === "UnitManager") {
+        if (role === "Validator" || role === "UnitManager" || role === "HR") {
           groupUnit.style.display = "none";
           sUnit.removeAttribute("required");
           groupTeam.style.display = "none";

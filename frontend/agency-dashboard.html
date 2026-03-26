@@ -657,7 +657,7 @@
           "block";
 
       window.onload = async () => {
-        const userRoles = user.role.split(",").map((r) => r.trim());
+        const userRoles = (user.role || "").split(",").map((r) => r.trim());
         const switcher = document.getElementById("workspace-switcher");
 
         if (userRoles.length > 1) {
@@ -948,7 +948,7 @@
           tbody.innerHTML = allStaff
             .map((s) => {
               const safeStaffId = s.id || "0";
-              let roleBadges = s.role
+              let roleBadges = (s.role || "Pending Role")
                 .split(",")
                 .map(
                   (r) =>

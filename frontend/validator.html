@@ -114,145 +114,150 @@
     </div>
 
     <script>
-              const user = JSON.parse(localStorage.getItem('user'));
+      const userStr = localStorage.getItem('user');
+      if (!userStr) window.location.href = 'login.html';
+      
+      const user = JSON.parse(userStr);
 
-              if (!user || user.role !== 'Validator') {
-                  window.location.href = 'login.html';
+      if (!user || !user.role || !user.role.includes('Validator')) {
+          window.location.href = 'login.html';
+      }
+
+      document.getElementById('welcomeMsg').innerText = `Welcome back, ${user.fullName}`;
+      document.getElementById('roleBadge').innerText = `${user.role} | ${user.agencyName}`;
+
+      window.onload = () => {
+          const userRoles = (user.role || "").split(',').map(r => r.trim());
+          const switcher = document.getElementById("workspace-switcher");
+
+          if (userRoles.length > 1) {
+              if (userRoles.includes("Validator") && !window.location.pathname.includes("validator.html")) {
+                  switcher.innerHTML += `<button onclick="window.location.href='validator.html'" class="btn-outline"><i class="fas fa-check-double"></i> Validator Desk</button>`;
               }
-
-              document.getElementById('welcomeMsg').innerText = `Welcome back, ${user.fullName}`;
-              document.getElementById('roleBadge').innerText = `${user.role} | ${user.agencyName}`;
-
-              window.onload = const userRoles = user.role.split(',').map(r => r.trim());
-      const switcher = document.getElementById("workspace-switcher");
-
-      if (userRoles.length > 1) {
-          if (userRoles.includes("Validator") && !window.location.pathname.includes("validator.html")) {
-              switcher.innerHTML += `<button onclick="window.location.href='validator.html'" class="btn-outline"><i class="fas fa-check-double"></i> Validator Desk</button>`;
+              if ((userRoles.includes("Leader") || userRoles.includes("UnitManager") || userRoles.includes("CEO")) && !window.location.pathname.includes("agency-dashboard.html")) {
+                  switcher.innerHTML += `<button onclick="window.location.href='agency-dashboard.html'" class="btn-outline"><i class="fas fa-users"></i> Agency Desk</button>`;
+              }
+              if (userRoles.includes("HR")) {
+                  switcher.innerHTML += `<button onclick="window.location.href='hr-dashboard.html'" class="btn-outline"><i class="fas fa-briefcase"></i> HR Desk</button>`;
+              }
           }
-          if ((userRoles.includes("Leader") || userRoles.includes("UnitManager") || userRoles.includes("CEO")) && !window.location.pathname.includes("agency-dashboard.html")) {
-              switcher.innerHTML += `<button onclick="window.location.href='agency-dashboard.html'" class="btn-outline"><i class="fas fa-users"></i> Agency Desk</button>`;
-          }
-          if (userRoles.includes("HR")) {
-              switcher.innerHTML += `<button onclick="window.location.href='hr-dashboard.html'" class="btn-outline"><i class="fas fa-briefcase"></i> HR Desk</button>`;
-          }
+          
+          // CRITICAL: Actually call the function to load the candidates!
+          fetchCandidatesForValidation();
       };
 
-              async function fetchCandidatesForValidation() {
-                  try {
-                      // Fetch applications specifically for this agency
-                      const res = await fetch(`https://voxa-pi-three.vercel.app/api/validator/applications?agency=${encodeURIComponent(user.agencyName)}`);
-                      const apps = await res.json();
+      async function fetchCandidatesForValidation() {
+          try {
+              const res = await fetch(`https://voxa-pi-three.vercel.app/api/validator/applications?agency=${encodeURIComponent(user.agencyName)}`);
+              const apps = await res.json();
 
-                      const container = document.getElementById('evaluationsContainer');
-                      container.innerHTML = '';
+              const container = document.getElementById('evaluationsContainer');
+              container.innerHTML = '';
 
-                      if (apps.length === 0) {
-                          container.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 40px; background: var(--bg-card); border-radius: 12px;">No candidates pending evaluation at the moment.</p>`;
-                          return;
-                      }
+              if (apps.length === 0) {
+                  container.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 40px; background: var(--bg-card); border-radius: 12px;">No candidates pending evaluation at the moment.</p>`;
+                  return;
+              }
 
-                      apps.forEach(app => {
-                          const aiRating = app.AI_Rating || 'Pending AI Analysis';
-                          const aiSummary = app.AI_Summary || 'No AI summary available yet.';
-                          const audioUrl1 = app.VoiceRecordPath ? `https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath}` : '';
-                          const audioUrl2 = app.VoiceRecordPath2 ? `https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath2}` : '';
+              apps.forEach(app => {
+                  const aiRating = app.AI_Rating || 'Pending AI Analysis';
+                  const aiSummary = app.AI_Summary || 'No AI summary available yet.';
+                  const audioUrl1 = app.VoiceRecordPath ? `https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath}` : '';
+                  const audioUrl2 = app.VoiceRecordPath2 ? `https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath2}` : '';
 
-                          const currentGrade = app.AgencyGrade || '';
-                          const currentNotes = app.ValidatorNotes || '';
+                  const currentGrade = app.AgencyGrade || '';
+                  const currentNotes = app.ValidatorNotes || '';
 
-                          let audioHtml = '';
-                          if (audioUrl1) audioHtml += `<p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Primary Audio (English)</p><audio controls class="audio-player" src="${audioUrl1}"></audio>`;
-                          if (audioUrl2) audioHtml += `<p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; margin-top: 10px;">Secondary Audio</p><audio controls class="audio-player" src="${audioUrl2}"></audio>`;
+                  let audioHtml = '';
+                  if (audioUrl1) audioHtml += `<p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Primary Audio (English)</p><audio controls class="audio-player" src="${audioUrl1}"></audio>`;
+                  if (audioUrl2) audioHtml += `<p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; margin-top: 10px;">Secondary Audio</p><audio controls class="audio-player" src="${audioUrl2}"></audio>`;
 
-                          container.innerHTML += `
-                              <div class="eval-card">
-                                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
-                                      <div>
-                                          <h4 style="font-size: 1.2rem;">${app.FullName}</h4>
-                                          <p style="color: var(--text-muted); font-size: 0.9rem;"><i class="fas fa-briefcase"></i> ${app.JobTitle} at ${app.Company}</p>
-                                      </div>
-                                      <div style="text-align: right;">
-                                          <span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85rem;">AI Grade: ${aiRating}</span>
-                                          <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;">Source: ${app.RecruiterSource}</p>
-                                      </div>
-                                  </div>
-
-                                  <div class="ai-summary">
-                                      <strong><i class="fas fa-robot"></i> AI Analysis Notes:</strong><br>
-                                      ${aiSummary}
-                                  </div>
-
-                                  ${audioHtml}
-
-                                  <div class="grading-section">
-                                      <div>
-                                          <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 5px;">Official Grade</label>
-                                          <select id="grade-${app.ApplicationID}">
-                                              <option value="" disabled ${!currentGrade ? 'selected' : ''}>Select Grade...</option>
-                                              <option value="A1/A2" ${currentGrade === 'A1/A2' ? 'selected' : ''}>A1/A2 (Beginner)</option>
-                                              <option value="B1" ${currentGrade === 'B1' ? 'selected' : ''}>B1 (Intermediate)</option>
-                                              <option value="B2" ${currentGrade === 'B2' ? 'selected' : ''}>B2 (Upper Intermediate)</option>
-                                              <option value="C1" ${currentGrade === 'C1' ? 'selected' : ''}>C1 (Advanced)</option>
-                                              <option value="C2" ${currentGrade === 'C2' ? 'selected' : ''}>C2 (Mastery)</option>
-                                              <option value="Failed" ${currentGrade === 'Failed' ? 'selected' : ''}>Rejected</option>
-                                          </select>
-                                      </div>
-                                      <div>
-                                          <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 5px;">QA Notes</label>
-                                          <input type="text" id="notes-${app.ApplicationID}" placeholder="E.g., Great fluency, minor grammar issues..." value="${currentNotes}">
-                                      </div>
-                                      <div>
-                                          <button onclick="submitGrade(${app.ApplicationID})" class="btn-submit-grade">
-                                              <i class="fas fa-save"></i> Save Grade
-                                          </button>
-                                      </div>
-                                  </div>
+                  container.innerHTML += `
+                      <div class="eval-card">
+                          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
+                              <div>
+                                  <h4 style="font-size: 1.2rem;">${app.FullName}</h4>
+                                  <p style="color: var(--text-muted); font-size: 0.9rem;"><i class="fas fa-briefcase"></i> ${app.JobTitle} at ${app.Company}</p>
                               </div>
-                          `;
-                      });
-                  } catch (e) {
-                      console.error("Fetch Error", e);
-                      document.getElementById('evaluationsContainer').innerHTML = `<p style="color: #ef4444;">Failed to load candidates.</p>`;
-                  }
+                              <div style="text-align: right;">
+                                  <span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85rem;">AI Grade: ${aiRating}</span>
+                                  <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;">Source: ${app.RecruiterSource}</p>
+                              </div>
+                          </div>
+
+                          <div class="ai-summary">
+                              <strong><i class="fas fa-robot"></i> AI Analysis Notes:</strong><br>
+                              ${aiSummary}
+                          </div>
+
+                          ${audioHtml}
+
+                          <div class="grading-section">
+                              <div>
+                                  <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 5px;">Official Grade</label>
+                                  <select id="grade-${app.ApplicationID}">
+                                      <option value="" disabled ${!currentGrade ? 'selected' : ''}>Select Grade...</option>
+                                      <option value="A1/A2" ${currentGrade === 'A1/A2' ? 'selected' : ''}>A1/A2 (Beginner)</option>
+                                      <option value="B1" ${currentGrade === 'B1' ? 'selected' : ''}>B1 (Intermediate)</option>
+                                      <option value="B2" ${currentGrade === 'B2' ? 'selected' : ''}>B2 (Upper Intermediate)</option>
+                                      <option value="C1" ${currentGrade === 'C1' ? 'selected' : ''}>C1 (Advanced)</option>
+                                      <option value="C2" ${currentGrade === 'C2' ? 'selected' : ''}>C2 (Mastery)</option>
+                                      <option value="Failed" ${currentGrade === 'Failed' ? 'selected' : ''}>Rejected</option>
+                                  </select>
+                              </div>
+                              <div>
+                                  <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 5px;">QA Notes</label>
+                                  <input type="text" id="notes-${app.ApplicationID}" placeholder="E.g., Great fluency..." value="${currentNotes}">
+                              </div>
+                              <div>
+                                  <button onclick="submitGrade(${app.ApplicationID})" class="btn-submit-grade">
+                                      <i class="fas fa-save"></i> Save Grade
+                                  </button>
+                              </div>
+                          </div>
+                      </div>
+                  `;
+              });
+          } catch (e) {
+              console.error("Fetch Error", e);
+              document.getElementById('evaluationsContainer').innerHTML = `<p style="color: #ef4444;">Failed to load candidates.</p>`;
+          }
+      }
+
+      async function submitGrade(appId) {
+          const grade = document.getElementById(`grade-${appId}`).value;
+          const notes = document.getElementById(`notes-${appId}`).value;
+
+          if (!grade) return alert("Please select a grade before saving.");
+
+          const payload = {
+              applicationId: appId,
+              agencyName: user.agencyName,
+              grade: grade,
+              notes: notes
+          };
+
+          try {
+              const res = await fetch('https://voxa-pi-three.vercel.app/api/validator/grade', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload)
+              });
+
+              if (res.ok) {
+                  alert("✅ Grade successfully saved!");
+              } else {
+                  alert("❌ Failed to save grade.");
               }
+          } catch (e) {
+              console.error("Save Error", e);
+          }
+      }
 
-              async function submitGrade(appId) {
-                  const grade = document.getElementById(`grade-${appId}`).value;
-                  const notes = document.getElementById(`notes-${appId}`).value;
-
-                  if (!grade) {
-                      return alert("Please select a grade before saving.");
-                  }
-
-                  const payload = {
-                      applicationId: appId,
-                      agencyName: user.agencyName,
-                      grade: grade,
-                      notes: notes
-                  };
-
-                  try {
-                      const res = await fetch('https://voxa-pi-three.vercel.app/api/validator/grade', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify(payload)
-                      });
-
-                      if (res.ok) {
-                          alert("✅ Grade successfully saved!");
-                      } else {
-                          alert("❌ Failed to save grade.");
-                      }
-                  } catch (e) {
-                      console.error("Save Error", e);
-                  }
-              }
-
-              function logout() {
-                  localStorage.removeItem('user');
-                  window.location.href = 'login.html';
-              }
+      function logout() {
+          localStorage.removeItem('user');
+          window.location.href = 'login.html';
+      }
     </script>
   </body>
 </html>
