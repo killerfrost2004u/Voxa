@@ -307,6 +307,9 @@
       <button class="btn-outline btn-logout" style="padding: 8px 15px">
         Logout
       </button>
+      <div
+        id="workspace-switcher"
+        style="display: inline-flex; gap: 10px; margin-right: 15px"></div>
     </div>
 
     <div class="container">
@@ -654,6 +657,28 @@
           "block";
 
       window.onload = async () => {
+        const userRoles = user.role.split(",").map((r) => r.trim());
+        const switcher = document.getElementById("workspace-switcher");
+
+        if (userRoles.length > 1) {
+          if (
+            userRoles.includes("Validator") &&
+            !window.location.pathname.includes("validator.html")
+          ) {
+            switcher.innerHTML += `<button onclick="window.location.href='validator.html'" class="btn-outline"><i class="fas fa-check-double"></i> Validator Desk</button>`;
+          }
+          if (
+            (userRoles.includes("Leader") ||
+              userRoles.includes("UnitManager") ||
+              userRoles.includes("CEO")) &&
+            !window.location.pathname.includes("agency-dashboard.html")
+          ) {
+            switcher.innerHTML += `<button onclick="window.location.href='agency-dashboard.html'" class="btn-outline"><i class="fas fa-users"></i> Agency Desk</button>`;
+          }
+          if (userRoles.includes("HR")) {
+            switcher.innerHTML += `<button onclick="window.location.href='hr-dashboard.html'" class="btn-outline"><i class="fas fa-briefcase"></i> HR Desk</button>`;
+          }
+        }
         await fetchCandidates();
         if (!isRecruiterOnly) {
           await fetchPendingStaff();
