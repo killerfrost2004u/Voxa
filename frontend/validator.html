@@ -1,174 +1,258 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>QA Validator Workspace | Voxa</title>
-    <link rel="icon" type="image/png" href="images/voxa-logo.png">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/dashboard.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="images/voxa-logo.png" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        .dashboard-header { background: var(--bg-card); padding: 20px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;}
-        .eval-card { background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; }
-        .audio-player { width: 100%; height: 40px; margin-top: 10px; margin-bottom: 15px; border-radius: 8px; }
-        .ai-summary { background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 15px; border-radius: 4px; margin-bottom: 15px; font-size: 0.9rem; }
-        .grading-section { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 15px; align-items: end; background: var(--bg-main); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
-        .grading-section input, .grading-section select { width: 100%; padding: 10px; background: var(--bg-input); color: white; border: 1px solid var(--border-color); border-radius: 6px; }
-        .btn-submit-grade { background: var(--primary-color); color: #000; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
-        
-        .btn-outline {
-            background: transparent; color: var(--text-main); border: 1px solid var(--border-color);
-            padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s;
-        }
-        .btn-outline:hover { border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.1); }
-    </style>
-</head>
-<body style="background: var(--bg-main); color: var(--text-main);">
+      .dashboard-header {
+        background: var(--bg-card);
+        padding: 20px 30px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .eval-card {
+        background: var(--bg-card);
+        padding: 25px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 20px;
+      }
+      .audio-player {
+        width: 100%;
+        height: 40px;
+        margin-top: 10px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+      }
+      .ai-summary {
+        background: rgba(16, 185, 129, 0.1);
+        border-left: 4px solid #10b981;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+      }
+      .grading-section {
+        display: grid;
+        grid-template-columns: 1fr 2fr 1fr;
+        gap: 15px;
+        align-items: end;
+        background: var(--bg-main);
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+      }
+      .grading-section input,
+      .grading-section select {
+        width: 100%;
+        padding: 10px;
+        background: var(--bg-input);
+        color: white;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+      }
+      .btn-submit-grade {
+        background: var(--primary-color);
+        color: #000;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        width: 100%;
+      }
 
+      .btn-outline {
+        background: transparent;
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 8px 15px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.2s;
+      }
+      .btn-outline:hover {
+        border-color: #ef4444;
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+      }
+    </style>
+  </head>
+  <body style="background: var(--bg-main); color: var(--text-main)">
     <div class="dashboard-header">
-        <div>
-            <h2 id="welcomeMsg">QA Validator Workspace</h2>
-            <p id="roleBadge" style="color: var(--primary-color); font-weight: 600;"></p>
-        </div>
-        <button onclick="logout()" class="btn-outline">Logout</button>
+      <div>
+        <h2 id="welcomeMsg">QA Validator Workspace</h2>
+        <p
+          id="roleBadge"
+          style="color: var(--primary-color); font-weight: 600"></p>
+      </div>
+      <button onclick="logout()" class="btn-outline">Logout</button>
+      <div
+        id="workspace-switcher"
+        style="display: inline-flex; gap: 10px; margin-right: 15px"></div>
     </div>
 
     <div class="container">
-        <h3 style="margin-bottom: 20px; color: #10b981;"><i class="fas fa-headphones"></i> Candidates Pending Evaluation</h3>
-        
-        <div id="evaluationsContainer">
-            <p style="color: var(--text-muted);">Loading candidates...</p>
-        </div>
+      <h3 style="margin-bottom: 20px; color: #10b981">
+        <i class="fas fa-headphones"></i> Candidates Pending Evaluation
+      </h3>
+
+      <div id="evaluationsContainer">
+        <p style="color: var(--text-muted)">Loading candidates...</p>
+      </div>
     </div>
 
     <script>
-        const user = JSON.parse(localStorage.getItem('user'));
-        
-        if (!user || user.role !== 'Validator') {
-            window.location.href = 'login.html';
-        }
+              const user = JSON.parse(localStorage.getItem('user'));
 
-        document.getElementById('welcomeMsg').innerText = `Welcome back, ${user.fullName}`;
-        document.getElementById('roleBadge').innerText = `${user.role} | ${user.agencyName}`;
+              if (!user || user.role !== 'Validator') {
+                  window.location.href = 'login.html';
+              }
 
-        window.onload = fetchCandidatesForValidation;
+              document.getElementById('welcomeMsg').innerText = `Welcome back, ${user.fullName}`;
+              document.getElementById('roleBadge').innerText = `${user.role} | ${user.agencyName}`;
 
-        async function fetchCandidatesForValidation() {
-            try {
-                // Fetch applications specifically for this agency
-                const res = await fetch(`https://voxa-pi-three.vercel.app/api/validator/applications?agency=${encodeURIComponent(user.agencyName)}`);
-                const apps = await res.json();
-                
-                const container = document.getElementById('evaluationsContainer');
-                container.innerHTML = '';
+              window.onload = const userRoles = user.role.split(',').map(r => r.trim());
+      const switcher = document.getElementById("workspace-switcher");
 
-                if (apps.length === 0) {
-                    container.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 40px; background: var(--bg-card); border-radius: 12px;">No candidates pending evaluation at the moment.</p>`;
-                    return;
-                }
+      if (userRoles.length > 1) {
+          if (userRoles.includes("Validator") && !window.location.pathname.includes("validator.html")) {
+              switcher.innerHTML += `<button onclick="window.location.href='validator.html'" class="btn-outline"><i class="fas fa-check-double"></i> Validator Desk</button>`;
+          }
+          if ((userRoles.includes("Leader") || userRoles.includes("UnitManager") || userRoles.includes("CEO")) && !window.location.pathname.includes("agency-dashboard.html")) {
+              switcher.innerHTML += `<button onclick="window.location.href='agency-dashboard.html'" class="btn-outline"><i class="fas fa-users"></i> Agency Desk</button>`;
+          }
+          if (userRoles.includes("HR")) {
+              switcher.innerHTML += `<button onclick="window.location.href='hr-dashboard.html'" class="btn-outline"><i class="fas fa-briefcase"></i> HR Desk</button>`;
+          }
+      };
 
-                apps.forEach(app => {
-                    const aiRating = app.AI_Rating || 'Pending AI Analysis';
-                    const aiSummary = app.AI_Summary || 'No AI summary available yet.';
-                    const audioUrl1 = app.VoiceRecordPath ? `https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath}` : '';
-                    const audioUrl2 = app.VoiceRecordPath2 ? `https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath2}` : '';
-                    
-                    const currentGrade = app.AgencyGrade || '';
-                    const currentNotes = app.ValidatorNotes || '';
+              async function fetchCandidatesForValidation() {
+                  try {
+                      // Fetch applications specifically for this agency
+                      const res = await fetch(`https://voxa-pi-three.vercel.app/api/validator/applications?agency=${encodeURIComponent(user.agencyName)}`);
+                      const apps = await res.json();
 
-                    let audioHtml = '';
-                    if (audioUrl1) audioHtml += `<p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Primary Audio (English)</p><audio controls class="audio-player" src="${audioUrl1}"></audio>`;
-                    if (audioUrl2) audioHtml += `<p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; margin-top: 10px;">Secondary Audio</p><audio controls class="audio-player" src="${audioUrl2}"></audio>`;
+                      const container = document.getElementById('evaluationsContainer');
+                      container.innerHTML = '';
 
-                    container.innerHTML += `
-                        <div class="eval-card">
-                            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
-                                <div>
-                                    <h4 style="font-size: 1.2rem;">${app.FullName}</h4>
-                                    <p style="color: var(--text-muted); font-size: 0.9rem;"><i class="fas fa-briefcase"></i> ${app.JobTitle} at ${app.Company}</p>
-                                </div>
-                                <div style="text-align: right;">
-                                    <span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85rem;">AI Grade: ${aiRating}</span>
-                                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;">Source: ${app.RecruiterSource}</p>
-                                </div>
-                            </div>
+                      if (apps.length === 0) {
+                          container.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 40px; background: var(--bg-card); border-radius: 12px;">No candidates pending evaluation at the moment.</p>`;
+                          return;
+                      }
 
-                            <div class="ai-summary">
-                                <strong><i class="fas fa-robot"></i> AI Analysis Notes:</strong><br>
-                                ${aiSummary}
-                            </div>
+                      apps.forEach(app => {
+                          const aiRating = app.AI_Rating || 'Pending AI Analysis';
+                          const aiSummary = app.AI_Summary || 'No AI summary available yet.';
+                          const audioUrl1 = app.VoiceRecordPath ? `https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath}` : '';
+                          const audioUrl2 = app.VoiceRecordPath2 ? `https://voxa-pi-three.vercel.app/uploads/${app.VoiceRecordPath2}` : '';
 
-                            ${audioHtml}
+                          const currentGrade = app.AgencyGrade || '';
+                          const currentNotes = app.ValidatorNotes || '';
 
-                            <div class="grading-section">
-                                <div>
-                                    <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 5px;">Official Grade</label>
-                                    <select id="grade-${app.ApplicationID}">
-                                        <option value="" disabled ${!currentGrade ? 'selected' : ''}>Select Grade...</option>
-                                        <option value="A1/A2" ${currentGrade === 'A1/A2' ? 'selected' : ''}>A1/A2 (Beginner)</option>
-                                        <option value="B1" ${currentGrade === 'B1' ? 'selected' : ''}>B1 (Intermediate)</option>
-                                        <option value="B2" ${currentGrade === 'B2' ? 'selected' : ''}>B2 (Upper Intermediate)</option>
-                                        <option value="C1" ${currentGrade === 'C1' ? 'selected' : ''}>C1 (Advanced)</option>
-                                        <option value="C2" ${currentGrade === 'C2' ? 'selected' : ''}>C2 (Mastery)</option>
-                                        <option value="Failed" ${currentGrade === 'Failed' ? 'selected' : ''}>Rejected</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 5px;">QA Notes</label>
-                                    <input type="text" id="notes-${app.ApplicationID}" placeholder="E.g., Great fluency, minor grammar issues..." value="${currentNotes}">
-                                </div>
-                                <div>
-                                    <button onclick="submitGrade(${app.ApplicationID})" class="btn-submit-grade">
-                                        <i class="fas fa-save"></i> Save Grade
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-            } catch (e) {
-                console.error("Fetch Error", e);
-                document.getElementById('evaluationsContainer').innerHTML = `<p style="color: #ef4444;">Failed to load candidates.</p>`;
-            }
-        }
+                          let audioHtml = '';
+                          if (audioUrl1) audioHtml += `<p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px;">Primary Audio (English)</p><audio controls class="audio-player" src="${audioUrl1}"></audio>`;
+                          if (audioUrl2) audioHtml += `<p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; margin-top: 10px;">Secondary Audio</p><audio controls class="audio-player" src="${audioUrl2}"></audio>`;
 
-        async function submitGrade(appId) {
-            const grade = document.getElementById(`grade-${appId}`).value;
-            const notes = document.getElementById(`notes-${appId}`).value;
+                          container.innerHTML += `
+                              <div class="eval-card">
+                                  <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px;">
+                                      <div>
+                                          <h4 style="font-size: 1.2rem;">${app.FullName}</h4>
+                                          <p style="color: var(--text-muted); font-size: 0.9rem;"><i class="fas fa-briefcase"></i> ${app.JobTitle} at ${app.Company}</p>
+                                      </div>
+                                      <div style="text-align: right;">
+                                          <span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85rem;">AI Grade: ${aiRating}</span>
+                                          <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;">Source: ${app.RecruiterSource}</p>
+                                      </div>
+                                  </div>
 
-            if (!grade) {
-                return alert("Please select a grade before saving.");
-            }
+                                  <div class="ai-summary">
+                                      <strong><i class="fas fa-robot"></i> AI Analysis Notes:</strong><br>
+                                      ${aiSummary}
+                                  </div>
 
-            const payload = {
-                applicationId: appId,
-                agencyName: user.agencyName,
-                grade: grade,
-                notes: notes
-            };
+                                  ${audioHtml}
 
-            try {
-                const res = await fetch('https://voxa-pi-three.vercel.app/api/validator/grade', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+                                  <div class="grading-section">
+                                      <div>
+                                          <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 5px;">Official Grade</label>
+                                          <select id="grade-${app.ApplicationID}">
+                                              <option value="" disabled ${!currentGrade ? 'selected' : ''}>Select Grade...</option>
+                                              <option value="A1/A2" ${currentGrade === 'A1/A2' ? 'selected' : ''}>A1/A2 (Beginner)</option>
+                                              <option value="B1" ${currentGrade === 'B1' ? 'selected' : ''}>B1 (Intermediate)</option>
+                                              <option value="B2" ${currentGrade === 'B2' ? 'selected' : ''}>B2 (Upper Intermediate)</option>
+                                              <option value="C1" ${currentGrade === 'C1' ? 'selected' : ''}>C1 (Advanced)</option>
+                                              <option value="C2" ${currentGrade === 'C2' ? 'selected' : ''}>C2 (Mastery)</option>
+                                              <option value="Failed" ${currentGrade === 'Failed' ? 'selected' : ''}>Rejected</option>
+                                          </select>
+                                      </div>
+                                      <div>
+                                          <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 5px;">QA Notes</label>
+                                          <input type="text" id="notes-${app.ApplicationID}" placeholder="E.g., Great fluency, minor grammar issues..." value="${currentNotes}">
+                                      </div>
+                                      <div>
+                                          <button onclick="submitGrade(${app.ApplicationID})" class="btn-submit-grade">
+                                              <i class="fas fa-save"></i> Save Grade
+                                          </button>
+                                      </div>
+                                  </div>
+                              </div>
+                          `;
+                      });
+                  } catch (e) {
+                      console.error("Fetch Error", e);
+                      document.getElementById('evaluationsContainer').innerHTML = `<p style="color: #ef4444;">Failed to load candidates.</p>`;
+                  }
+              }
 
-                if (res.ok) {
-                    alert("✅ Grade successfully saved!");
-                } else {
-                    alert("❌ Failed to save grade.");
-                }
-            } catch (e) {
-                console.error("Save Error", e);
-            }
-        }
+              async function submitGrade(appId) {
+                  const grade = document.getElementById(`grade-${appId}`).value;
+                  const notes = document.getElementById(`notes-${appId}`).value;
 
-        function logout() {
-            localStorage.removeItem('user');
-            window.location.href = 'login.html';
-        }
+                  if (!grade) {
+                      return alert("Please select a grade before saving.");
+                  }
+
+                  const payload = {
+                      applicationId: appId,
+                      agencyName: user.agencyName,
+                      grade: grade,
+                      notes: notes
+                  };
+
+                  try {
+                      const res = await fetch('https://voxa-pi-three.vercel.app/api/validator/grade', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(payload)
+                      });
+
+                      if (res.ok) {
+                          alert("✅ Grade successfully saved!");
+                      } else {
+                          alert("❌ Failed to save grade.");
+                      }
+                  } catch (e) {
+                      console.error("Save Error", e);
+                  }
+              }
+
+              function logout() {
+                  localStorage.removeItem('user');
+                  window.location.href = 'login.html';
+              }
     </script>
-</body>
+  </body>
 </html>
