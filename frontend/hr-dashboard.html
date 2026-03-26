@@ -354,7 +354,7 @@
             </h3>
             <button
               class="btn-outline"
-              onclick="openLeadModal()"
+              onclick="window.openLeadModal()"
               style="background: var(--primary-color); color: black">
               + Add New Lead
             </button>
@@ -646,17 +646,37 @@
       };
 
       // --- CRM MODAL LOGIC ---
-      function openLeadModal(leadId = null) {
-        document.getElementById("leadModal").style.display = "flex";
+      window.openLeadModal = function (leadId = null) {
+        const modal = document.getElementById("leadModal");
 
-        if (leadId) {
+        // Bulletproof CSS override to force visibility
+        modal.style.cssText = `
+              display: flex !important;
+              position: fixed !important;
+              top: 0 !important;
+              left: 0 !important;
+              width: 100vw !important;
+              height: 100vh !important;
+              background-color: rgba(0, 0, 0, 0.85) !important;
+              z-index: 9999999 !important;
+              justify-content: center !important;
+              align-items: center !important;
+              opacity: 1 !important;
+              visibility: visible !important;
+              pointer-events: auto !important;
+          `;
+
+        if (leadId && typeof leadId === "number") {
           const lead = crmLeadsData.find((l) => l.LeadID === leadId);
-          document.getElementById("leadId").value = lead.LeadID;
-          document.getElementById("leadCompany").value = lead.CompanyName;
-          document.getElementById("leadContact").value = lead.ContactName;
-          document.getElementById("leadStatus").value = lead.Status;
-          document.getElementById("leadAction").value = lead.ActionItem;
-          document.getElementById("btn-submit-lead").innerText = "Update Lead";
+          if (lead) {
+            document.getElementById("leadId").value = lead.LeadID;
+            document.getElementById("leadCompany").value = lead.CompanyName;
+            document.getElementById("leadContact").value = lead.ContactName;
+            document.getElementById("leadStatus").value = lead.Status;
+            document.getElementById("leadAction").value = lead.ActionItem;
+            document.getElementById("btn-submit-lead").innerText =
+              "Update Lead";
+          }
         } else {
           document.getElementById("leadId").value = "";
           document.getElementById("leadCompany").value = "";
@@ -665,11 +685,12 @@
           document.getElementById("leadAction").value = "";
           document.getElementById("btn-submit-lead").innerText = "Save Lead";
         }
-      }
+      };
 
-      function closeLeadModal() {
-        document.getElementById("leadModal").style.display = "none";
-      }
+      window.closeLeadModal = function () {
+        const modal = document.getElementById("leadModal");
+        if (modal) modal.style.cssText = "display: none !important;";
+      };
 
       // --- CRM API LOGIC ---
       async function loadCRMLeads() {

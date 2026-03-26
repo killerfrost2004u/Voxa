@@ -936,6 +936,69 @@ def approve_staff():
         if 'cur' in locals(): cur.close()
         if 'conn' in locals(): conn.close()
 
+from psycopg2.extras import RealDictCursor
+
+# --- HR CRM LEADS API ---
+
+@app.route('/api/hr/leads', methods=['GET'])
+def get_hr_leads():
+    agency = request.args.get('agency')
+    if not agency:
+        return jsonify({"error": "Agency is required"}), 400
+        
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute("SELECT * FROM CRM_Leads WHERE AgencyName = %s ORDER BY CreatedAt DESC", (agency,))
+        leads = cur.fetchall()
+        return jsonify(leads)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+@app.route('/api/hr/leads', methods=['POST'])
+def create_hr_lead():
+    data = request.json
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            INSERT INTO CRM_Leads (AgencyName, CompanyName, ContactName, Status, ActionItem)
+            VALUES (%s, %s, %s, %s, %s) RETURNING LeadID
+        """, (data.get('agencyName'), data.get('companyName'), data.get('contactName'), data.get('status', 'Prospect'), data.get('actionItem')))
+        
+        lead_id = cur.fetchone()[0]
+        conn.commit()
+        return jsonify({"message": "Lead created successfully", "LeadID": lead_id}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+@app.route('/api/hr/leads/<int:lead_id>', methods=['PUT'])
+def update_hr_lead(lead_id):
+    data = request.json
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            UPDATE CRM_Leads
+            SET CompanyName=%s, ContactName=%s, Status=%s, ActionItem=%s
+            WHERE LeadID=%s
+        """, (data.get('companyName'), data.get('contactName'), data.get('status'), data.get('actionItem'), lead_id))
+        conn.commit()
+        return jsonify({"message": "Lead updated successfully"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
 @app.route('/api/admin/stats', methods=['GET'])
 def get_admin_stats():
     try:
