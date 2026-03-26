@@ -87,7 +87,7 @@
         text-align: right;
       }
 
-      /* Modals (Default state) */
+      /* Modals */
       .modal-overlay {
         display: none;
       }
@@ -107,7 +107,7 @@
         width: 100%;
         padding: 10px;
         margin-top: 5px;
-        margin-bottom: 15px;
+        margin-bottom: 10px;
         background: var(--bg-input);
         color: white;
         border: 1px solid var(--border-color);
@@ -182,7 +182,7 @@
         background: rgba(239, 68, 68, 0.1);
       }
 
-      /* Tags */
+      /* Tags & Pills */
       .status-badge {
         padding: 4px 8px;
         border-radius: 4px;
@@ -216,29 +216,70 @@
         display: inline-block;
         margin-top: 5px;
       }
-      .multi-select-box {
-        background: var(--bg-input);
-        border: 1px solid var(--border-color);
-        padding: 10px;
-        border-radius: 6px;
-        margin-bottom: 15px;
+
+      /* 🚀 NEW: Dynamic Smart Pill Suggestions */
+      .suggestion-pills {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 8px;
+        margin-bottom: 20px;
       }
-      .multi-select-box label {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 0.9rem;
+      .suggestion-pill {
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
         cursor: pointer;
+        transition: 0.2s;
+        font-weight: 500;
+      }
+      .suggestion-pill:hover {
+        background: rgba(0, 229, 255, 0.1);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+      }
+
+      /* 🚀 NEW: Beautiful Role Selection Grid */
+      .role-checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .role-card {
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 12px 5px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.85rem;
+        user-select: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+      }
+      .role-card i {
+        font-size: 1.2rem;
+      }
+      .role-cb {
+        display: none;
+      } /* Hide default checkbox */
+      .role-cb:checked + .role-card {
+        background: rgba(0, 229, 255, 0.1);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
       }
     </style>
   </head>
   <body style="background: var(--bg-main); color: var(--text-main)">
-    <datalist id="agencyUnits"></datalist>
-    <datalist id="agencyTeams"></datalist>
-
     <div class="dashboard-header">
       <div>
         <h2 id="dashboardTitle">Workspace</h2>
@@ -425,10 +466,8 @@
       <div class="modal-card">
         <h3 style="margin-bottom: 15px">📅 Schedule Interview</h3>
         <input type="hidden" id="modalAppId" />
-
-        <label style="font-size: 0.85rem; color: var(--text-muted)">Date</label>
-        <input type="date" id="modalDate" required />
-
+        <label style="font-size: 0.85rem; color: var(--text-muted)">Date</label
+        ><input type="date" id="modalDate" required />
         <label style="font-size: 0.85rem; color: var(--text-muted)"
           >Time Slot</label
         >
@@ -441,15 +480,12 @@
             7:00 PM - 9:00 PM (Night Slot)
           </option>
         </select>
-
         <label style="font-size: 0.85rem; color: var(--text-muted)"
           >Meeting Link (Optional)</label
-        >
-        <input
+        ><input
           type="url"
           id="modalLink"
           placeholder="https://zoom.us/j/123..." />
-
         <button type="button" class="btn-schedule btn-submit-schedule">
           Confirm Slot
         </button>
@@ -480,26 +516,34 @@
         <label style="font-size: 0.85rem; color: var(--text-muted)"
           >Assign Roles</label
         >
-        <div class="multi-select-box">
-          <label
-            ><input type="checkbox" class="role-cb" value="CEO" /> CEO</label
-          >
-          <label
-            ><input type="checkbox" class="role-cb" value="UnitManager" /> Unit
-            Manager</label
-          >
-          <label
-            ><input type="checkbox" class="role-cb" value="Leader" />
-            Leader</label
-          >
-          <label
-            ><input type="checkbox" class="role-cb" value="Validator" />
-            Validator</label
-          >
-          <label
-            ><input type="checkbox" class="role-cb" value="Recruiter" />
-            Recruiter</label
-          >
+
+        <div class="role-checkbox-grid">
+          <label>
+            <input type="checkbox" class="role-cb" value="CEO" />
+            <div class="role-card"><i class="fas fa-crown"></i> CEO</div>
+          </label>
+          <label>
+            <input type="checkbox" class="role-cb" value="UnitManager" />
+            <div class="role-card">
+              <i class="fas fa-building"></i> Unit Manager
+            </div>
+          </label>
+          <label>
+            <input type="checkbox" class="role-cb" value="Leader" />
+            <div class="role-card"><i class="fas fa-users"></i> Leader</div>
+          </label>
+          <label>
+            <input type="checkbox" class="role-cb" value="Validator" />
+            <div class="role-card">
+              <i class="fas fa-check-double"></i> Validator
+            </div>
+          </label>
+          <label>
+            <input type="checkbox" class="role-cb" value="Recruiter" />
+            <div class="role-card">
+              <i class="fas fa-user-plus"></i> Recruiter
+            </div>
+          </label>
         </div>
 
         <label style="font-size: 0.85rem; color: var(--text-muted)"
@@ -508,9 +552,9 @@
         <input
           type="text"
           id="editStaffUnit"
-          list="agencyUnits"
-          placeholder="Select or type Unit Name..."
+          placeholder="Type or click a suggestion below..."
           autocomplete="off" />
+        <div id="unitSuggestions" class="suggestion-pills"></div>
 
         <label style="font-size: 0.85rem; color: var(--text-muted)"
           >Team Name</label
@@ -518,9 +562,9 @@
         <input
           type="text"
           id="editStaffTeam"
-          list="agencyTeams"
-          placeholder="Select or type Team Name..."
+          placeholder="Type or click a suggestion below..."
           autocomplete="off" />
+        <div id="teamSuggestions" class="suggestion-pills"></div>
 
         <button
           type="button"
@@ -620,7 +664,7 @@
         }
       };
 
-      // --- SMART DROPDOWN POPULATOR ---
+      // --- 🚀 NEW: SMART SUGGESTION PILLS GENERATOR ---
       function populateStructureDropdowns() {
         const units = new Set();
         const teams = new Set();
@@ -632,22 +676,29 @@
             teams.add(s.team.trim());
         });
 
-        const unitList = document.getElementById("agencyUnits");
-        const teamList = document.getElementById("agencyTeams");
+        const unitList = document.getElementById("unitSuggestions");
+        const teamList = document.getElementById("teamSuggestions");
 
+        // Generate clickable pills that instantly populate the target input field when clicked
         if (unitList) {
           unitList.innerHTML = Array.from(units)
-            .map((u) => `<option value="${u}"></option>`)
+            .map(
+              (u) =>
+                `<span class="suggestion-pill" data-target="editStaffUnit">${u}</span>`,
+            )
             .join("");
         }
         if (teamList) {
           teamList.innerHTML = Array.from(teams)
-            .map((t) => `<option value="${t}"></option>`)
+            .map(
+              (t) =>
+                `<span class="suggestion-pill" data-target="editStaffTeam">${t}</span>`,
+            )
             .join("");
         }
       }
 
-      // --- THE FIX: FORCING VISIBILITY (Z-INDEX 1000 ALLOWS BROWSER DROPDOWNS TO FLOAT OVER IT) ---
+      // --- THE FIX: FORCING VISIBILITY ---
       function forceShowModal(modalId) {
         const modal = document.getElementById(modalId);
         if (!modal) return;
@@ -659,11 +710,12 @@
               width: 100vw !important;
               height: 100vh !important;
               background-color: rgba(0, 0, 0, 0.85) !important;
-              z-index: 1000 !important; 
+              z-index: 9999999 !important;
               justify-content: center !important;
               align-items: center !important;
               opacity: 1 !important;
               visibility: visible !important;
+              pointer-events: auto !important;
           `;
       }
 
@@ -672,40 +724,64 @@
         if (modal) modal.style.cssText = "display: none !important;";
       }
 
-      // --- EVENT DELEGATION ---
+      // --- BULLETPROOF EVENT DELEGATION ---
       document.addEventListener("click", function (e) {
-        const target = e.target.closest("button") || e.target;
+        // Check for Button clicks
+        const targetBtn = e.target.closest("button");
+        if (targetBtn) {
+          if (targetBtn.classList.contains("btn-details")) {
+            e.preventDefault();
+            window.openViewPanel(targetBtn.getAttribute("data-id"));
+            return;
+          } else if (targetBtn.classList.contains("btn-schedule-call")) {
+            e.preventDefault();
+            window.openScheduleModal(targetBtn.getAttribute("data-id"));
+            return;
+          } else if (targetBtn.classList.contains("btn-promote")) {
+            e.preventDefault();
+            window.openPromoteModal(targetBtn.getAttribute("data-id"));
+            return;
+          } else if (targetBtn.classList.contains("btn-close")) {
+            e.preventDefault();
+            forceHideModal(targetBtn.getAttribute("data-modal"));
+            return;
+          } else if (targetBtn.classList.contains("btn-submit-promote")) {
+            e.preventDefault();
+            window.submitPromotion();
+            return;
+          } else if (targetBtn.classList.contains("btn-submit-schedule")) {
+            e.preventDefault();
+            window.submitSchedule();
+            return;
+          } else if (targetBtn.classList.contains("btn-approve")) {
+            e.preventDefault();
+            window.processApproval(
+              targetBtn.getAttribute("data-id"),
+              "approve",
+            );
+            return;
+          } else if (targetBtn.classList.contains("btn-reject")) {
+            e.preventDefault();
+            window.processApproval(targetBtn.getAttribute("data-id"), "reject");
+            return;
+          } else if (targetBtn.classList.contains("btn-copy-link")) {
+            e.preventDefault();
+            window.copyReferralLink();
+            return;
+          } else if (targetBtn.classList.contains("btn-logout")) {
+            e.preventDefault();
+            window.logout();
+            return;
+          }
+        }
 
-        if (target.classList.contains("btn-details")) {
+        // Check for Clickable Smart Pills
+        if (e.target.classList.contains("suggestion-pill")) {
           e.preventDefault();
-          window.openViewPanel(target.getAttribute("data-id"));
-        } else if (target.classList.contains("btn-schedule-call")) {
-          e.preventDefault();
-          window.openScheduleModal(target.getAttribute("data-id"));
-        } else if (target.classList.contains("btn-promote")) {
-          e.preventDefault();
-          window.openPromoteModal(target.getAttribute("data-id"));
-        } else if (target.classList.contains("btn-close")) {
-          e.preventDefault();
-          forceHideModal(target.getAttribute("data-modal"));
-        } else if (target.classList.contains("btn-submit-promote")) {
-          e.preventDefault();
-          window.submitPromotion();
-        } else if (target.classList.contains("btn-submit-schedule")) {
-          e.preventDefault();
-          window.submitSchedule();
-        } else if (target.classList.contains("btn-approve")) {
-          e.preventDefault();
-          window.processApproval(target.getAttribute("data-id"), "approve");
-        } else if (target.classList.contains("btn-reject")) {
-          e.preventDefault();
-          window.processApproval(target.getAttribute("data-id"), "reject");
-        } else if (target.classList.contains("btn-copy-link")) {
-          e.preventDefault();
-          window.copyReferralLink();
-        } else if (target.classList.contains("btn-logout")) {
-          e.preventDefault();
-          window.logout();
+          const targetInputId = e.target.getAttribute("data-target");
+          if (targetInputId) {
+            document.getElementById(targetInputId).value = e.target.innerText;
+          }
         }
       });
 
@@ -716,17 +792,14 @@
             `https://voxa-pi-three.vercel.app/api/admin/applications?email=${user.email}`,
           );
           allCandidates = await res.json();
-
           const tbody = document.getElementById("candidateTableBody");
           tbody.innerHTML = "";
 
           let countAccepted = 0,
             countRejected = 0,
             countPending = 0;
-
-          if (allCandidates.length === 0) {
+          if (allCandidates.length === 0)
             tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-muted);">No candidates generated yet.</td></tr>`;
-          }
 
           allCandidates.forEach((app) => {
             const safeAppId = app.ApplicationID || app.id || "0";
@@ -739,7 +812,6 @@
             if (status === "Accepted") countAccepted++;
             else if (status === "Rejected") countRejected++;
             else countPending++;
-
             let badgeClass = "status-pending";
             if (status === "Accepted") badgeClass = "status-accepted";
             if (status === "Rejected") badgeClass = "status-rejected";
@@ -760,7 +832,6 @@
             } else if (app.InterviewLink) {
               actionBtn += `<a href="${app.InterviewLink}" target="_blank" style="background:#10b981; color:white; padding:5px 12px; border-radius:4px; font-size: 0.8rem; font-weight:bold; text-decoration:none; margin-right: 5px;">Join Call</a> `;
             }
-
             actionBtn += `<button type="button" class="btn-action-details btn-details" data-id="${safeAppId}"><i class="fas fa-eye"></i> Details</button>`;
 
             tbody.innerHTML += `
@@ -778,7 +849,6 @@
                   <td style="padding: 15px 10px;">${actionBtn}</td>
               </tr>`;
           });
-
           document.getElementById("kpi-total").innerText = allCandidates.length;
           document.getElementById("kpi-accepted").innerText = countAccepted;
           document.getElementById("kpi-rejected").innerText = countRejected;
@@ -843,6 +913,7 @@
           );
           allStaff = await res.json();
 
+          // GENERATE SMART PILLS
           populateStructureDropdowns();
 
           const tbody = document.getElementById("staffDirectoryBody");
@@ -875,7 +946,7 @@
         }
       }
 
-      // --- MODAL LOGIC ---
+      // --- MODAL POPUP LOGIC ---
       function calculateAge(dobString) {
         if (!dobString || dobString === "None" || dobString === "null")
           return "N/A";
@@ -891,17 +962,15 @@
           (a) => String(a.ApplicationID || a.id) === String(appId),
         );
         if (!app) {
-          alert("Candidate data not found locally. ID: " + appId);
+          alert("Candidate data not found locally.");
           return;
         }
-
         const age = calculateAge(app.DateOfBirth);
         const aiSum =
           app.ClientPanel || app.AI_Summary || "Pending AI Assessment...";
         const valNotes = app.ValidatorFeedback || "No notes yet.";
-        const panelText = `Candidate: ${app.FullName}\nEmail: ${app.Email}\nPhone: ${app.Phone}\nWhatsApp: ${app.WhatsApp || "N/A"}\nAge: ${age}\nLocation: ${app.Address || "N/A"}\n\nAI Assessment:\n${aiSum}\n\nHR Validator Notes:\n${valNotes}`;
-
-        document.getElementById("viewPanelContent").innerText = panelText;
+        document.getElementById("viewPanelContent").innerText =
+          `Candidate: ${app.FullName}\nEmail: ${app.Email}\nPhone: ${app.Phone}\nWhatsApp: ${app.WhatsApp || "N/A"}\nAge: ${age}\nLocation: ${app.Address || "N/A"}\n\nAI Assessment:\n${aiSum}\n\nHR Validator Notes:\n${valNotes}`;
         forceShowModal("viewPanelModal");
       };
 
@@ -910,23 +979,20 @@
           (staff) => String(staff.id) === String(staffId),
         );
         if (!s) {
-          alert("Staff data not found locally. ID: " + staffId);
+          alert("Staff data not found locally.");
           return;
         }
-
         document.getElementById("editStaffId").value = s.id;
         document.getElementById("editStaffName").innerText =
           "Managing: " + s.name;
         document.getElementById("editStaffUnit").value = s.unit || "";
         document.getElementById("editStaffTeam").value = s.team || "";
-
         const roleBoxes = document.querySelectorAll(".role-cb");
         roleBoxes.forEach((cb) => (cb.checked = false));
         const rolesArray = (s.role || "").split(",").map((r) => r.trim());
         roleBoxes.forEach((cb) => {
           if (rolesArray.includes(cb.value)) cb.checked = true;
         });
-
         forceShowModal("promoteModal");
       };
 
@@ -945,10 +1011,8 @@
         )
           .map((cb) => cb.value)
           .join(", ");
-
         if (selectedRoles === "")
           return alert("Staff must have at least one role!");
-
         try {
           const res = await fetch(
             `https://voxa-pi-three.vercel.app/api/agency/staff/${id}`,
@@ -966,9 +1030,7 @@
             alert("✅ Profile updated successfully!");
             forceHideModal("promoteModal");
             fetchStaffDirectory();
-          } else {
-            alert("Failed to update profile.");
-          }
+          } else alert("Failed to update profile.");
         } catch (e) {
           console.error(e);
         }
@@ -994,9 +1056,7 @@
             alert("✅ Interview Scheduled!");
             forceHideModal("scheduleModal");
             fetchCandidates();
-          } else {
-            alert("❌ Error scheduling interview.");
-          }
+          } else alert("❌ Error scheduling interview.");
         } catch (e) {
           console.error(e);
         }
@@ -1025,8 +1085,9 @@
       };
 
       window.copyReferralLink = function () {
-        const link = `https://voxa-pi-three.vercel.app/apply.html?recruiter=${encodeURIComponent(user.fullName)}&agency=${encodeURIComponent(user.agencyName)}&unit=${encodeURIComponent(user.unitName || "")}&team=${encodeURIComponent(user.teamName || "")}`;
-        navigator.clipboard.writeText(link);
+        navigator.clipboard.writeText(
+          `https://voxa-pi-three.vercel.app/apply.html?recruiter=${encodeURIComponent(user.fullName)}&agency=${encodeURIComponent(user.agencyName)}&unit=${encodeURIComponent(user.unitName || "")}&team=${encodeURIComponent(user.teamName || "")}`,
+        );
         alert("✅ Invite link copied! Send this to your candidates.");
       };
 
