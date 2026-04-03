@@ -356,7 +356,7 @@ function renderCompanies(data) {
     const card = document.createElement("div");
     card.classList.add("company-card");
     card.innerHTML = `
-            <div class="company-logo-large">${comp.logo || "DW"}</div>
+            <div class="company-logo-large">${comp.logo || "VO"}</div>
             <h3>${comp.name}</h3>
             <div class="company-rating" style="margin: 5px 0;">
                 <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
@@ -382,7 +382,7 @@ window.renderCompanyProfile = function (companyName, allJobsArray) {
 
   const companyInfo = {
     name: companyName,
-    logo: companyJobs[0].logo || "DW",
+    logo: companyJobs[0].logo || "VO",
     count: companyJobs.length,
   };
 
@@ -531,7 +531,7 @@ function appendJobCard(container, job, isWide) {
   if (isWide) {
     card.classList.add("job-card-wide");
     card.innerHTML = `
-            <div class="logo-box">${job.logo || "DW"}</div>
+            <div class="logo-box">${job.logo || "VO"}</div>
             <div class="job-info">
                 <h3>${job.title}</h3>
                 <div class="company">${job.company}</div>
@@ -551,7 +551,7 @@ function appendJobCard(container, job, isWide) {
     card.classList.add("job-card");
     card.innerHTML = `
             <div class="job-card-header">
-                <div class="company-logo">${job.logo || "DW"}</div>
+                <div class="company-logo">${job.logo || "VO"}</div>
                 <div class="header-text">
                     <h3 class="job-title">${job.title}</h3>
                     <p class="company-name">${job.company}</p>
@@ -585,7 +585,7 @@ window.openJobDetails = function (jobId) {
     document.getElementById("modal-hours").textContent =
       job.hours || "Standard";
   if (document.getElementById("modal-logo"))
-    document.getElementById("modal-logo").textContent = job.logo || "DW";
+    document.getElementById("modal-logo").textContent = job.logo || "VO";
 
   const reqContainer = document.getElementById("modal-requirements");
   if (reqContainer) {

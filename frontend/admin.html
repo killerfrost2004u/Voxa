@@ -395,23 +395,39 @@
             <i class="fas fa-chart-bar" style="color: var(--primary-color)"></i>
             Global Agency Performance
           </h3>
-          <table
-            class="data-table"
-            style="width: 100%; text-align: left; border-collapse: collapse">
-            <thead>
-              <tr
-                style="
-                  border-bottom: 1px solid var(--border-color);
-                  color: var(--text-muted);
-                ">
-                <th style="padding: 10px">Agency Name</th>
-                <th style="padding: 10px; text-align: right">
-                  Total Candidates Sourced
-                </th>
-              </tr>
-            </thead>
-            <tbody id="agencyTableBody"></tbody>
-          </table>
+
+          <!-- Responsive Wrapper for Mobile -->
+          <div style="overflow-x: auto; width: 100%">
+            <table
+              class="data-table"
+              style="
+                width: 100%;
+                text-align: left;
+                border-collapse: collapse;
+                min-width: 300px;
+              ">
+              <thead>
+                <tr
+                  style="
+                    border-bottom: 1px solid var(--border-color);
+                    color: var(--text-muted);
+                  ">
+                  <th style="padding: 10px; white-space: nowrap">
+                    Agency Name
+                  </th>
+                  <th
+                    style="
+                      padding: 10px;
+                      text-align: right;
+                      white-space: nowrap;
+                    ">
+                    Total Candidates Sourced
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="agencyTableBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
       <div id="section-apps" class="data-table-container">

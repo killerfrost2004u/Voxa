@@ -219,12 +219,12 @@ def get_public_jobs():
             formatted_jobs.append({
                 "id": j.get("JobID"),
                 "title": j.get("JobTitle", "Unknown Title"),
-                "company": j.get("CompanyName", "Dark Wolves"),
+                "company": j.get("CompanyName", "Voxa"),
                 "location": j.get("Location") or "Remote",
                 "salary": j.get("SalaryPackage") or "Competitive",
                 "requirements": f"Account: {j.get('AccountType', 'N/A')} | Hours: {j.get('WorkingHours', 'N/A')} | Target: {j.get('TargetAudience', 'N/A')}",
                 "description": j.get("OfferDetails", ""),
-                "logo": j.get("CompanyName", "DW")[:2].upper(),
+                "logo": j.get("CompanyName", "VO")[:2].upper(),
                 "bilingual": bool(j.get("RequiresSecondLanguage", False))
             })
         return jsonify(formatted_jobs)
@@ -503,9 +503,18 @@ def apply():
         
         # 🚀 Capture the Referral Matrix Data
         recruiter = d.get('recruiterSource') or d.get('ref') or 'Direct/Organic'
+        
         agency = d.get('agencyName')
+        if not agency or str(agency).strip() in ['', 'null', 'undefined', 'None']:
+            agency = 'Voxa'
+            
         unit = d.get('unitName')
+        if not unit or str(unit).strip() in ['', 'null', 'undefined', 'None']:
+            unit = 'Direct'
+            
         team = d.get('teamName')
+        if not team or str(team).strip() in ['', 'null', 'undefined', 'None']:
+            team = 'Direct'
 
         # 🚀 Added the Matrix columns to the SQL statement
         c.execute(
@@ -1046,10 +1055,9 @@ def get_admin_stats():
 
         # 2. Get Agency Performance Breakdown
         cur.execute('''
-            SELECT "AgencyName", COUNT("ApplicationID") as candidate_count 
+            SELECT COALESCE(NULLIF(TRIM("AgencyName"), ''), 'Voxa') as agency, COUNT("ApplicationID") as candidate_count 
             FROM "JobApplications" 
-            WHERE "AgencyName" IS NOT NULL 
-            GROUP BY "AgencyName"
+            GROUP BY COALESCE(NULLIF(TRIM("AgencyName"), ''), 'Voxa')
             ORDER BY candidate_count DESC
         ''')
         agency_stats = [{"agency": row[0], "count": row[1]} for row in cur.fetchall()]

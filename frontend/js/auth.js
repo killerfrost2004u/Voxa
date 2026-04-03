@@ -99,9 +99,9 @@ if (loginForm) {
             fullName: data.user.fullName,
             email: data.user.email,
             role: data.user.role,
-            agencyName: data.user.agencyName,
-            unitName: data.user.unitName,
-            teamName: data.user.teamName,
+            agencyName: data.user.agencyName || "Voxa",
+            unitName: data.user.unitName || "Direct",
+            teamName: data.user.teamName || "Direct",
             isAdmin: data.user.isAdmin,
           }),
         );
