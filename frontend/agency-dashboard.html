@@ -516,6 +516,11 @@
             color: var(--primary-color);
           "></p>
 
+        <div id="validator-scopes-group" style="display: none; margin-bottom: 15px; background: rgba(0, 229, 255, 0.05); padding: 15px; border-radius: 8px; border: 1px dashed var(--primary-color);">
+            <label style="font-size: 0.85rem; color: var(--primary-color); font-weight: bold; display: block; margin-bottom: 10px;"><i class="fas fa-check-double"></i> Validator Assignments (Select Units)</label>
+            <div id="validatorScopesCheckboxes" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+        </div>
+
         <label style="font-size: 0.85rem; color: var(--text-muted)"
           >Assign Roles</label
         >
@@ -814,6 +819,14 @@
         }
       });
 
+      // Global Change Listener for Validator Role Checkbox
+      document.addEventListener("change", function (e) {
+        if (e.target.classList.contains("role-cb") && e.target.value === "Validator") {
+            const scopeGroup = document.getElementById("validator-scopes-group");
+            if (scopeGroup) scopeGroup.style.display = e.target.checked ? "block" : "none";
+        }
+      });
+
       // --- DATA FETCHING ---
       async function fetchCandidates() {
         try {
@@ -1055,6 +1068,19 @@
           if (rolesArray.includes(cb.value)) cb.checked = true;
         });
 
+        // 🚀 Generate Dynamic Checkboxes for Validator Units
+        const units = new Set();
+        allStaff.forEach(staff => { if (staff.unit && staff.unit.trim() !== "" && staff.unit !== "None") units.add(staff.unit.trim()); });
+        units.add("Direct"); 
+
+        const currentScopes = (s.scopes || "").split(",").map(x => x.trim());
+        document.getElementById("validatorScopesCheckboxes").innerHTML = Array.from(units).map(u => `
+            <label style="display:flex; align-items:center; gap:5px; background:var(--bg-card); border: 1px solid var(--border-color); padding:6px 12px; border-radius:20px; font-size:0.85rem; cursor:pointer;">
+                <input type="checkbox" class="scope-cb" value="${u}" ${currentScopes.includes(u) ? "checked" : ""}> ${u}
+            </label>
+        `).join("");
+        document.getElementById("validator-scopes-group").style.display = rolesArray.includes("Validator") ? "block" : "none";
+
         // 🚀 3. ENFORCE STRICT RBAC VISIBILITY RULES
         // Only CEOs see the top 4 roles
         const showTopRoles = isCEO ? "block" : "none";
@@ -1091,6 +1117,10 @@
         )
           .map((cb) => cb.value)
           .join(", ");
+          
+        const selectedScopes = Array.from(document.querySelectorAll(".scope-cb:checked"))
+          .map(cb => cb.value).join(",");
+          
         if (selectedRoles === "")
           return alert("Staff must have at least one role!");
         try {
@@ -1103,6 +1133,7 @@
                 role: selectedRoles,
                 unit: unit,
                 team: team,
+                scopes: selectedScopes
               }),
             },
           );

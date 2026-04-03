@@ -159,24 +159,15 @@
       async function fetchCandidatesForValidation() {
         try {
           // 1. Determine the Validator's Scope
-          // If unitName is empty, "None", or "All", we treat it as an Agency-Wide scope
-          let unitScope = "All";
-          if (
-            user.unitName &&
-            user.unitName.trim() !== "" &&
-            user.unitName !== "None" &&
-            user.unitName.toLowerCase() !== "all"
-          ) {
-            unitScope = user.unitName;
-          }
+          let scopes = user.validatorScopes || "All";
 
           // 2. Update the UI badge so the Validator knows their scope!
           document.getElementById("roleBadge").innerText =
-            `${user.role} | ${user.agencyName} | Scope: ${unitScope}`;
+            `${user.role} | ${user.agencyName} | Scope: ${scopes}`;
 
           // 3. Send BOTH the agency and the unit scope to the backend
           const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/validator/applications?agency=${encodeURIComponent(user.agencyName)}&unit=${encodeURIComponent(unitScope)}`,
+            `https://voxa-pi-three.vercel.app/api/validator/applications?agency=${encodeURIComponent(user.agencyName)}&scopes=${encodeURIComponent(scopes)}`,
           );
           const apps = await res.json();
 
@@ -184,7 +175,7 @@
           container.innerHTML = "";
 
           if (apps.length === 0) {
-            container.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 40px; background: var(--bg-card); border-radius: 12px;">No candidates pending evaluation in your scope (${unitScope}).</p>`;
+            container.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 40px; background: var(--bg-card); border-radius: 12px;">No candidates pending evaluation in your assigned scopes (${scopes}).</p>`;
             return;
           }
 

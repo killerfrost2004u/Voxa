@@ -102,6 +102,7 @@ if (loginForm) {
             agencyName: data.user.agencyName || "Voxa",
             unitName: data.user.unitName || "Direct",
             teamName: data.user.teamName || "Direct",
+            validatorScopes: data.user.validatorScopes || "",
             isAdmin: data.user.isAdmin,
           }),
         );
@@ -110,10 +111,13 @@ if (loginForm) {
         // 1. Split the user's role string into an array (e.g., ["UnitManager", "Validator"])
         const userRoles = (data.user.role || "")
           .split(",")
-          .map((r) => r.trim());
+          .map((r) => r.trim())
+          .filter((r) => r && r !== "Candidate");
 
         // 2. Route based on the highest-priority role they hold
-        if (userRoles.includes("SuperAdmin") || userRoles.includes("Admin")) {
+        if (userRoles.length === 1 && userRoles[0] === "Validator") {
+          window.location.href = "validator.html";
+        } else if (userRoles.includes("SuperAdmin") || userRoles.includes("Admin")) {
           window.location.href = "admin.html";
         } else if (userRoles.includes("HR")) {
           window.location.href = "hr-dashboard.html";

@@ -61,6 +61,21 @@ def get_db_connection():
             time.sleep(2)
     return None
 
+def init_db():
+    conn = get_db_connection()
+    if conn:
+        c = conn.cursor()
+        try:
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "ValidatorScopes" TEXT DEFAULT \'\'')
+            conn.commit()
+            print("✅ Database Migrations Complete (ValidatorScopes synced).")
+        except Exception as e:
+            print(f"❌ Migration Error: {e}")
+        finally:
+            conn.close()
+
+init_db()
+
 # --- THE NATIVE MULTIMODAL CLOUD AI ---
 def run_gemini_audio_analysis(file_path):
     print(f"⏳ Uploading media to Gemini API: {file_path}")
@@ -447,7 +462,7 @@ def login():
         if conn:
             c = conn.cursor()
             # 🚀 NEW: Select ALL the matrix columns!
-            c.execute("""SELECT "FullName", "Email", "PasswordHash", "Role", "AgencyName", "UnitName", "TeamName" FROM "Users" WHERE "Email"=%s""", (data.get('email'),))
+            c.execute("""SELECT "FullName", "Email", "PasswordHash", "Role", "AgencyName", "UnitName", "TeamName", "ValidatorScopes" FROM "Users" WHERE "Email"=%s""", (data.get('email'),))
             user_row = c.fetchone()
             conn.close()
 
@@ -464,6 +479,7 @@ def login():
                         "agencyName": user_row[4],
                         "unitName": user_row[5],
                         "teamName": user_row[6],
+                        "validatorScopes": user_row[7] if len(user_row) > 7 else "",
                         "isAdmin": role in ['Admin', 'SuperAdmin']
                     }
                 }), 200
@@ -601,7 +617,7 @@ def apps():
 @app.route('/api/validator/applications', methods=['GET'])
 def get_validator_applications():
     agency = request.args.get('agency')
-    unit = request.args.get('unit', 'All') # Default to 'All' if not provided
+    scopes = request.args.get('scopes', '')
     
     if not agency:
         return jsonify({"error": "Agency is required"}), 400
@@ -609,26 +625,28 @@ def get_validator_applications():
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        # 🚀 FIX: Changed "RecruiterUnit" to "UnitName" to match the database column exactly
-        if unit and unit.lower() != 'all' and unit != 'None' and unit != '':
+        scopes_list = [s.strip() for s in scopes.split(',') if s.strip()]
+        
+        # Use PostgreSQL ANY() to match multiple units if scopes exist
+        if scopes_list and 'All' not in scopes_list:
             cur.execute('''
                 SELECT * FROM "JobApplications" 
-                    WHERE COALESCE(NULLIF(TRIM("AgencyName"), ''), 'Voxa') = %s AND COALESCE(NULLIF(TRIM("UnitName"), ''), 'Direct') = %s
+                WHERE COALESCE(NULLIF(TRIM("AgencyName"), ''), 'Voxa') = %s 
+                AND COALESCE(NULLIF(TRIM("UnitName"), ''), 'Direct') = ANY(%s)
                 ORDER BY "ApplicationID" DESC
-            ''', (agency, unit))
+            ''', (agency, scopes_list))
             
-        # If the Validator is "All" (Agency-wide), just filter by Agency
         else:
             cur.execute('''
                 SELECT * FROM "JobApplications" 
-                    WHERE COALESCE(NULLIF(TRIM("AgencyName"), ''), 'Voxa') = %s
+                WHERE COALESCE(NULLIF(TRIM("AgencyName"), ''), 'Voxa') = %s
                 ORDER BY "ApplicationID" DESC
             ''', (agency,))
             
         apps = cur.fetchall()
         return jsonify(apps)
     except Exception as e:
-        print(f"Validator Route Error: {e}") # This will print the exact SQL error to your Vercel logs if it fails again
+        print(f"Validator Route Error: {e}") 
         return jsonify({"error": str(e)}), 500
     finally:
         cur.close()
@@ -760,7 +778,7 @@ def get_agency_staff():
         if not u: return jsonify([])
         
         u_role, u_agency, u_unit, u_team = u
-        base_query = 'SELECT "UserID", "FullName", "Email", "Role", "UnitName", "TeamName" FROM "Users" WHERE "Status" = \'Approved\' AND COALESCE(NULLIF(TRIM("AgencyName"), \'\'), \'Voxa\') = %s'
+        base_query = 'SELECT "UserID", "FullName", "Email", "Role", "UnitName", "TeamName", "ValidatorScopes" FROM "Users" WHERE "Status" = \'Approved\' AND COALESCE(NULLIF(TRIM("AgencyName"), \'\'), \'Voxa\') = %s'
         params = [u_agency]
 
         if 'CEO' in u_role or 'SuperAdmin' in u_role or 'Admin' in u_role: pass
@@ -772,7 +790,7 @@ def get_agency_staff():
 
         cur.execute(base_query + ' ORDER BY "Role", "FullName"', tuple(params))
         rows = cur.fetchall()
-        result = [{"id": r[0], "name": r[1], "email": r[2], "role": r[3], "unit": r[4], "team": r[5]} for r in rows]
+        result = [{"id": r[0], "name": r[1], "email": r[2], "role": r[3], "unit": r[4], "team": r[5], "scopes": r[6]} for r in rows]
         return jsonify(result), 200
     except Exception as e: return jsonify([]), 500
     finally:
@@ -785,12 +803,13 @@ def update_agency_staff(id):
     new_role = data.get('role')
     new_unit = data.get('unit')
     new_team = data.get('team')
+    new_scopes = data.get('scopes', '')
 
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        cur.execute('UPDATE "Users" SET "Role"=%s, "UnitName"=%s, "TeamName"=%s WHERE "UserID"=%s', 
-                    (new_role, new_unit, new_team, id))
+        cur.execute('UPDATE "Users" SET "Role"=%s, "UnitName"=%s, "TeamName"=%s, "ValidatorScopes"=%s WHERE "UserID"=%s', 
+                    (new_role, new_unit, new_team, new_scopes, id))
         conn.commit()
         return jsonify({"message": "Staff profile successfully updated!"}), 200
     except Exception as e: return jsonify({"error": "Failed to update staff"}), 500
