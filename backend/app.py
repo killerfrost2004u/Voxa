@@ -563,7 +563,7 @@ def apps():
         if user_data:
             u_name, u_role, u_team, u_unit, u_agency = user_data
 
-            # 🚀 THE FIX: We JOIN the ValidatorGrades table here!
+            # 🚀 THE FIX: Prevent duplicates using DISTINCT ON and ensure older NULL rows fall back to Voxa/Direct
             base_select = """SELECT a.*, 
                                     u."UnitName" as "RecruiterUnit", 
                                     u."TeamName" as "RecruiterTeam",
@@ -571,17 +571,21 @@ def apps():
                                     v."ValidatorNotes"
                              FROM "JobApplications" a 
                              LEFT JOIN "Users" u ON a."RecruiterSource" = u."FullName" 
-                             LEFT JOIN "ValidatorGrades" v ON a."ApplicationID" = v."ApplicationID" """
+                             LEFT JOIN (
+                                 SELECT DISTINCT ON ("ApplicationID") "ApplicationID", "HumanGrade", "ValidatorNotes"
+                                 FROM "ValidatorGrades"
+                                 ORDER BY "ApplicationID", "GradedAt" DESC
+                             ) v ON a."ApplicationID" = v."ApplicationID" """
 
             # Support Dual Roles by using "in u_role" instead of "u_role =="
             if 'Admin' in u_role or 'SuperAdmin' in u_role:
                 c.execute(base_select + """ORDER BY a."SubmittedAt" DESC""")
             elif 'CEO' in u_role:
-                c.execute(base_select + """WHERE a."AgencyName" = %s ORDER BY a."SubmittedAt" DESC""", (u_agency,))
+                c.execute(base_select + """WHERE COALESCE(NULLIF(TRIM(a."AgencyName"), ''), 'Voxa') = %s ORDER BY a."SubmittedAt" DESC""", (u_agency,))
             elif 'UnitManager' in u_role:
-                c.execute(base_select + """WHERE a."AgencyName" = %s AND u."UnitName" = %s ORDER BY a."SubmittedAt" DESC""", (u_agency, u_unit))
+                c.execute(base_select + """WHERE COALESCE(NULLIF(TRIM(a."AgencyName"), ''), 'Voxa') = %s AND COALESCE(NULLIF(TRIM(a."UnitName"), ''), 'Direct') = %s ORDER BY a."SubmittedAt" DESC""", (u_agency, u_unit))
             elif 'Leader' in u_role:
-                c.execute(base_select + """WHERE a."AgencyName" = %s AND u."TeamName" = %s ORDER BY a."SubmittedAt" DESC""", (u_agency, u_team))
+                c.execute(base_select + """WHERE COALESCE(NULLIF(TRIM(a."AgencyName"), ''), 'Voxa') = %s AND COALESCE(NULLIF(TRIM(a."TeamName"), ''), 'Direct') = %s ORDER BY a."SubmittedAt" DESC""", (u_agency, u_team))
             else:
                 c.execute(base_select + """WHERE a."RecruiterSource" = %s ORDER BY a."SubmittedAt" DESC""", (u_name,))
             
@@ -609,7 +613,7 @@ def get_validator_applications():
         if unit and unit.lower() != 'all' and unit != 'None' and unit != '':
             cur.execute('''
                 SELECT * FROM "JobApplications" 
-                WHERE "AgencyName" = %s AND "UnitName" = %s
+                    WHERE COALESCE(NULLIF(TRIM("AgencyName"), ''), 'Voxa') = %s AND COALESCE(NULLIF(TRIM("UnitName"), ''), 'Direct') = %s
                 ORDER BY "ApplicationID" DESC
             ''', (agency, unit))
             
@@ -617,7 +621,7 @@ def get_validator_applications():
         else:
             cur.execute('''
                 SELECT * FROM "JobApplications" 
-                WHERE "AgencyName" = %s
+                    WHERE COALESCE(NULLIF(TRIM("AgencyName"), ''), 'Voxa') = %s
                 ORDER BY "ApplicationID" DESC
             ''', (agency,))
             
@@ -756,7 +760,7 @@ def get_agency_staff():
         if not u: return jsonify([])
         
         u_role, u_agency, u_unit, u_team = u
-        base_query = 'SELECT "UserID", "FullName", "Email", "Role", "UnitName", "TeamName" FROM "Users" WHERE "Status" = \'Approved\' AND "AgencyName" = %s'
+        base_query = 'SELECT "UserID", "FullName", "Email", "Role", "UnitName", "TeamName" FROM "Users" WHERE "Status" = \'Approved\' AND COALESCE(NULLIF(TRIM("AgencyName"), \'\'), \'Voxa\') = %s'
         params = [u_agency]
 
         if 'CEO' in u_role or 'SuperAdmin' in u_role or 'Admin' in u_role: pass
@@ -839,18 +843,18 @@ def get_team_stats():
     cur = conn.cursor()
     try:
         # Build the dynamic Matrix Query for stats
-        base_query = 'SELECT "RecruiterSource", COUNT(*) as count FROM "JobApplications" WHERE "AgencyName" = %s'
+        base_query = 'SELECT COALESCE(NULLIF(TRIM("RecruiterSource"), \'\'), \'Direct/Organic\'), COUNT(*) as count FROM "JobApplications" WHERE COALESCE(NULLIF(TRIM("AgencyName"), \'\'), \'Voxa\') = %s'
         params = [agency]
 
         if role == 'UnitManager':
-            base_query += ' AND "UnitName" = %s'
+            base_query += ' AND COALESCE(NULLIF(TRIM("UnitName"), \'\'), \'Direct\') = %s'
             params.append(unit)
         elif role == 'Leader':
-            base_query += ' AND "UnitName" = %s AND "TeamName" = %s'
+            base_query += ' AND COALESCE(NULLIF(TRIM("UnitName"), \'\'), \'Direct\') = %s AND COALESCE(NULLIF(TRIM("TeamName"), \'\'), \'Direct\') = %s'
             params.extend([unit, team])
 
-        # Filter out empty recruiters and group them
-        base_query += ' AND "RecruiterSource" IS NOT NULL GROUP BY "RecruiterSource" ORDER BY count DESC'
+        # Group them perfectly
+        base_query += ' GROUP BY COALESCE(NULLIF(TRIM("RecruiterSource"), \'\'), \'Direct/Organic\') ORDER BY count DESC'
         
         cur.execute(base_query, tuple(params))
         stats = cur.fetchall()
@@ -913,13 +917,13 @@ def get_pending_staff():
         if role in ['SuperAdmin', 'Admin']:
             pass # SuperAdmins see ALL pending users across the whole system
         elif role == 'CEO':
-            base_query += ' AND "AgencyName" = %s AND "Role" IN (\'UnitManager\', \'Validator\', \'Leader\', \'Recruiter\', \'HR\')'
+            base_query += ' AND COALESCE(NULLIF(TRIM("AgencyName"), \'\'), \'Voxa\') = %s AND "Role" IN (\'UnitManager\', \'Validator\', \'Leader\', \'Recruiter\', \'HR\')'
             params.append(agency)
         elif role == 'UnitManager':
-            base_query += ' AND "AgencyName" = %s AND "UnitName" = %s AND "Role" IN (\'Leader\', \'Recruiter\')'
+            base_query += ' AND COALESCE(NULLIF(TRIM("AgencyName"), \'\'), \'Voxa\') = %s AND COALESCE(NULLIF(TRIM("UnitName"), \'\'), \'Direct\') = %s AND "Role" IN (\'Leader\', \'Recruiter\')'
             params.extend([agency, unit])
         elif role == 'Leader':
-            base_query += ' AND "AgencyName" = %s AND "UnitName" = %s AND "TeamName" = %s AND "Role" = \'Recruiter\''
+            base_query += ' AND COALESCE(NULLIF(TRIM("AgencyName"), \'\'), \'Voxa\') = %s AND COALESCE(NULLIF(TRIM("UnitName"), \'\'), \'Direct\') = %s AND COALESCE(NULLIF(TRIM("TeamName"), \'\'), \'Direct\') = %s AND "Role" = \'Recruiter\''
             params.extend([agency, unit, team])
         else:
             return jsonify([]), 200 # Normal Recruiters shouldn't see this queue
