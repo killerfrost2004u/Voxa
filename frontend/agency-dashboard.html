@@ -471,19 +471,66 @@
       <div class="modal-card">
         <h3 style="margin-bottom: 15px">📅 Schedule Interview & Panel</h3>
         <input type="hidden" id="modalAppId" />
-        
-        <label style="font-size: 0.9rem; color: var(--text-main); font-weight: 600; display: block; margin-bottom: 8px;">
-          <i class="fas fa-calendar-check" style="color: var(--primary-color); margin-right: 5px;"></i> Available HR Slots
+
+        <label
+          style="
+            font-size: 0.9rem;
+            color: var(--text-main);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+          ">
+          <i
+            class="fas fa-briefcase"
+            style="color: var(--primary-color); margin-right: 5px"></i>
+          Target Job Offer
+        </label>
+        <select id="modalJob" required onchange="updateModalSlots()">
+          <option value="" disabled selected>Loading jobs...</option>
+        </select>
+
+        <label
+          style="
+            font-size: 0.9rem;
+            color: var(--text-main);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+          ">
+          <i
+            class="fas fa-calendar-check"
+            style="color: var(--primary-color); margin-right: 5px"></i>
+          Available HR Slots
         </label>
         <select id="modalSlot" required>
-            <option value="" disabled selected>Loading slots...</option>
+          <option value="" disabled selected>Select a job first...</option>
         </select>
-        
-        <label style="font-size: 0.9rem; color: var(--text-main); font-weight: 600; display: block; margin-bottom: 8px; margin-top: 15px;">
-          <i class="fas fa-file-signature" style="color: var(--primary-color); margin-right: 5px;"></i> Candidate Panel Summary
+
+        <label
+          style="
+            font-size: 0.9rem;
+            color: var(--text-main);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+            margin-top: 15px;
+          ">
+          <i
+            class="fas fa-file-signature"
+            style="color: var(--primary-color); margin-right: 5px"></i>
+          Candidate Panel Summary
         </label>
-        <textarea id="modalPanel" rows="4" placeholder="Write candidate strengths, QA notes, and profile highlights for the client..." required style="resize:vertical; min-height: 100px; line-height: 1.5;"></textarea>
-        
+        <textarea
+          id="modalPanel"
+          rows="4"
+          placeholder="Write candidate strengths, QA notes, and profile highlights for the client..."
+          required
+          style="
+            resize: vertical;
+            min-height: 100px;
+            line-height: 1.5;
+          "></textarea>
+
         <button type="button" class="btn-schedule btn-submit-schedule">
           Confirm Slot & Save Panel
         </button>
@@ -511,9 +558,30 @@
             color: var(--primary-color);
           "></p>
 
-        <div id="validator-scopes-group" style="display: none; margin-bottom: 15px; background: rgba(0, 229, 255, 0.05); padding: 15px; border-radius: 8px; border: 1px dashed var(--primary-color);">
-            <label style="font-size: 0.85rem; color: var(--primary-color); font-weight: bold; display: block; margin-bottom: 10px;"><i class="fas fa-check-double"></i> Validator Assignments (Select Units)</label>
-            <div id="validatorScopesCheckboxes" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+        <div
+          id="validator-scopes-group"
+          style="
+            display: none;
+            margin-bottom: 15px;
+            background: rgba(0, 229, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed var(--primary-color);
+          ">
+          <label
+            style="
+              font-size: 0.85rem;
+              color: var(--primary-color);
+              font-weight: bold;
+              display: block;
+              margin-bottom: 10px;
+            "
+            ><i class="fas fa-check-double"></i> Validator Assignments (Select
+            Units)</label
+          >
+          <div
+            id="validatorScopesCheckboxes"
+            style="display: flex; flex-wrap: wrap; gap: 10px"></div>
         </div>
 
         <label style="font-size: 0.85rem; color: var(--text-muted)"
@@ -629,6 +697,8 @@
       // --- 1. GLOBAL VARIABLES ---
       let allCandidates = [];
       let allStaff = [];
+      let globalJobsData = [];
+      let currentAgencySlots = [];
 
       const userStr = localStorage.getItem("user");
       if (!userStr) window.location.href = "login.html";
@@ -683,6 +753,12 @@
             switcher.innerHTML += `<button onclick="window.location.href='hr-dashboard.html'" class="btn-outline"><i class="fas fa-briefcase"></i> HR Desk</button>`;
           }
         }
+        
+        try {
+          const jRes = await fetch("https://voxa-pi-three.vercel.app/api/admin/jobs");
+          globalJobsData = await jRes.json();
+        } catch(e) { console.error("Could not load jobs", e); }
+
         await fetchCandidates();
         if (!isRecruiterOnly) {
           await fetchPendingStaff();
@@ -764,7 +840,10 @@
             return;
           } else if (targetBtn.classList.contains("btn-schedule-call")) {
             e.preventDefault();
-            window.openScheduleModal(targetBtn.getAttribute("data-id"), targetBtn.getAttribute("data-job"));
+            window.openScheduleModal(
+              targetBtn.getAttribute("data-id"),
+              targetBtn.getAttribute("data-job"),
+            );
             return;
           } else if (targetBtn.classList.contains("btn-promote")) {
             e.preventDefault();
@@ -816,9 +895,13 @@
 
       // Global Change Listener for Validator Role Checkbox
       document.addEventListener("change", function (e) {
-        if (e.target.classList.contains("role-cb") && e.target.value === "Validator") {
-            const scopeGroup = document.getElementById("validator-scopes-group");
-            if (scopeGroup) scopeGroup.style.display = e.target.checked ? "block" : "none";
+        if (
+          e.target.classList.contains("role-cb") &&
+          e.target.value === "Validator"
+        ) {
+          const scopeGroup = document.getElementById("validator-scopes-group");
+          if (scopeGroup)
+            scopeGroup.style.display = e.target.checked ? "block" : "none";
         }
       });
 
@@ -889,7 +972,7 @@
               <tr style="border-bottom: 1px solid var(--border-color);">
                   <td style="padding: 15px 10px;">
                     <div style="font-weight:bold; color:var(--text-main);">${app.FullName}</div>
-                    <div style="font-size:0.8rem; color:var(--text-muted);">${app.JobTitle}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);"><span style="color: var(--primary-color); font-weight: 500;">${app.Company || "N/A"}</span> &bull; ${app.JobTitle}</div>
                   </td>
                   <td style="padding: 15px 10px;">
                     <div style="color: var(--primary-color); font-weight: 500;">${app.RecruiterSource || "Direct/Organic"}</div>
@@ -1065,16 +1148,25 @@
 
         // 🚀 Generate Dynamic Checkboxes for Validator Units
         const units = new Set();
-        allStaff.forEach(staff => { if (staff.unit && staff.unit.trim() !== "" && staff.unit !== "None") units.add(staff.unit.trim()); });
-        units.add("Direct"); 
+        allStaff.forEach((staff) => {
+          if (staff.unit && staff.unit.trim() !== "" && staff.unit !== "None")
+            units.add(staff.unit.trim());
+        });
+        units.add("Direct");
 
-        const currentScopes = (s.scopes || "").split(",").map(x => x.trim());
-        document.getElementById("validatorScopesCheckboxes").innerHTML = Array.from(units).map(u => `
+        const currentScopes = (s.scopes || "").split(",").map((x) => x.trim());
+        document.getElementById("validatorScopesCheckboxes").innerHTML =
+          Array.from(units)
+            .map(
+              (u) => `
             <label style="display:flex; align-items:center; gap:5px; background:var(--bg-card); border: 1px solid var(--border-color); padding:6px 12px; border-radius:20px; font-size:0.85rem; cursor:pointer;">
                 <input type="checkbox" class="scope-cb" value="${u}" ${currentScopes.includes(u) ? "checked" : ""}> ${u}
             </label>
-        `).join("");
-        document.getElementById("validator-scopes-group").style.display = rolesArray.includes("Validator") ? "block" : "none";
+        `,
+            )
+            .join("");
+        document.getElementById("validator-scopes-group").style.display =
+          rolesArray.includes("Validator") ? "block" : "none";
 
         // 🚀 3. ENFORCE STRICT RBAC VISIBILITY RULES
         // Only CEOs see the top 4 roles
@@ -1097,28 +1189,87 @@
         forceShowModal("promoteModal");
       };
 
-      window.openScheduleModal = async function (appId, jobTitle) {
+      window.openScheduleModal = async function (appId, targetJobTitle) {
         document.getElementById("modalAppId").value = appId;
+        const jobSelect = document.getElementById("modalJob");
         const slotSelect = document.getElementById("modalSlot");
-        slotSelect.innerHTML = '<option value="" disabled selected>Loading slots...</option>';
-        
-        try {
-            const res = await fetch(`https://voxa-pi-three.vercel.app/api/hr/slots?agency=${encodeURIComponent(user.agencyName)}&job=${encodeURIComponent(jobTitle)}`);
-            const slots = await res.json();
-            
-            if (slots.length === 0) {
-                slotSelect.innerHTML = '<option value="" disabled selected>No slots available for this job right now.</option>';
-            } else {
-                slotSelect.innerHTML = slots.map(s => {
-                    const remaining = s.Capacity - s.Booked;
-                    return `<option value="${s.SlotID}">${s.SlotDate} @ ${s.SlotTime} (${remaining} slots left)</option>`;
-                }).join("");
-            }
-        } catch(e) {
-            slotSelect.innerHTML = '<option value="" disabled selected>Error loading slots.</option>';
-        }
+
+        jobSelect.innerHTML =
+          '<option value="" disabled selected>Loading jobs...</option>';
+        slotSelect.innerHTML =
+          '<option value="" disabled selected>Select a job first...</option>';
         document.getElementById("modalPanel").value = "";
+
         forceShowModal("scheduleModal");
+
+        try {
+          const res = await fetch(
+            `https://voxa-pi-three.vercel.app/api/hr/slots`,
+          );
+          const allSlots = await res.json();
+
+          currentAgencySlots = allSlots.filter(
+            (s) => s.AgencyName === user.agencyName && s.Booked < s.Capacity,
+          );
+
+          if (currentAgencySlots.length === 0) {
+            jobSelect.innerHTML =
+              '<option value="" disabled selected>No slots available for your agency.</option>';
+            return;
+          }
+
+          const uniqueJobs = [
+            ...new Set(currentAgencySlots.map((s) => s.JobTitle)),
+          ];
+
+          jobSelect.innerHTML =
+            '<option value="" disabled selected>Select Target Job Offer...</option>';
+          uniqueJobs.forEach((job) => {
+            const jobData = globalJobsData.find((j) => j.JobTitle === job);
+            const companyName = jobData
+              ? jobData.CompanyName
+              : "Unknown Company";
+            const displayTitle = `${companyName} - ${job}`;
+
+            const isSelected = job === targetJobTitle ? "selected" : "";
+            jobSelect.innerHTML += `<option value="${job}" ${isSelected}>${displayTitle}</option>`;
+          });
+
+          if (uniqueJobs.includes(targetJobTitle)) {
+            jobSelect.value = targetJobTitle;
+          }
+          window.updateModalSlots();
+        } catch (e) {
+          jobSelect.innerHTML =
+            '<option value="" disabled selected>Error loading jobs.</option>';
+        }
+      };
+
+      window.updateModalSlots = function () {
+        const selectedJob = document.getElementById("modalJob").value;
+        const slotSelect = document.getElementById("modalSlot");
+
+        if (!selectedJob) {
+          slotSelect.innerHTML =
+            '<option value="" disabled selected>Select a job first...</option>';
+          return;
+        }
+
+        const relevantSlots = currentAgencySlots.filter(
+          (s) => s.JobTitle === selectedJob,
+        );
+
+        if (relevantSlots.length === 0) {
+          slotSelect.innerHTML =
+            '<option value="" disabled selected>No slots available for this job.</option>';
+        } else {
+          slotSelect.innerHTML =
+            '<option value="" disabled selected>Select a time block...</option>';
+          relevantSlots.forEach((s) => {
+            const remaining = s.Capacity - s.Booked;
+            slotSelect.innerHTML += `<option value="${s.SlotID}">${s.SlotDate} @ ${s.SlotTime} (${remaining} slots left)</option>`;
+          });
+        }
       };
 
       // --- ACTION SUBMISSIONS ---
@@ -1131,10 +1282,13 @@
         )
           .map((cb) => cb.value)
           .join(", ");
-          
-        const selectedScopes = Array.from(document.querySelectorAll(".scope-cb:checked"))
-          .map(cb => cb.value).join(",");
-          
+
+        const selectedScopes = Array.from(
+          document.querySelectorAll(".scope-cb:checked"),
+        )
+          .map((cb) => cb.value)
+          .join(",");
+
         if (selectedRoles === "")
           return alert("Staff must have at least one role!");
         try {
@@ -1147,7 +1301,7 @@
                 role: selectedRoles,
                 unit: unit,
                 team: team,
-                scopes: selectedScopes
+                scopes: selectedScopes,
               }),
             },
           );
@@ -1212,7 +1366,9 @@
         navigator.clipboard.writeText(
           `https://voxa-pi-three.vercel.app/index.html?recruiter=${encodeURIComponent(user.fullName)}&agency=${encodeURIComponent(user.agencyName)}&unit=${encodeURIComponent(user.unitName || "")}&team=${encodeURIComponent(user.teamName || "")}`,
         );
-        alert("✅ Invite link copied! Candidates will land on the homepage and your referral will be tracked globally.");
+        alert(
+          "✅ Invite link copied! Candidates will land on the homepage and your referral will be tracked globally.",
+        );
       };
 
       window.logout = function () {
