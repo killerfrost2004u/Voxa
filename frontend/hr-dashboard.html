@@ -430,10 +430,16 @@
             <select id="slotAgency" required>
               <option value="" disabled selected>Select Agency...</option>
             </select>
-            <input type="date" id="slotDate" />
             <input type="text" id="slotTime" placeholder="Time Block (e.g. 10:00 AM - 12:00 PM)" />
-            <input type="number" id="slotCapacity" placeholder="Number of Slots (e.g. 10)" />
-            <button onclick="createSlot()" class="btn-primary" style="grid-column: span 3;">+ Create Slot Block</button>
+            <input type="number" id="slotCapacity" placeholder="Slots DAILY (e.g. 10)" />
+            
+            <div style="grid-column: span 3; margin-top: 5px;">
+              <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px; display: block;">Select Interview Days (Remaining of week / Next week)</label>
+              <div id="week-days-container" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                  <!-- Rendered via JS -->
+              </div>
+            </div>
+            <button onclick="createSlot()" class="btn-primary" style="grid-column: span 3; margin-top: 10px;">+ Create Slot Blocks</button>
           </div>
           
           <table style="width: 100%; text-align: left; border-collapse: collapse; margin-top: 20px;">
@@ -544,11 +550,12 @@
           switcher.innerHTML += `<button onclick="window.location.href='agency-dashboard.html'" class="btn-outline"><i class="fas fa-users"></i> Agency Desk</button>`;
       }
 
-      window.onload = () => {
-        loadAdminJobs();
+      window.onload = async () => {
+        await loadAdminJobs();
         loadSlots();
         loadCRMLeads();
         populateSlotDropdowns();
+        renderSlotDays();
       };
 
       function switchTab(tab) {
@@ -666,32 +673,83 @@
                   tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px">No slots created yet.</td></tr>';
                   return;
               }
-              tbody.innerHTML = slots.map(s => `
+              tbody.innerHTML = slots.map(s => {
+                  const job = adminJobsData.find(j => j.JobTitle === s.JobTitle);
+                  const displayTitle = job ? `${job.CompanyName} - ${s.JobTitle}` : s.JobTitle;
+                  return `
                   <tr style="border-bottom: 1px solid var(--border-color);">
-                      <td style="padding: 10px;"><b>${s.JobTitle}</b><br><small style="color:var(--primary-color);">${s.AgencyName}</small></td>
+                      <td style="padding: 10px;"><b>${displayTitle}</b><br><small style="color:var(--primary-color);">${s.AgencyName}</small></td>
                       <td style="padding: 10px;">${s.SlotDate}<br><small>${s.SlotTime}</small></td>
                       <td style="padding: 10px;">${s.Capacity}</td>
                       <td style="padding: 10px;">${s.Booked}</td>
                       <td style="padding: 10px;"><button onclick="deleteSlot(${s.SlotID})" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i class="fas fa-trash"></i></button></td>
                   </tr>
-              `).join("");
+              `}).join("");
           } catch(e) { console.error(e); }
+      }
+
+      function renderSlotDays() {
+          const container = document.getElementById("week-days-container");
+          if (!container) return;
+          
+          let today = new Date();
+          let datesHtml = '';
+          
+          // Generate the next 14 days so HR can pick any upcoming days 
+          // covering the remaining of this week and the next week.
+          for(let i = 1; i <= 14; i++) {
+              let d = new Date();
+              d.setDate(today.getDate() + i);
+              let dateStr = d.toISOString().split('T')[0];
+              let display = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+              
+              // Highlight weekends (Friday=5, Saturday=6) by lowering opacity slightly
+              let isWeekend = (d.getDay() === 5 || d.getDay() === 6);
+              let opacity = isWeekend ? '0.6' : '1';
+              
+              datesHtml += `
+              <label style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; opacity: ${opacity};">
+                  <input type="checkbox" class="slot-day-cb" value="${dateStr}"> 
+                  <span style="font-size: 0.9rem;">${display}</span>
+              </label>`;
+          }
+          container.innerHTML = datesHtml;
       }
       
       window.createSlot = async function() {
-          const payload = {
-              jobTitle: document.getElementById("slotJob").value,
-              agencyName: document.getElementById("slotAgency").value,
-              date: document.getElementById("slotDate").value,
-              time: document.getElementById("slotTime").value,
-              capacity: document.getElementById("slotCapacity").value
-          };
+          const selectedDates = Array.from(document.querySelectorAll('.slot-day-cb:checked')).map(cb => cb.value);
+          const jobTitle = document.getElementById("slotJob").value;
+          const agencyName = document.getElementById("slotAgency").value;
+          const time = document.getElementById("slotTime").value;
+          const capacity = document.getElementById("slotCapacity").value;
           
-          if (!payload.jobTitle || !payload.agencyName || !payload.date || !payload.time || !payload.capacity) {
-              return alert("Please completely fill out all slot fields before creating a block.");
+          if (!jobTitle || !agencyName || !time || !capacity) {
+              return alert("Please completely fill out the job, agency, time, and capacity fields.");
           }
-          await fetch('https://voxa-pi-three.vercel.app/api/hr/slots', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-          loadSlots();
+          if (selectedDates.length === 0) {
+              return alert("Please select at least one day for the interview slots.");
+          }
+
+          const btn = document.querySelector('button[onclick="createSlot()"]');
+          const originalText = btn.innerText;
+          btn.innerText = "Creating slots...";
+          btn.disabled = true;
+
+          try {
+              // Loop through each selected date and create a daily capacity block
+              for (const date of selectedDates) {
+                  const payload = { jobTitle, agencyName, date, time, capacity };
+                  await fetch('https://voxa-pi-three.vercel.app/api/hr/slots', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+              }
+              
+              document.querySelectorAll('.slot-day-cb:checked').forEach(cb => cb.checked = false);
+              loadSlots();
+          } catch(e) {
+              alert("An error occurred while creating the slots.");
+          } finally {
+              btn.innerText = originalText;
+              btn.disabled = false;
+          }
       }
       
       window.deleteSlot = async function(id) {
