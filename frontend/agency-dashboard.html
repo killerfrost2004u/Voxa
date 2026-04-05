@@ -103,7 +103,8 @@
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       }
       .modal-card input,
-      .modal-card select {
+      .modal-card select,
+      .modal-card textarea {
         width: 100%;
         padding: 10px;
         margin-top: 5px;
@@ -113,6 +114,7 @@
         border: 1px solid var(--border-color);
         border-radius: 6px;
         outline: none;
+        font-family: inherit;
       }
 
       /* Dynamic Buttons */
@@ -470,17 +472,17 @@
         <h3 style="margin-bottom: 15px">📅 Schedule Interview & Panel</h3>
         <input type="hidden" id="modalAppId" />
         
-        <label style="font-size: 0.85rem; color: var(--text-muted)"
-          >Available HR Slots</label
-        >
+        <label style="font-size: 0.9rem; color: var(--text-main); font-weight: 600; display: block; margin-bottom: 8px;">
+          <i class="fas fa-calendar-check" style="color: var(--primary-color); margin-right: 5px;"></i> Available HR Slots
+        </label>
         <select id="modalSlot" required>
             <option value="" disabled selected>Loading slots...</option>
         </select>
         
-        <label style="font-size: 0.85rem; color: var(--text-muted)"
-          >Candidate Panel Summary</label
-        >
-        <textarea id="modalPanel" rows="4" placeholder="Write candidate strengths, QA notes, and profile highlights for the client..." required style="resize:vertical;"></textarea>
+        <label style="font-size: 0.9rem; color: var(--text-main); font-weight: 600; display: block; margin-bottom: 8px; margin-top: 15px;">
+          <i class="fas fa-file-signature" style="color: var(--primary-color); margin-right: 5px;"></i> Candidate Panel Summary
+        </label>
+        <textarea id="modalPanel" rows="4" placeholder="Write candidate strengths, QA notes, and profile highlights for the client..." required style="resize:vertical; min-height: 100px; line-height: 1.5;"></textarea>
         
         <button type="button" class="btn-schedule btn-submit-schedule">
           Confirm Slot & Save Panel
@@ -877,7 +879,7 @@
 
             let actionBtn = "";
             if (!app.InterviewDate && (isLeader || isUM || isCEO)) {
-              actionBtn += `<button type="button" class="btn-action-schedule btn-schedule-call" data-id="${safeAppId}" data-job="${app.JobTitle}">Schedule Call</button> `;
+              actionBtn += `<button type="button" class="btn-action-schedule btn-schedule-call" data-id="${safeAppId}" data-job="${app.JobTitle}">Schedule Interview</button> `;
             } else if (app.InterviewLink) {
               actionBtn += `<a href="${app.InterviewLink}" target="_blank" style="background:#10b981; color:white; padding:5px 12px; border-radius:4px; font-size: 0.8rem; font-weight:bold; text-decoration:none; margin-right: 5px;">Join Call</a> `;
             }
