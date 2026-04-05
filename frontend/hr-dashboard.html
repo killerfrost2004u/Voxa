@@ -234,6 +234,9 @@
         <button class="tab-btn" onclick="switchTab('crm')" id="tab-crm">
           <i class="fas fa-handshake"></i> B2B Client CRM
         </button>
+        <button class="tab-btn" onclick="switchTab('slots')" id="tab-slots">
+          <i class="fas fa-calendar-alt"></i> HR Calendar Slots
+        </button>
       </div>
 
       <div id="section-jobs">
@@ -415,6 +418,39 @@
         </div>
       </div>
 
+      <div id="section-slots" style="display: none">
+        <div class="leaderboard-card">
+          <h3 style="margin-bottom: 15px; color: var(--primary-color)">
+            <i class="fas fa-calendar-plus"></i> Create Interview Slots
+          </h3>
+          <div class="job-form">
+            <input type="text" id="slotJob" placeholder="Job Title (e.g. Telesales)" />
+            <input type="text" id="slotAgency" placeholder="Agency Name (e.g. Dark Wolves)" />
+            <input type="date" id="slotDate" />
+            <input type="text" id="slotTime" placeholder="Time Block (e.g. 10:00 AM - 12:00 PM)" />
+            <input type="number" id="slotCapacity" placeholder="Number of Slots (e.g. 10)" />
+            <button onclick="createSlot()" class="btn-primary" style="grid-column: span 3;">+ Create Slot Block</button>
+          </div>
+          
+          <table style="width: 100%; text-align: left; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
+                <th style="padding: 10px">Job & Agency</th>
+                <th style="padding: 10px">Date & Time</th>
+                <th style="padding: 10px">Capacity</th>
+                <th style="padding: 10px">Booked</th>
+                <th style="padding: 10px">Action</th>
+              </tr>
+            </thead>
+            <tbody id="slots-table-body">
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 20px">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="modal-overlay" id="leadModal">
         <div class="modal-card">
           <h3 style="margin-bottom: 15px; color: var(--primary-color)">
@@ -506,13 +542,16 @@
 
       window.onload = () => {
         loadAdminJobs();
+        loadSlots();
       };
 
       function switchTab(tab) {
         document.getElementById("section-jobs").style.display = "none";
         document.getElementById("section-crm").style.display = "none";
+        document.getElementById("section-slots").style.display = "none";
         document.getElementById("tab-jobs").classList.remove("active");
         document.getElementById("tab-crm").classList.remove("active");
+        document.getElementById("tab-slots").classList.remove("active");
 
         document.getElementById(`section-${tab}`).style.display = "block";
         document.getElementById(`tab-${tab}`).classList.add("active");
@@ -573,6 +612,45 @@
         submitBtn.innerHTML = `<i class="fas fa-save"></i> Update Published Job`;
         submitBtn.style.background = "#f59e0b";
       };
+
+      // --- HR SLOTS API ---
+      async function loadSlots() {
+          try {
+              const res = await fetch('https://voxa-pi-three.vercel.app/api/hr/slots');
+              const slots = await res.json();
+              const tbody = document.getElementById("slots-table-body");
+              if (slots.length === 0) {
+                  tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px">No slots created yet.</td></tr>';
+                  return;
+              }
+              tbody.innerHTML = slots.map(s => `
+                  <tr style="border-bottom: 1px solid var(--border-color);">
+                      <td style="padding: 10px;"><b>${s.JobTitle}</b><br><small style="color:var(--primary-color);">${s.AgencyName}</small></td>
+                      <td style="padding: 10px;">${s.SlotDate}<br><small>${s.SlotTime}</small></td>
+                      <td style="padding: 10px;">${s.Capacity}</td>
+                      <td style="padding: 10px;">${s.Booked}</td>
+                      <td style="padding: 10px;"><button onclick="deleteSlot(${s.SlotID})" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i class="fas fa-trash"></i></button></td>
+                  </tr>
+              `).join("");
+          } catch(e) { console.error(e); }
+      }
+      
+      window.createSlot = async function() {
+          const payload = {
+              jobTitle: document.getElementById("slotJob").value,
+              agencyName: document.getElementById("slotAgency").value,
+              date: document.getElementById("slotDate").value,
+              time: document.getElementById("slotTime").value,
+              capacity: document.getElementById("slotCapacity").value
+          };
+          await fetch('https://voxa-pi-three.vercel.app/api/hr/slots', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          loadSlots();
+      }
+      
+      window.deleteSlot = async function(id) {
+          await fetch(`https://voxa-pi-three.vercel.app/api/hr/slots/${id}`, { method: 'DELETE' });
+          loadSlots();
+      }
 
       window.saveJobData = async function () {
         const payload = {

@@ -467,30 +467,23 @@
 
     <div class="modal-overlay" id="scheduleModal">
       <div class="modal-card">
-        <h3 style="margin-bottom: 15px">📅 Schedule Interview</h3>
+        <h3 style="margin-bottom: 15px">📅 Schedule Interview & Panel</h3>
         <input type="hidden" id="modalAppId" />
-        <label style="font-size: 0.85rem; color: var(--text-muted)">Date</label
-        ><input type="date" id="modalDate" required />
+        
         <label style="font-size: 0.85rem; color: var(--text-muted)"
-          >Time Slot</label
+          >Available HR Slots</label
         >
-        <select id="modalTime" required>
-          <option value="10:00 AM - 10:30 AM">10:00 AM - 10:30 AM</option>
-          <option value="11:00 AM - 11:30 AM">11:00 AM - 11:30 AM</option>
-          <option value="2:00 PM - 2:30 PM">2:00 PM - 2:30 PM</option>
-          <option value="4:00 PM - 4:30 PM">4:00 PM - 4:30 PM</option>
-          <option value="7:00 PM - 9:00 PM">
-            7:00 PM - 9:00 PM (Night Slot)
-          </option>
+        <select id="modalSlot" required>
+            <option value="" disabled selected>Loading slots...</option>
         </select>
+        
         <label style="font-size: 0.85rem; color: var(--text-muted)"
-          >Meeting Link (Optional)</label
-        ><input
-          type="url"
-          id="modalLink"
-          placeholder="https://zoom.us/j/123..." />
+          >Candidate Panel Summary</label
+        >
+        <textarea id="modalPanel" rows="4" placeholder="Write candidate strengths, QA notes, and profile highlights for the client..." required style="resize:vertical;"></textarea>
+        
         <button type="button" class="btn-schedule btn-submit-schedule">
-          Confirm Slot
+          Confirm Slot & Save Panel
         </button>
         <button
           type="button"
@@ -769,7 +762,7 @@
             return;
           } else if (targetBtn.classList.contains("btn-schedule-call")) {
             e.preventDefault();
-            window.openScheduleModal(targetBtn.getAttribute("data-id"));
+            window.openScheduleModal(targetBtn.getAttribute("data-id"), targetBtn.getAttribute("data-job"));
             return;
           } else if (targetBtn.classList.contains("btn-promote")) {
             e.preventDefault();
@@ -884,7 +877,7 @@
 
             let actionBtn = "";
             if (!app.InterviewDate && (isLeader || isUM || isCEO)) {
-              actionBtn += `<button type="button" class="btn-action-schedule btn-schedule-call" data-id="${safeAppId}">Schedule Call</button> `;
+              actionBtn += `<button type="button" class="btn-action-schedule btn-schedule-call" data-id="${safeAppId}" data-job="${app.JobTitle}">Schedule Call</button> `;
             } else if (app.InterviewLink) {
               actionBtn += `<a href="${app.InterviewLink}" target="_blank" style="background:#10b981; color:white; padding:5px 12px; border-radius:4px; font-size: 0.8rem; font-weight:bold; text-decoration:none; margin-right: 5px;">Join Call</a> `;
             }
@@ -1102,8 +1095,27 @@
         forceShowModal("promoteModal");
       };
 
-      window.openScheduleModal = function (appId) {
+      window.openScheduleModal = async function (appId, jobTitle) {
         document.getElementById("modalAppId").value = appId;
+        const slotSelect = document.getElementById("modalSlot");
+        slotSelect.innerHTML = '<option value="" disabled selected>Loading slots...</option>';
+        
+        try {
+            const res = await fetch(`https://voxa-pi-three.vercel.app/api/hr/slots?agency=${encodeURIComponent(user.agencyName)}&job=${encodeURIComponent(jobTitle)}`);
+            const slots = await res.json();
+            
+            if (slots.length === 0) {
+                slotSelect.innerHTML = '<option value="" disabled selected>No slots available for this job right now.</option>';
+            } else {
+                slotSelect.innerHTML = slots.map(s => {
+                    const remaining = s.Capacity - s.Booked;
+                    return `<option value="${s.SlotID}">${s.SlotDate} @ ${s.SlotTime} (${remaining} slots left)</option>`;
+                }).join("");
+            }
+        } catch(e) {
+            slotSelect.innerHTML = '<option value="" disabled selected>Error loading slots.</option>';
+        }
+        document.getElementById("modalPanel").value = "";
         forceShowModal("scheduleModal");
       };
 
@@ -1150,9 +1162,8 @@
       window.submitSchedule = async function () {
         const payload = {
           application_id: document.getElementById("modalAppId").value,
-          date: document.getElementById("modalDate").value,
-          time: document.getElementById("modalTime").value,
-          link: document.getElementById("modalLink").value,
+          slot_id: document.getElementById("modalSlot").value,
+          panel: document.getElementById("modalPanel").value,
         };
         try {
           const res = await fetch(

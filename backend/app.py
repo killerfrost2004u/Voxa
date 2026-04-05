@@ -69,6 +69,17 @@ def init_db():
         c = conn.cursor()
         try:
             c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "ValidatorScopes" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "JobApplications" ADD COLUMN IF NOT EXISTS "ClientPanel" TEXT DEFAULT \'\'')
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS "InterviewSlots" (
+                    "SlotID" SERIAL PRIMARY KEY,
+                    "JobTitle" TEXT,
+                    "AgencyName" TEXT,
+                    "SlotDate" TEXT,
+                    "SlotTime" TEXT,
+                    "Capacity" INTEGER,
+                    "Booked" INTEGER DEFAULT 0
+                )''')
             conn.commit()
             print("✅ Database Migrations Complete (ValidatorScopes synced).")
         except Exception as e:
@@ -894,27 +905,36 @@ def get_team_stats():
 def schedule_interview():
     data = request.json
     app_id = data.get('application_id')
-    date = data.get('date')
-    time = data.get('time')
-    link = data.get('link')
+    slot_id = data.get('slot_id')
+    panel = data.get('panel')
     
-    if not all([app_id, date, time]):
+    if not all([app_id, slot_id, panel]):
         return jsonify({"error": "Missing required fields"}), 400
         
     conn = get_db_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        # Update the candidate's row with the interview slot
-        # Note: Replace "id" with your actual primary key column name if it differs (e.g., "ApplicationID")
+        # 1. Fetch the slot and check capacity
+        cur.execute('SELECT * FROM "InterviewSlots" WHERE "SlotID" = %s', (slot_id,))
+        slot = cur.fetchone()
+        
+        if not slot or slot['Booked'] >= slot['Capacity']:
+            return jsonify({"error": "Slot is fully booked or no longer available."}), 400
+            
+        # 2. Reserve the slot (decrement available capacity)
+        cur.execute('UPDATE "InterviewSlots" SET "Booked" = "Booked" + 1 WHERE "SlotID" = %s', (slot_id,))
+        
+        # 3. Update the candidate with the interview time and the written Client Panel
         cur.execute("""
             UPDATE "JobApplications"
-            SET "InterviewDate" = %s, "InterviewTime" = %s, "InterviewLink" = %s
-            WHERE "id" = %s 
-        """, (date, time, link, app_id))
+            SET "InterviewDate" = %s, "InterviewTime" = %s, "ClientPanel" = %s, "Status" = 'Scheduled'
+            WHERE "ApplicationID" = %s 
+        """, (slot['SlotDate'], slot['SlotTime'], panel, app_id))
         
         conn.commit()
         return jsonify({"message": "Interview slot locked in!"}), 200
     except Exception as e:
+        conn.rollback()
         print(f"❌ Schedule Error: {e}")
         return jsonify({"error": "Failed to schedule interview"}), 500
     finally:
@@ -1101,6 +1121,51 @@ def get_admin_stats():
     finally:
         if 'cur' in locals() and cur: cur.close()
         if 'conn' in locals() and conn: conn.close()
+
+# --- HR INTERVIEW CALENDAR API ---
+@app.route('/api/hr/slots', methods=['GET', 'POST'])
+def manage_slots():
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        if request.method == 'GET':
+            agency = request.args.get('agency')
+            job = request.args.get('job')
+            
+            if agency and job:
+                # For Agency Leaders: Only show future slots that are NOT fully booked
+                cur.execute('SELECT * FROM "InterviewSlots" WHERE "AgencyName" = %s AND "JobTitle" = %s AND "Booked" < "Capacity" ORDER BY "SlotDate" ASC', (agency, job))
+            else:
+                # For HR: Show all slots
+                cur.execute('SELECT * FROM "InterviewSlots" ORDER BY "SlotDate" DESC')
+                
+            return jsonify(cur.fetchall()), 200
+            
+        elif request.method == 'POST':
+            d = request.json
+            cur.execute('INSERT INTO "InterviewSlots" ("JobTitle", "AgencyName", "SlotDate", "SlotTime", "Capacity") VALUES (%s, %s, %s, %s, %s)',
+                        (d.get('jobTitle'), d.get('agencyName'), d.get('date'), d.get('time'), d.get('capacity')))
+            conn.commit()
+            return jsonify({"message": "Slot Created"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
+
+@app.route('/api/hr/slots/<int:id>', methods=['DELETE'])
+def delete_slot(id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute('DELETE FROM "InterviewSlots" WHERE "SlotID" = %s', (id,))
+        conn.commit()
+        return jsonify({"message": "Deleted"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        cur.close()
+        conn.close()
 
 # --- CONTACT FORM API ---
 @app.route('/api/contact', methods=['POST'])
