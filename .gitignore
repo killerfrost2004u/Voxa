@@ -52,3 +52,6 @@ next-env.d.ts
 *.swp
 backend/speechocean762.tar.gz
 backend/credentials.json
+
+# Gemini CLI
+.gemini/settings.json
