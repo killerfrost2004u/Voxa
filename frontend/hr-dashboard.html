@@ -599,9 +599,13 @@
           const jobSelect = document.getElementById("slotJob");
           if (jobSelect) {
             jobSelect.innerHTML = '<option value="" disabled selected>Select Job Offer...</option>';
-            const uniqueJobs = [...new Set(adminJobsData.map(j => j.JobTitle))];
-            uniqueJobs.forEach(title => {
-              jobSelect.innerHTML += `<option value="${title}">${title}</option>`;
+            const addedJobs = new Set();
+            adminJobsData.forEach(j => {
+              const optionText = `${j.CompanyName} - ${j.JobTitle}`;
+              if (!addedJobs.has(optionText)) {
+                addedJobs.add(optionText);
+                jobSelect.innerHTML += `<option value="${j.JobTitle}">${optionText}</option>`;
+              }
             });
           }
 
