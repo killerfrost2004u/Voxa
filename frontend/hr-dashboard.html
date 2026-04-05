@@ -543,6 +543,7 @@
       window.onload = () => {
         loadAdminJobs();
         loadSlots();
+        loadCRMLeads();
       };
 
       function switchTab(tab) {
@@ -716,12 +717,6 @@
       };
       // --- GLOBALS ---
       let crmLeadsData = [];
-
-      // Update your window.onload to include fetching leads
-      window.onload = () => {
-        loadAdminJobs();
-        loadCRMLeads(); // ADD THIS LINE
-      };
 
       // --- CRM MODAL LOGIC ---
       window.openLeadModal = function (leadId = null) {
