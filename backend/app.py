@@ -13,6 +13,8 @@ from flask_cors import CORS
 import google.generativeai as genai
 from dotenv import load_dotenv
 import tempfile
+import smtplib
+from email.message import EmailMessage
 
 # --- CONFIGURATION ---
 load_dotenv()
@@ -1099,5 +1101,44 @@ def get_admin_stats():
     finally:
         if 'cur' in locals() and cur: cur.close()
         if 'conn' in locals() and conn: conn.close()
+
+# --- CONTACT FORM API ---
+@app.route('/api/contact', methods=['POST'])
+def handle_contact():
+    data = request.json
+    name = data.get('name')
+    sender_email = data.get('email')
+    subject = data.get('subject')
+    message = data.get('message')
+
+    if not all([name, sender_email, subject, message]):
+        return jsonify({"error": "All fields are required"}), 400
+
+    # Uses standard environment variables for the email credentials
+    SMTP_USER = os.getenv("SMTP_USER", "voxaa.business@gmail.com") 
+    SMTP_PASS = os.getenv("SMTP_PASS") # Must be a 16-character Gmail App Password
+
+    if not SMTP_PASS:
+        print("❌ SMTP_PASS is not set in environment variables.")
+        return jsonify({"error": "Email server is not configured. Contact Administrator."}), 500
+
+    try:
+        msg = EmailMessage()
+        msg['Subject'] = f"Voxa Contact Form: {subject}"
+        msg['From'] = SMTP_USER
+        msg['To'] = "voxaa.business@gmail.com"
+        msg['Reply-To'] = sender_email # This ensures when you hit "Reply" in Gmail, it goes to the candidate!
+        
+        body = f"New message from the Voxa Contact Form:\n\nName: {name}\nEmail: {sender_email}\nSubject: {subject}\n\nMessage:\n{message}"
+        msg.set_content(body)
+
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login(SMTP_USER, SMTP_PASS)
+            smtp.send_message(msg)
+
+        return jsonify({"message": "Message sent successfully!"}), 200
+    except Exception as e:
+        print(f"❌ Email Sending Error: {e}")
+        return jsonify({"error": "Failed to send the email. Please try again later."}), 500
 
 if __name__ == '__main__': app.run(debug=True, port=5000, use_reloader=False)
