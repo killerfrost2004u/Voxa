@@ -1197,9 +1197,9 @@
 
       window.copyReferralLink = function () {
         navigator.clipboard.writeText(
-          `https://voxa-pi-three.vercel.app/apply.html?recruiter=${encodeURIComponent(user.fullName)}&agency=${encodeURIComponent(user.agencyName)}&unit=${encodeURIComponent(user.unitName || "")}&team=${encodeURIComponent(user.teamName || "")}`,
+          `https://voxa-pi-three.vercel.app/index.html?recruiter=${encodeURIComponent(user.fullName)}&agency=${encodeURIComponent(user.agencyName)}&unit=${encodeURIComponent(user.unitName || "")}&team=${encodeURIComponent(user.teamName || "")}`,
         );
-        alert("✅ Invite link copied! Send this to your candidates.");
+        alert("✅ Invite link copied! Candidates will land on the homepage and your referral will be tracked globally.");
       };
 
       window.logout = function () {

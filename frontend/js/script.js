@@ -10,6 +10,17 @@ const jobsPerPage = 10;
 
 // --- INITIALIZE SCRIPT ON EVERY PAGE ---
 document.addEventListener("DOMContentLoaded", () => {
+  // 🚀 Global Referral Tracking (Catches them on any page!)
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("recruiter")) {
+    localStorage.setItem("voxa_referral", JSON.stringify({
+      recruiter: urlParams.get("recruiter"),
+      agency: urlParams.get("agency") || "Voxa",
+      unit: urlParams.get("unit") || "Direct",
+      team: urlParams.get("team") || "Direct"
+    }));
+  }
+
   loadJobs();
 });
 

@@ -802,11 +802,19 @@
             formData.append("company", params.get("company") || "Voxa");
             formData.append("ref", params.get("ref") || "Direct/Organic");
 
-            // 🚀 Matrix Referral Tracking
-            if (params.get("recruiter")) formData.append("recruiterSource", params.get("recruiter"));
-            if (params.get("agency")) formData.append("agencyName", params.get("agency"));
-            if (params.get("unit")) formData.append("unitName", params.get("unit"));
-            if (params.get("team")) formData.append("teamName", params.get("team"));
+            // 🚀 Matrix Global Referral Tracking
+            const storedRef = JSON.parse(localStorage.getItem("voxa_referral"));
+            if (params.get("recruiter")) {
+              formData.append("recruiterSource", params.get("recruiter"));
+              formData.append("agencyName", params.get("agency") || "Voxa");
+              formData.append("unitName", params.get("unit") || "Direct");
+              formData.append("teamName", params.get("team") || "Direct");
+            } else if (storedRef) {
+              formData.append("recruiterSource", storedRef.recruiter);
+              formData.append("agencyName", storedRef.agency);
+              formData.append("unitName", storedRef.unit);
+              formData.append("teamName", storedRef.team);
+            }
 
             // 3. SEND
             const res = await fetch(
