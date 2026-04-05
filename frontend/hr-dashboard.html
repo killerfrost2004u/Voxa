@@ -424,8 +424,12 @@
             <i class="fas fa-calendar-plus"></i> Create Interview Slots
           </h3>
           <div class="job-form">
-            <input type="text" id="slotJob" placeholder="Job Title (e.g. Telesales)" />
-            <input type="text" id="slotAgency" placeholder="Agency Name (e.g. Dark Wolves)" />
+            <select id="slotJob" required>
+              <option value="" disabled selected>Select Job Offer...</option>
+            </select>
+            <select id="slotAgency" required>
+              <option value="" disabled selected>Select Agency...</option>
+            </select>
             <input type="date" id="slotDate" />
             <input type="text" id="slotTime" placeholder="Time Block (e.g. 10:00 AM - 12:00 PM)" />
             <input type="number" id="slotCapacity" placeholder="Number of Slots (e.g. 10)" />
@@ -544,6 +548,7 @@
         loadAdminJobs();
         loadSlots();
         loadCRMLeads();
+        populateSlotDropdowns();
       };
 
       function switchTab(tab) {
@@ -558,6 +563,29 @@
         document.getElementById(`tab-${tab}`).classList.add("active");
       }
 
+      async function populateSlotDropdowns() {
+        try {
+          const res = await fetch("https://voxa-pi-three.vercel.app/api/structure");
+          const structure = await res.json();
+          const agencySelect = document.getElementById("slotAgency");
+          
+          if (agencySelect) {
+            agencySelect.innerHTML = '<option value="" disabled selected>Select Agency...</option>';
+            for (let agency in structure) {
+              agencySelect.innerHTML += `<option value="${agency}">${agency}</option>`;
+            }
+            if (user.agencyName && !structure[user.agencyName]) {
+              agencySelect.innerHTML += `<option value="${user.agencyName}">${user.agencyName}</option>`;
+            }
+            if (user.agencyName) {
+              agencySelect.value = user.agencyName;
+            }
+          }
+        } catch(e) {
+          console.error("Failed to load agency structure", e);
+        }
+      }
+
       // --- JOB MANAGEMENT API (Shared with Admin) ---
       async function loadAdminJobs() {
         const tbody = document.getElementById("jobs-table-body");
@@ -566,6 +594,16 @@
             "https://voxa-pi-three.vercel.app/api/admin/jobs",
           );
           adminJobsData = await res.json();
+
+          // Populate the Slot Jobs Dropdown
+          const jobSelect = document.getElementById("slotJob");
+          if (jobSelect) {
+            jobSelect.innerHTML = '<option value="" disabled selected>Select Job Offer...</option>';
+            const uniqueJobs = [...new Set(adminJobsData.map(j => j.JobTitle))];
+            uniqueJobs.forEach(title => {
+              jobSelect.innerHTML += `<option value="${title}">${title}</option>`;
+            });
+          }
 
           if (adminJobsData.length === 0) {
             tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 20px; color:var(--text-muted);">No jobs published yet.</td></tr>`;
@@ -644,6 +682,10 @@
               time: document.getElementById("slotTime").value,
               capacity: document.getElementById("slotCapacity").value
           };
+          
+          if (!payload.jobTitle || !payload.agencyName || !payload.date || !payload.time || !payload.capacity) {
+              return alert("Please completely fill out all slot fields before creating a block.");
+          }
           await fetch('https://voxa-pi-three.vercel.app/api/hr/slots', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
           loadSlots();
       }
