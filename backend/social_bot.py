@@ -79,11 +79,18 @@ def generate_social_content(job):
     """
     
     print(f"🤖 Generating content for {job['CompanyName']} - {job['JobTitle']}...")
-    response = model.generate_content(prompt)
-    
-    # Clean up JSON markdown block if present
-    result_text = response.text.strip().removeprefix("```json").removesuffix("```").strip()
-    return json.loads(result_text)
+    try:
+        response = model.generate_content(prompt)
+        
+        # Clean up JSON markdown block if present
+        result_text = response.text.strip().removeprefix("```json").removesuffix("```").strip()
+        return json.loads(result_text)
+    except Exception as e:
+        print(f"\n❌ Error communicating with Gemini API: {e}")
+        if "429" in str(e) or "Quota" in str(e):
+            print("⚠️ You have exceeded your Gemini API free quota or rate limit.")
+            print("⏳ Please wait a minute and try again, or check your dashboard at https://aistudio.google.com/")
+        return None
 
 if __name__ == "__main__":
     print("🚀 Voxa AI Social Media Bot Initialized!")
@@ -93,5 +100,8 @@ if __name__ == "__main__":
     if jobs:
         # For testing, let's just generate content for the first job in the list
         content = generate_social_content(jobs[0])
-        print("\n✅ Generation Complete! Here is the output:\n")
-        print(json.dumps(content, indent=2, ensure_ascii=False))
+        if content:
+            print("\n✅ Generation Complete! Here is the output:\n")
+            print(json.dumps(content, indent=2, ensure_ascii=False))
+        else:
+            print("\n❌ Failed to generate social content due to an API error.")
