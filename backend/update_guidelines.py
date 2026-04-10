@@ -1,6 +1,7 @@
 import os
 import json
 import datetime
+import re
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -35,8 +36,14 @@ def update_platform_rules():
     - Detail exactly how many seconds to pause between posts, and how to format links so platforms don't throttle the reach.
     </anti_ai_rules>
     
+    <thinking_process>
+    You are equipped with a Deep-Thinking Protocol. Before writing the final JSON, you MUST exhaustively plan your work inside <thinking>...</thinking> tags. 
+    Inside the <thinking> block, analyze the Egyptian market, calculate the exact best posting times in Cairo, and map out heavy strategies to avoid bot-detection. Be verbose, meticulous, and analytical in your thinking.
+    </thinking_process>
+
     <output_format>
     You must output ONLY a valid JSON object. You are equipped with a Deep-Thinking Protocol. You MUST think step-by-step inside an exhaustive "_thinking" JSON key BEFORE you output the rest of the JSON. Inside "_thinking", analyze the Egyptian market, calculate the exact best posting times in Cairo, and map out heavy strategies to avoid bot-detection. Be verbose, meticulous, and analytical in your thinking.
+    After your <thinking> block, you must output ONLY a valid JSON object. Do not include markdown formatting like ```json.
     The JSON must exactly match this structure:
     {{
         "_thinking": "Brainstorm your massive analysis here first...",
@@ -74,12 +81,26 @@ def update_platform_rules():
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
             response_format={"type": "json_object"}
+            temperature=0.7
         )
         result_text = response.choices[0].message.content.strip().removeprefix("```json").removesuffix("```").strip()
+        
+        result_text = response.choices[0].message.content.strip()
+        
+        # Safely extract ONLY the JSON object using regex
+        match = re.search(r'\{.*\}', result_text, re.DOTALL)
+        if not match:
+            raise ValueError("No JSON object found in the AI response.")
+            
+        json_str = match.group(0)
+        
+        # Validate that it parses correctly before saving it
+        parsed_json = json.loads(json_str)
         
         file_path = os.path.join(os.path.dirname(__file__), "platform_guidelines.json")
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(result_text)
+            json.dump(parsed_json, f, indent=4)
             
         print("✅ Successfully updated platform_guidelines.json! The Social Bot will now follow these new rules.")
     except Exception as e:
