@@ -1,54 +1,90 @@
 import os
 import json
 import datetime
-import google.generativeai as genai
+from openai import OpenAI
 from dotenv import load_dotenv
 
 # --- CONFIGURATION ---
 load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-if not GEMINI_API_KEY:
-    raise ValueError("No API key found. Please check your .env file.")
+# Configure this to match your local LLM server (Ollama, LM Studio, etc.)
+# Default below is for Ollama. For LM Studio, you might use http://localhost:1234/v1
+LOCAL_LLM_URL = os.getenv("LOCAL_LLM_URL", "http://localhost:11434/v1")
+LOCAL_MODEL_NAME = os.getenv("LOCAL_MODEL_NAME", "llama3.2") 
 
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-2.5-flash')
+client = OpenAI(base_url=LOCAL_LLM_URL, api_key="local-no-key-required")
 
 def update_platform_rules():
     current_date = datetime.date.today().strftime("%B %Y")
     print(f"🔍 Fetching the absolute latest social media algorithms and guidelines for {current_date}...")
     
     prompt = f"""
-    Act as a Master Social Media & SEO Strategist operating in {current_date}. 
-    I need the most up-to-date (current) algorithm rules, character limits, hashtag best practices, and spam-triggers to avoid for recruitment/job postings on 4 platforms.
+    <role>
+    You are a Master Social Media Algorithm Expert and Elite SEO Strategist operating in {current_date}. Your absolute specialty is the Egyptian digital landscape.
+    </role>
     
-    Focus heavily on:
-    - Exact number of recommended hashtags.
-    - Link placement (e.g., Instagram doesn't allow clickable links in captions).
-    - Tone and visual spacing.
+    <task>
+    Generate an ULTRA-DETAILED, highly analytical master JSON report on the absolute latest algorithm rules, shadowban triggers, and engagement hacks for LinkedIn, Facebook, Instagram, and TikTok. 
+    Your primary target demographic is EGYPT (Cairo Time/EET).
+    Do NOT write short summaries. Detail EXACTLY when to post in Egypt for maximum reach, what specific content formats to use, and how to avoid being flagged as a bot or spam.
+    </task>
     
-    Output ONLY a valid JSON object in this exact format:
+    <anti_ai_rules>
+    - CRITICAL: Detail exactly what robotic, AI-sounding words to avoid (e.g., 'delve', 'testament', 'revolutionize', 'elevate', 'unleash', 'in today's fast-paced world').
+    - Explain exactly how to write using natural Egyptian-English phrasing, Franco-Arabic slang, and authentic human error (uneven spacing, casual punctuation) so platforms do not shadowban our posts for being automated.
+    - Detail exactly how many seconds to pause between posts, and how to format links so platforms don't throttle the reach.
+    </anti_ai_rules>
+    
+    <output_format>
+    You must output ONLY a valid JSON object. You are equipped with a Deep-Thinking Protocol. You MUST think step-by-step inside an exhaustive "_thinking" JSON key BEFORE you output the rest of the JSON. Inside "_thinking", analyze the Egyptian market, calculate the exact best posting times in Cairo, and map out heavy strategies to avoid bot-detection. Be verbose, meticulous, and analytical in your thinking.
+    The JSON must exactly match this structure:
     {{
-        "linkedin": "Guidelines here...",
-        "facebook": "Guidelines here...",
-        "instagram": "Guidelines here...",
-        "tiktok": "Guidelines here..."
+        "_thinking": "Brainstorm your massive analysis here first...",
+        "linkedin": {{
+            "posting_frequency_and_egypt_times": "Massive detail on exact Cairo times and days...",
+            "algorithmic_hooks": "Massive detail on what the algorithm favors right now...",
+            "anti_ai_and_spam_rules": "Massive detail on avoiding bot bans and link throttling...",
+            "tone_and_formatting": "Massive detail on spacing, character limits, and hashtag strategy..."
+        }},
+        "facebook": {{
+            "posting_frequency_and_egypt_times": "...",
+            "algorithmic_hooks": "...",
+            "anti_ai_and_spam_rules": "...",
+            "tone_and_formatting": "..."
+        }},
+        "instagram": {{
+            "posting_frequency_and_egypt_times": "...",
+            "algorithmic_hooks": "...",
+            "anti_ai_and_spam_rules": "...",
+            "tone_and_formatting": "..."
+        }},
+        "tiktok": {{
+            "posting_frequency_and_egypt_times": "...",
+            "algorithmic_hooks": "...",
+            "anti_ai_and_spam_rules": "...",
+            "tone_and_formatting": "..."
+        }}
     }}
+    </output_format>
     """
     
     try:
-        response = model.generate_content(prompt)
-        result_text = response.text.strip().removeprefix("```json").removesuffix("```").strip()
+        response = client.chat.completions.create(
+            model=LOCAL_MODEL_NAME,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            response_format={"type": "json_object"}
+        )
+        result_text = response.choices[0].message.content.strip().removeprefix("```json").removesuffix("```").strip()
         
-        with open("platform_guidelines.json", "w", encoding="utf-8") as f:
+        file_path = os.path.join(os.path.dirname(__file__), "platform_guidelines.json")
+        with open(file_path, "w", encoding="utf-8") as f:
             f.write(result_text)
             
         print("✅ Successfully updated platform_guidelines.json! The Social Bot will now follow these new rules.")
     except Exception as e:
-        print(f"\n❌ Error communicating with Gemini API: {e}")
-        if "429" in str(e) or "Quota" in str(e):
-            print("⚠️ You have exceeded your Gemini API free quota or rate limit.")
-            print("⏳ Please wait a minute and try again, or check your dashboard at https://aistudio.google.com/")
+        print(f"\n❌ Error communicating with Local LLM: {e}")
+        print("⚠️ Please ensure your local LLM server (Ollama/LM Studio) is running.")
 
 if __name__ == "__main__":
     update_platform_rules()

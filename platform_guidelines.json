@@ -1,0 +1,38 @@
+{
+  "linkedin": {
+    "hashtag_limit": 5,
+    "link_placement": "Links can be included in the post description or as a comment.",
+    "tone_spacing": "Use professional tone, proper grammar and spelling. Use bullet points or numbered lists to break up large blocks of text.",
+    "spam_triggers": [
+      "Generic phrases like 'Apply now' or 'Click here'",
+      "Spammy keywords like 'hacker' or 'gig'"
+    ]
+  },
+  "facebook": {
+    "hashtag_limit": 5,
+    "link_placement": "Links can be included in the post description.",
+    "tone_spacing": "Use friendly tone, use emojis and short paragraphs to make posts more engaging.",
+    "spam_triggers": [
+      "Generic phrases like 'Win a job' or 'Get hired today'",
+      "Spammy keywords like 'free' or 'guaranteed'"
+    ]
+  },
+  "instagram": {
+    "hashtag_limit": 30,
+    "link_placement": "Links cannot be included in the caption, but can be included in bio.",
+    "tone_spacing": "Use visually appealing posts with high-quality images and short captions.",
+    "spam_triggers": [
+      "Generic phrases like 'Follow us for job opportunities'",
+      "Spammy keywords like '#jobopening' or '#careergoals'"
+    ]
+  },
+  "tiktok": {
+    "hashtag_limit": 5,
+    "link_placement": "Links cannot be included in the bio, but can be included in the caption with a swipe-up link.",
+    "tone_spacing": "Use short, engaging captions and hashtags, and focus on visually appealing content.",
+    "spam_triggers": [
+      "Generic phrases like 'Apply now' or 'Get hired today'",
+      "Spammy keywords like '#jobopening' or '#careergoals'"
+    ]
+  }
+}

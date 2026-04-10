@@ -15,15 +15,26 @@ from dotenv import load_dotenv
 import tempfile
 import smtplib
 from email.message import EmailMessage
+# import psutil
+# import librosa
+# import torch
+# from transformers import AutoProcessor, Qwen2AudioForConditionalGeneration
+
+# --- RAM CLEANUP ---
+def free_ram_kill_other_llms():
+    pass # Moved entirely to local_ai_worker.py
+
+# Execute memory cleanup on boot
+free_ram_kill_other_llms()
 
 # --- CONFIGURATION ---
 load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-if not GEMINI_API_KEY:
-    raise ValueError("No API key found. Please make sure you have a .env file with GEMINI_API_KEY set.")
-
-genai.configure(api_key=GEMINI_API_KEY)
+# GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# 
+# if not GEMINI_API_KEY:
+#     raise ValueError("No API key found. Please make sure you have a .env file with GEMINI_API_KEY set.")
+# 
+# genai.configure(api_key=GEMINI_API_KEY)
 
 # NEW: Your Live Neon Cloud Database URL
 DATABASE_URL = "postgresql://neondb_owner:npg_ZWb5lX1Hhgre@ep-empty-shape-aln50nml-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require"
@@ -111,10 +122,12 @@ def run_gemini_audio_analysis(file_path):
         model = genai.GenerativeModel('gemini-2.5-flash')
 
         prompt = """
+        <role>
         You are an expert CEFR English Examiner and Technical Recruiter. Listen to the candidate's audio natively.
         Evaluate their English proficiency and provide individual CEFR grades for Fluency, Pronunciation, and Grammar, plus an Overall grade.
+        </role>
 
-        SCORING RUBRIC:
+        <scoring_rubric>
         - 0-25: A1 & A2 (Beginner)
         - 26-40: B1 (Intermediate)
         - 41-50: B1+ (Strong Intermediate)
@@ -123,8 +136,9 @@ def run_gemini_audio_analysis(file_path):
         - 76-85: C1 (Advanced)
         - 86-95: C1+ (Strong Advanced)
         - 96-100: C2 (Mastery)
+        </scoring_rubric>
 
-        CRITICAL GRADING CALIBRATION (YOU MUST FOLLOW THESE 4 PROFILES STRICTLY):
+        <grading_calibration>
         1. THE C1+ EXECUTIVE (Score 86-95): High-speed, highly confident, native-like rhythm, uses industry jargon smoothly. EXTREMELY IMPORTANT: If they possess this level of fluency, IGNORE minor grammar or preposition slips (like 'get it sorted out' or 'negotiating in the deals'). Their Overall Grade MUST be C1+.
         2. THE C1 FLUENT STORYTELLER (Score 76-85): Speaks fluently, clearly, and confidently, but has a noticeable regional accent and makes direct translation errors (e.g., 'they hold the company', 'in a university'). Because fluency and pronunciation are the top priority, their Overall Grade MUST be C1. Do NOT drop them to B2.
         3. THE SCRIPT READER PENALTY (Score 51-65): LISTEN CAREFULLY TO THE INTONATION. If a candidate has absolutely flawless grammar and rich vocabulary but sounds like they are reading from a prepared piece of paper (monotonous, rhythmic pacing, lack of spontaneous 'thinking' pauses, unnatural breathing), you MUST penalize them. True C1 requires spontaneous thought. If they are reading, their Overall Grade MUST be B2 (max score 65), even if their grammar is C2 level. You MUST mention that they sound rehearsed in the summary.
@@ -135,7 +149,9 @@ def run_gemini_audio_analysis(file_path):
 
         7. CLIENT PANEL: Write a highly professional, 2-3 sentence summary designed to be sent to a corporate client. Highlight their strengths, accent, and overall communication confidence.
         8. CONSTRUCTIVE FEEDBACK: Write a single, polite sentence offering a specific tip on how they can improve their spoken English based on their audio.
+        </grading_calibration>
 
+        <output_format>
         Provide a summary of their speech detailing their fluency, grammar, and ACCENT PROFILE. Return ONLY valid JSON in this EXACT format:
         {
             "overall_level": "[Insert Level here]",
@@ -147,6 +163,7 @@ def run_gemini_audio_analysis(file_path):
             "summary": "[Insert detailed summary here...]",
             "transcript": "[Insert transcript here...]"
         }
+        </output_format>
         """
 
         max_retries = 3
@@ -172,6 +189,106 @@ def run_gemini_audio_analysis(file_path):
         print(f"❌ Gemini Setup Error: {e}")
         return None
 
+# --- LAZY LALM LOADER ---
+processor = None
+audio_model = None
+
+def get_audio_model():
+    global processor, audio_model
+    if audio_model is None:
+        print("\n⏳ Initializing 4-bit Quantized LALM (Qwen2-Audio-7B)...")
+        print("⚙️ Automatically dividing workload across GPU, System RAM, and CPU...")
+        
+        processor = AutoProcessor.from_pretrained("Qwen/Qwen2-Audio-7B-Instruct")
+        # device_map="auto" splits it across available hardware. load_in_4bit compresses the size.
+        audio_model = Qwen2AudioForConditionalGeneration.from_pretrained(
+            "Qwen/Qwen2-Audio-7B-Instruct",
+            device_map="auto",
+            load_in_4bit=True, 
+            torch_dtype=torch.float16
+        )
+        print("✅ LALM successfully loaded into memory!\n")
+    return processor, audio_model
+
+# --- THE NATIVE LOCAL MULTIMODAL LALM ---
+def run_local_audio_analysis(file_path):
+    print(f"🧠 Local LALM is evaluating {file_path} natively...")
+    try:
+        proc, mod = get_audio_model()
+
+        prompt_text = """
+        <role>
+        You are an expert CEFR English Examiner and Technical Recruiter. Listen to the candidate's audio natively.
+        Evaluate their English proficiency and provide individual CEFR grades for Fluency, Pronunciation, and Grammar, plus an Overall grade.
+        </role>
+
+        <scoring_rubric>
+        - 0-25: A1 & A2 (Beginner)
+        - 26-40: B1 (Intermediate)
+        - 41-50: B1+ (Strong Intermediate)
+        - 51-65: B2 (Upper Intermediate)
+        - 66-75: B2+ (Advanced Intermediate)
+        - 76-85: C1 (Advanced)
+        - 86-95: C1+ (Strong Advanced)
+        - 96-100: C2 (Mastery)
+        </scoring_rubric>
+
+        <grading_calibration>
+        1. THE C1+ EXECUTIVE (Score 86-95): High-speed, highly confident, native-like rhythm, uses industry jargon smoothly. EXTREMELY IMPORTANT: If they possess this level of fluency, IGNORE minor grammar or preposition slips (like 'get it sorted out' or 'negotiating in the deals'). Their Overall Grade MUST be C1+.
+        2. THE C1 FLUENT STORYTELLER (Score 76-85): Speaks fluently, clearly, and confidently, but has a noticeable regional accent and makes direct translation errors (e.g., 'they hold the company', 'in a university'). Because fluency and pronunciation are the top priority, their Overall Grade MUST be C1. Do NOT drop them to B2.
+        3. THE SCRIPT READER PENALTY (Score 51-65): LISTEN CAREFULLY TO THE INTONATION. If a candidate has absolutely flawless grammar and rich vocabulary but sounds like they are reading from a prepared piece of paper (monotonous, rhythmic pacing, lack of spontaneous 'thinking' pauses, unnatural breathing), you MUST penalize them. True C1 requires spontaneous thought. If they are reading, their Overall Grade MUST be B2 (max score 65), even if their grammar is C2 level. You MUST mention that they sound rehearsed in the summary.
+        4. THE B1+ GRAMMAR DROPPER (Score 41-50): If the candidate has a good accent and confidence, but consistently drops foundational verbs ('this my last year', 'I looking forward') or articles, their Overall Grade MUST be capped at B1+. 
+        
+        5. ACCENT PROFILING: Explicitly name their accent (e.g., 'Clear Egyptian'). A strong but clear accent does not lower the grade.
+        6. STRICT JSON FORMATTING: Use ONLY single quotes inside the JSON string values.
+
+        7. CLIENT PANEL: Write a highly professional, 2-3 sentence summary designed to be sent to a corporate client. Highlight their strengths, accent, and overall communication confidence.
+        8. CONSTRUCTIVE FEEDBACK: Write a single, polite sentence offering a specific tip on how they can improve their spoken English based on their audio.
+        </grading_calibration>
+
+        <output_format>
+        Provide a summary of their speech detailing their fluency, grammar, and ACCENT PROFILE. Return ONLY valid JSON in this EXACT format:
+        {
+            "overall_level": "[Insert Level here]",
+            "overall_score": [Insert Integer Score here],
+            "fluency_level": "[Insert Level here]",
+            "pronunciation_level": "[Insert Level here]",
+            "grammar_level": "[Insert Level here]",
+            "accent_profile": "[Insert 2-3 words max, e.g., 'Clear Egyptian']",
+            "summary": "[Insert detailed summary here...]",
+            "transcript": "[Insert transcript here...]"
+        }
+        </output_format>
+        """
+        
+        print("🔊 Reading audio file into tensors...")
+        audio_arr, sr = librosa.load(file_path, sr=proc.feature_extractor.sampling_rate)
+        
+        conversation = [
+            {"role": "user", "content": [
+                {"type": "audio", "audio_url": "local_audio.wav"}, # Template placeholder
+                {"type": "text", "text": prompt_text}
+            ]}
+        ]
+        
+        text = proc.apply_chat_template(conversation, add_generation_prompt=True, tokenize=False)
+        inputs = proc(text=text, audios=[audio_arr], return_tensors="pt", padding=True)
+        inputs = inputs.to(mod.device)
+        
+        print("⏳ Generating CEFR grading natively... (This will take time based on your hardware)")
+        with torch.no_grad():
+            generate_ids = mod.generate(**inputs, max_new_tokens=1024, temperature=0.2)
+            
+        generate_ids = generate_ids[:, inputs.input_ids.size(1):]
+        response = proc.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
+        
+        print("✅ Local Analysis Complete!")
+        return response
+        
+    except Exception as e:
+        print(f"❌ Local LALM Error: {e}")
+        return None
+
 # --- WORKER ---
 def ai_worker(app_id, file_name):
     # 1. Download from Cloudflare to a temporary local folder
@@ -183,9 +300,11 @@ def ai_worker(app_id, file_name):
         print(f"❌ Failed to download from R2: {e}")
         return
 
-    print(f"🤖 Processing App #{app_id} with Gemini API...")
+    # print(f"🤖 Processing App #{app_id} with Gemini API...")
+    print(f"🤖 Processing App #{app_id} entirely offline via LALM...")
     try:
-        ai_response = run_gemini_audio_analysis(local_path)
+        # ai_response = run_gemini_audio_analysis(local_path)
+        ai_response = run_local_audio_analysis(local_path)
 
         if ai_response:
             match = re.search(r'\{.*\}', ai_response, re.DOTALL)
