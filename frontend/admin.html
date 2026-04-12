@@ -731,11 +731,11 @@
                   <td>${statusBadge}</td> 
                   <td>${app.Email}<br>${app.Phone}</td>
                   <td>
-                      <div class="exp-cell" style="display: flex; flex-direction: column; gap: 5px;">
-                          <span>${app.Experience}</span>
-                          <button onclick="navigator.clipboard.writeText(\`${safeExperience}\`); alert('Experience Copied!');" class="btn-view-report" style="padding: 2px 6px; font-size: 0.7rem; width: fit-content;" title="Copy Experience"><i class="fas fa-copy"></i> Copy</button>
+                      <div class="exp-cell">${app.Experience}</div>
+                      <div style="margin-top:8px; display: flex; justify-content: space-between; align-items: center; gap: 5px;">
+                          <div style="font-size:0.75rem; color:var(--primary-color);"><i class="fas fa-link"></i> Ref: ${app.RecruiterSource || "Direct"}</div>
+                          <button onclick="navigator.clipboard.writeText(\`${safeExperience}\`); alert('Experience Copied!');" class="btn-view-report" style="padding: 2px 6px; font-size: 0.7rem;" title="Copy Experience"><i class="fas fa-copy"></i> Copy</button>
                       </div>
-                      <div style="margin-top:5px; font-size:0.75rem; color:var(--primary-color);"><i class="fas fa-link"></i> Ref: ${app.RecruiterSource || "Direct"}</div>
                   </td>
                   <td>${app.SubmittedAt}</td>
               </tr>`;
