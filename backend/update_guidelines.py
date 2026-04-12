@@ -25,7 +25,8 @@ def update_platform_rules():
     </role>
     
     <task>
-    Generate an ULTRA-DETAILED, highly analytical master JSON report on the absolute latest algorithm rules, shadowban triggers, and engagement hacks for LinkedIn, Facebook, Instagram, and TikTok. 
+    Generate an ULTRA-DETAILED, highly analytical master JSON report.
+    You MUST clearly separate the core platform guidelines from the high-reach/viral engagement tactics. 
     Your primary target demographic is EGYPT (Cairo Time/EET).
     Do NOT write short summaries. Detail EXACTLY when to post in Egypt for maximum reach, what specific content formats to use, and how to avoid being flagged as a bot or spam.
     </task>
@@ -42,34 +43,32 @@ def update_platform_rules():
     </thinking_process>
 
     <output_format>
-    You must output ONLY a valid JSON object. You are equipped with a Deep-Thinking Protocol. You MUST think step-by-step inside an exhaustive "_thinking" JSON key BEFORE you output the rest of the JSON. Inside "_thinking", analyze the Egyptian market, calculate the exact best posting times in Cairo, and map out heavy strategies to avoid bot-detection. Be verbose, meticulous, and analytical in your thinking.
-    After your <thinking> block, you must output ONLY a valid JSON object. Do not include markdown formatting like ```json.
+    After your <thinking> block, you must output ONLY a valid JSON object. Do not include markdown formatting like ```json. Do not include the <thinking> block inside the JSON.
     The JSON must exactly match this structure:
     {{
-        "_thinking": "Brainstorm your massive analysis here first...",
         "linkedin": {{
-            "posting_frequency_and_egypt_times": "Massive detail on exact Cairo times and days...",
-            "algorithmic_hooks": "Massive detail on what the algorithm favors right now...",
-            "anti_ai_and_spam_rules": "Massive detail on avoiding bot bans and link throttling...",
-            "tone_and_formatting": "Massive detail on spacing, character limits, and hashtag strategy..."
+            "core_guidelines": "Massive detail on exact Cairo times, days, spacing, character limits, and hashtag strategy...",
+            "anti_spam_and_bot_rules": "Massive detail on avoiding bot bans, link throttling, and robotic words...",
+            "high_reach_tactics": "Massive detail on what the algorithm favors right now to push content viral...",
+            "engagement_hacks": "Specific psychological hooks, formatting tricks, and comment strategies for the Egyptian audience..."
         }},
         "facebook": {{
-            "posting_frequency_and_egypt_times": "...",
-            "algorithmic_hooks": "...",
-            "anti_ai_and_spam_rules": "...",
-            "tone_and_formatting": "..."
+            "core_guidelines": "...",
+            "anti_spam_and_bot_rules": "...",
+            "high_reach_tactics": "...",
+            "engagement_hacks": "..."
         }},
         "instagram": {{
-            "posting_frequency_and_egypt_times": "...",
-            "algorithmic_hooks": "...",
-            "anti_ai_and_spam_rules": "...",
-            "tone_and_formatting": "..."
+            "core_guidelines": "...",
+            "anti_spam_and_bot_rules": "...",
+            "high_reach_tactics": "...",
+            "engagement_hacks": "..."
         }},
         "tiktok": {{
-            "posting_frequency_and_egypt_times": "...",
-            "algorithmic_hooks": "...",
-            "anti_ai_and_spam_rules": "...",
-            "tone_and_formatting": "..."
+            "core_guidelines": "...",
+            "anti_spam_and_bot_rules": "...",
+            "high_reach_tactics": "...",
+            "engagement_hacks": "..."
         }}
     }}
     </output_format>
@@ -79,11 +78,8 @@ def update_platform_rules():
         response = client.chat.completions.create(
             model=LOCAL_MODEL_NAME,
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            response_format={"type": "json_object"}
             temperature=0.7
         )
-        result_text = response.choices[0].message.content.strip().removeprefix("```json").removesuffix("```").strip()
         
         result_text = response.choices[0].message.content.strip()
         
@@ -99,7 +95,6 @@ def update_platform_rules():
         
         file_path = os.path.join(os.path.dirname(__file__), "platform_guidelines.json")
         with open(file_path, "w", encoding="utf-8") as f:
-            f.write(result_text)
             json.dump(parsed_json, f, indent=4)
             
         print("✅ Successfully updated platform_guidelines.json! The Social Bot will now follow these new rules.")

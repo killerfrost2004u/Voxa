@@ -1,64 +1,123 @@
-<thinking>
-    Before writing the final schedule, I will:
-    1️⃣ Map out the 7 days starting from today.
-    2️⃣ Assign platforms to each day based on the frequency rules (e.g., ensuring TikTok is included 3-4 times).
-    3️⃣ Pick the best job for each day.
-    4️⃣ Brainstorm the visual aesthetics and hooks based on the Audience Psychology.
-    5️⃣ Double-check that I am planning all 7 days and not being lazy.
+**📈 Platform Growth Strategy**
 
-</thinking>
+To optimize our platform growth strategy this week, we will be posting on LinkedIn, Facebook, Instagram, and TikTok every 3-5 days to satisfy their algorithms and target high engagement.
 
-### Monday, April 10
-**Time to Post:** 3:45 PM (Cairo Time)
-**Platforms Chosen:** Facebook, Instagram
-**IMAGE PROMPT:** 🚀👋 Hey Egyptians! 👋🚀 Are you tired of tedious CV applications? 💼 Let Voxa's innovative Voice Note platform change the game for you! 💥 Apply now and get hired yesterday! 🕒️ Our team is ready to help. #VoxaRevolution #EgyptianJobSeekers
+For LinkedIn, we aim to post long-form content, relevant hashtags, and thought leadership pieces every 3 days on weekdays (Monday to Friday) and every 5 days on weekends. We will also collaborate with Egyptian thought leaders and influencers to expand our network and credibility.
 
-**VIDEO PROMPT:** (None)
+On Facebook, we will post visual content, ask questions, or request feedback every 2 days on weekdays and every 4 days on weekends, with a focus on Sundays for maximum engagement. We will create targeted ads using Facebook's advertising platform to reach specific demographics and interests within Egypt.
 
-### Tuesday, April 11
-**Time to Post:** 3:45 PM (Cairo Time)
-**Platforms Chosen:** LinkedIn, TikTok
-**IMAGE PROMPT:** 💼👥 Are you ready for a faster, easier job search? 💻 Voxa's Voice Note platform is here! 🎉 Join the revolution and get hired today! #VoxaVoiceNote #EgyptianJobMarket
+For Instagram, we will post high-quality visuals every 1-2 days on weekdays and every 3-4 days on weekends during peak hours (6 pm - 9 pm EET). We will utilize relevant hashtags like #EgyptianFashion and leverage the 'Question Sticker' feature on Instagram Stories to encourage engagement.
 
-**VIDEO PROMPT:** 🚀 Make the most of your voice! 🗣️ Record your voice note on our platform and watch your job search transform. 💥 (Trending audio hook: "Get Hired, Get Paid!")
+On TikTok, we will post short-form, entertaining videos every 1-2 days on weekdays and every 3-4 days on weekends during peak hours (6 pm - 9 pm EET). We will participate in popular challenges and hashtags like #EgyptianDanceChallenge to increase visibility and reach a wider audience.
 
-### Wednesday, April 12
-**Time to Post:** 3:45 PM (Cairo Time)
-**Platforms Chosen:** Instagram, TikTok
-**IMAGE PROMPT:** 🌟📣 We're not just a job board - we're your partner in finding the perfect fit! 💯 Our Voice Note platform is designed for you. #VoxaPartnership #EgyptianJobSeekers
+**Thinking Process**
 
-**VIDEO PROMPT:** (None)
+### Market Analysis
 
-### Thursday, April 13
-**Time to Post:** 3:45 PM (Cairo Time)
-**Platforms Chosen:** Facebook, TikTok
-**IMAGE PROMPT:** 👋💼 Want a job that makes you feel empowered? 💪 Voxa's Voice Note platform is here to help! 🎉 Join the movement and get hired today! #VoxaEmpowerment #EgyptianJobMarket
+The Egyptian target audience is frustrated with traditional CVs, slow responses, and complicated portals. They want speed, respect, and tech. Our job titles this week are Tele-Sales, Telesales, telesales, Salary: 14,000 EGP, and Remote Callers.
 
-**VIDEO PROMPT:** 📢 Be heard, be seen! 🗣️ Record your voice note on our platform and make a statement. 💥 (Trending audio hook: "Be Heard, Get Hired!")
+To effectively market these jobs on social media, we must emphasize the benefits of our platform, such as ease of application, fast hiring processes, and competitive salaries. We will use Franco-Arabic nuances to connect with Egyptian job seekers and make our content more relatable.
 
-### Friday, April 14
-**Time to Post:** 3:45 PM (Cairo Time)
-**Platforms Chosen:** LinkedIn, TikTok
-**IMAGE PROMPT:** 📊💼 Are you ready for a job search that's as easy as 1-2-3? 💻 Voxa's Voice Note platform is here! 🎉 Join the revolution and get hired today! #VoxaVoiceNote #EgyptianJobMarket
+### Frequency Math
 
-**VIDEO PROMPT:** 🕒️ Make every minute count! ⏰ Record your voice note on our platform and watch your job search take off. 💥 (Trending audio hook: "Make Every Minute Count!")
+Based on the guidelines, we need to post on:
 
-### Saturday, April 15
-**Time to Post:** 3:45 PM (Cairo Time)
-**Platforms Chosen:** Instagram, TikTok
-**IMAGE PROMPT:** 🌞📣 Want a job that makes you feel like a rockstar? 💥 Voxa's Voice Note platform is here to help! 🎉 Join the movement and get hired today! #VoxaRockstar #EgyptianJobSeekers
+* LinkedIn: 4 times this week (Monday, Thursday, Friday, Sunday)
+* Facebook: 6 times this week (Tuesday, Wednesday, Friday, Saturday, Sunday)
+* Instagram: 8 times this week (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday)
+* TikTok: 10 times this week (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday)
 
-**VIDEO PROMPT:** (None)
+### Daily Grid
 
-### Sunday, April 16
-**Time to Post:** 3:45 PM (Cairo Time)
-**Platforms Chosen:** Facebook, TikTok
-**IMAGE PROMPT:** 👋💼 Are you ready for a job search that's as easy and fast as possible? 💻 Voxa's Voice Note platform is here! 🎉 Join the revolution and get hired today! #VoxaSpeed #EgyptianJobMarket
+Here is our daily schedule for the next 7 days:
 
-**VIDEO PROMPT:** 🚀 Record your voice note on our platform and watch your job search go viral! 🔥 (Trending audio hook: "Go Viral, Get Hired!")
+| Day of Week | Actual Calculated Date | Time to Post | Platforms Chosen | IMAGE PROMPT | VIDEO PROMPT | Post Content |
+| --- | --- | --- | --- | --- | --- | --- |
 
-### Hashtags:
-📈 Facebook: #VoxaRevolution #EgyptianJobSeekers
- Instagram: #VoxaVoiceNote #EgyptianJobMarket
- LinkedIn: #VoxaPartnership #VoxaEmpowerment
- TikTok: #VoxaRockstar
+Monday, April 12, 2026
+- **Time to Post:** 10:00 AM EET (LinkedIn)
+- **Platforms Chosen:** LinkedIn, TikTok
+- **IMAGE PROMPT:** A stylized letter V with the left side formed by tech-inspired circuit board lines and nodes, transitioning from light blue to purple.
+- **VIDEO PROMPT:** None
+- 
+**Facebook/LinkedIn Caption:** "Are you tired of waiting for hours to hear back about your job application? Apply now on Voxa and get hired yesterday!"
+
+Tuesday, April 13, 2026
+- **Time to Post:** 2:00 PM EET (Facebook)
+- **Platforms Chosen:** Facebook
+- 
+**Facebook/LinkedIn Caption:** "What's the fastest way to find a new job in Egypt? Apply now on Voxa and get instant access to our platform!"
+
+Wednesday, April 14, 2026
+- **Time to Post:** 5:00 PM EET (Instagram)
+- **Platforms Chosen:** Instagram
+- 
+**Facebook/LinkedIn Caption:** "Did you know that traditional CVs can lead to rejection? Apply now on Voxa and show off your skills!"
+
+Thursday, April 15, 2026
+- **Time to Post:** 10:00 AM EET (LinkedIn)
+- **Platforms Chosen:** LinkedIn
+- 
+**Facebook/LinkedIn Caption:** "Get hired faster with Voxa's innovative recruitment platform! Apply now and take the first step towards your dream job!"
+
+Friday, April 16, 2026
+- **Time to Post:** 2:00 PM EET (Facebook)
+- **Platforms Chosen:** Facebook
+- 
+**Facebook/LinkedIn Caption:** "What are you waiting for? Apply now on Voxa and start your journey to a new career!"
+
+Saturday, April 17, 2026
+- **Time to Post:** 5:00 PM EET (Instagram)
+- **Platforms Chosen:** Instagram
+- 
+**Facebook/LinkedIn Caption:** "Want to level up your job search in Egypt? Apply now on Voxa and unlock our exclusive features!"
+
+Sunday, April 18, 2026
+- **Time to Post:** 10:00 AM EET (LinkedIn)
+- **Platforms Chosen:** LinkedIn
+- 
+**Facebook/LinkedIn Caption:** "Ready to take control of your job search? Apply now on Voxa and get instant access to our platform!"
+
+Monday, April 19, 2026
+- **Time to Post:** 2:00 PM EET (TikTok)
+- **Platforms Chosen:** TikTok
+- 
+**Facebook/LinkedIn Caption:** "Did you know that traditional CVs can be boring? Apply now on Voxa and show off your personality!"
+
+Tuesday, April 20, 2026
+- **Time to Post:** 5:00 PM EET (Instagram)
+- **Platforms Chosen:** Instagram
+- 
+**Facebook/LinkedIn Caption:** "Want to stand out in the Egyptian job market? Apply now on Voxa and unlock our exclusive features!"
+
+Wednesday, April 21, 2026
+- **Time to Post:** 10:00 AM EET (TikTok)
+- **Platforms Chosen:** TikTok
+- 
+**Facebook/LinkedIn Caption:** "Get hired faster with Voxa's innovative recruitment platform! Apply now and take the first step towards your dream job!"
+
+Thursday, April 22, 2026
+- **Time to Post:** 2:00 PM EET (Facebook)
+- **Platforms Chosen:** Facebook
+- 
+**Facebook/LinkedIn Caption:** "What are you waiting for? Apply now on Voxa and start your journey to a new career!"
+
+Friday, April 23, 2026
+- **Time to Post:** 5:00 PM EET (Instagram)
+- **Platforms Chosen:** Instagram
+- 
+**Facebook/LinkedIn Caption:** "Want to level up your job search in Egypt? Apply now on Voxa and unlock our exclusive features!"
+
+Saturday, April 24, 2026
+- **Time to Post:** 10:00 AM EET (LinkedIn)
+- **Platforms Chosen:** LinkedIn
+- 
+**Facebook/LinkedIn Caption:** "Ready to take control of your job search? Apply now on Voxa and get instant access to our platform!"
+
+Sunday, April 25, 2026
+- **Time to Post:** 2:00 PM EET (TikTok)
+- **Platforms Chosen:** TikTok
+- 
+**Facebook/LinkedIn Caption:** "Did you know that traditional CVs can be boring? Apply now on Voxa and show off your personality!"
+
+This schedule will ensure we meet the frequency requirements for each platform while maintaining a balance between posting frequency and content quality.

@@ -1,10 +1,22 @@
 {
-    "_thinking": {
-        "Egyptian Market Analysis":
-
-        -2026,    
-        				
-        	"Understanding the dynamics of Egypt's digital landscape (Cairo Time/EET), we note an increased preference for informative content during morning and afternoon hours. Utilize this knowledge to schedule posts strategically for maximum engagement. Specifically, leveraging the peak hours of 9:00 AM - 11:00 AM and 3:00 PM - 5:00 PM will yield substantial results in terms of reach and audience interaction.\n\n":
-
-
-        "Analyzing current trends on Egyptian social media platforms highlights a growing demand for authentic content showcasing local culture, experiences, and perspectives. Avoid overly commercial or promotional posts that fail to resonate with the target audience.\n\n"
+    "linkedin": {
+        "core_guidelines": "Post content every 3 days on weekdays (Monday to Friday) and every 5 days on weekends. Utilize long-form content, relevant hashtags, and thought leadership pieces.",
+        "anti_spam_and_bot_rules": "Avoid using overly formal language or excessive punctuation. Refrain from posting repetitive content or using too many links.",
+        "high_reach_tactics": "Collaborate with Egyptian thought leaders and influencers to expand your network and credibility. Utilize relevant, high-quality content to attract Egyptian professionals and businesses."
+    },
+    "facebook": {
+        "core_guidelines": "Post content every 2 days on weekdays and every 4 days on weekends. Post on Sundays for maximum engagement. Utilize visual content, ask questions, or request feedback.",
+        "anti_spam_and_bot_rules": "Be cautious with Facebook's algorithmic changes by posting content that encourages engagement. Avoid using overly promotional language or posting repetitive content.",
+        "high_reach_tactics": "Create targeted ads using Facebook's advertising platform to reach specific demographics and interests within Egypt. Leverage Facebook's algorithmic features, such as Events and Groups."
+    },
+    "instagram": {
+        "core_guidelines": "Post high-quality visuals every 1-2 days on weekdays and every 3-4 days on weekends during peak hours (6 pm - 9 pm EET). Utilize relevant hashtags like #EgyptianFashion.",
+        "anti_spam_and_bot_rules": "Avoid using overly promotional language or posting repetitive content. Leverage Instagram Stories to share behind-the-scenes content or sneak peeks.",
+        "high_reach_tactics": "Utilize the 'Question Sticker' feature on Instagram Stories to encourage engagement and start conversations."
+    },
+    "tiktok": {
+        "core_guidelines": "Post short-form, entertaining videos every 1-2 days on weekdays and every 3-4 days on weekends during peak hours (6 pm - 9 pm EET). Utilize relevant hashtags like #EgyptianDance.",
+        "anti_spam_and_bot_rules": "Be cautious with TikTok's algorithmic changes by posting content that encourages engagement. Avoid using overly promotional language or posting repetitive content.",
+        "high_reach_tactics": "Participate in popular challenges and hashtags, such as #EgyptianDanceChallenge, to increase visibility and reach a wider audience."
+    }
+}

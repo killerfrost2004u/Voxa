@@ -15,14 +15,16 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:npg_ZWb5lX1H
 LOCAL_LLM_URL = os.getenv("LOCAL_LLM_URL", "http://localhost:11434/v1")
 LOCAL_MODEL_NAME = os.getenv("LOCAL_MODEL_NAME", "llama3.2")
 
-client = OpenAI(base_url=LOCAL_LLM_URL, api_key="local-no-key-required")
+client = OpenAI(base_url=LOCAL_LLM_URL, api_key="local-no-key-required", timeout=None)
 
 VOXA_BRAND_IDENTITY = """
 BRAND NAME: Voxa
 SLOGAN: "Apply now, get hired yesterday."
 MISSION: To revolutionize recruitment in Egypt by allowing candidates to apply for jobs using simply a Voice Note on our dedicated platform—no traditional CV required.
 MARKET POSITIONING: There are many recruitment agencies in Egypt, but none have a dedicated, seamless website or operate as efficiently and fast as Voxa. Emphasize our speed and tech-forward approach.
-VISUAL IDENTITY & COLORS: Primary colors are Light Blue (#34A8FF), Purple/Magenta (#954CE5), Dark Navy Background (#091122), and Pure White Text (#FFFFFF). The aesthetic is modern, clean, cinematic, and tech-forward. The Voxa logo or brand colors must naturally blend into the environment or wardrobe.
+VISUAL IDENTITY & COLORS: Primary colors are Light Blue (#34A8FF), Purple/Magenta (#954CE5), Dark Navy Background (#091122), and Pure White Text (#FFFFFF). 
+LOGO DESCRIPTION: A modern, stylized letter "V" where the left side is formed by tech-inspired circuit board lines and circular nodes. The colors transition in a gradient from light blue on the right side of the "V" to purple on the left circuit nodes.
+The aesthetic is modern, clean, cinematic, and tech-forward.
 ULTIMATE GOAL: Drive massive traffic to the Voxa website. Convert job seekers into registered users by selling them on how incredibly easy it is to apply.
 TONE OF VOICE: Innovative, empowering, energetic, Egyptian-youth friendly, and highly professional.
 """
@@ -99,7 +101,7 @@ def generate_weekly_schedule(jobs, analytics_data):
     
     <context>
     CURRENT DATE & TIME: {current_time}
-    You MUST start your 7-day schedule from today.
+    You MUST plan the optimal schedule for the next 7 days starting from today.
     
     AVAILABLE JOBS TO PROMOTE THIS WEEK:
     {jobs_text}
@@ -116,43 +118,51 @@ def generate_weekly_schedule(jobs, analytics_data):
     </platform_guidelines>
     
     <task>
-    Create a comprehensive Weekly Social Media Content Calendar (Monday to Sunday) in beautifully formatted Markdown.
+    Create an optimized Weekly Social Media Content Calendar in beautifully formatted Markdown.
     
     FIRST, start with a "📈 Platform Growth Strategy" section. 
     Based on the guidelines, briefly explain to me exactly how often we should be posting on each platform this week to satisfy their algorithms, and what type of engagement we are targeting.
     
-    THEN, for each day of the week, select ONE job from the list above to promote.
+    THEN, construct the schedule day by day. To hit high engagement, you MUST post on MULTIPLE platforms per day.
     </task>
     
     <rules>
-    DO NOT generate a post for every platform every day! You must distribute the posts across the week strictly based on the optimal frequency you defined in the Growth Strategy.
+    1. Base your total weekly posts on the guidelines, but group them together.
+    2. CRITICAL ABSOLUTE RULE: You MUST choose AT LEAST TWO OR THREE platforms for EVERY SINGLE DAY you generate. Never output a day with only one platform.
+    3. Under "Post Content", you MUST write the specific caption/script variations ONLY for the platforms you chose for that day.
+    4. Include an Instagram/Facebook Story or Reel strategy to boost engagement, but ONLY if Facebook or Instagram is chosen for that day.
     </rules>
     
     <thinking_process>
-    You are equipped with a Deep-Thinking Protocol. Before writing the final schedule, you MUST exhaustively plan your work inside <thinking>...</thinking> tags. 
-    Inside the <thinking> block, you must:
-    1. Analyze the Egyptian target audience and Franco-Arabic nuances for the selected jobs.
-    2. Map out all 7 days. Do not skip any day.
-    3. Assign platforms to each day based on the frequency rules (ensuring TikTok is included 3-4 times).
-    4. Brainstorm the visual aesthetics and hooks based on the Audience Psychology. Write out massive multi-paragraph ideas for the image and video prompts here first before finalizing them.
-    5. Double-check that you are planning all 7 days and explicitly outline the narrative for each post.
-    Take your absolute time. Be as verbose and detailed as possible in your internal thoughts.
+    You are equipped with a Deep-Thinking Protocol. You must think for a very long time before outputting the final schedule.
+    Inside the <thinking> block, you must complete these exact steps in extreme detail (minimum 300 words of thinking):
+    1. Market Analysis: Analyze the Egyptian target audience and Franco-Arabic nuances for the selected jobs.
+    2. Frequency Math: Write out exactly how many times each platform needs to be posted this week.
+    3. Daily Grid: Draft a day-by-day plan mapping AT LEAST TWO platforms to every active day to ensure the math adds up. (e.g., Monday: TikTok & Facebook, Tuesday: LinkedIn & Instagram & TikTok).
+    4. Visual Planning: Brainstorm the actual cinematic descriptions for the images and videos.
+    Take your absolute time. Do not rush. Be as verbose and analytical as possible.
     </thinking_process>
     
     <output_format>
     WARNING: You MUST include TikTok and its VIDEO PROMPT at least 3-4 times this week!
+    DO NOT wrap your daily schedules in XML tags.
     
-    For EVERY single day (Day 1 through Day 7), you MUST copy and fill out this exact template:
+    For EACH day you decide to schedule a post, you MUST copy and fill out this exact template (calculate the actual dates):
     
-    ### [Day of the Week], [Date]
+    ### [Day of the Week], [Actual Calculated Date, e.g., April 12, 2026]
     **Time to Post:** [Exact Cairo Time based on the platform guidelines]
     **Platforms Chosen:** [e.g., LinkedIn, TikTok]
-    **IMAGE PROMPT:** [CRITICAL: Write a massive, highly-detailed 3-4 paragraph Midjourney/DALL-E style prompt. Detail the lighting, camera angle, subject, Egyptian cultural context, facial expressions, and exactly how the Voxa brand colors (#34A8FF, #954CE5) are integrated. DO NOT write less than 3 paragraphs. Write "None" ONLY if it's a TikTok-only day.]
-    **VIDEO PROMPT:** [CRITICAL: Write a full, detailed shot-by-shot description. Describe the camera motion, pacing, lighting, and exact B-Roll footage needed. Write "None" ONLY if TikTok is not chosen today.]
+    **IMAGE PROMPT:** [If an image is needed, write a massive, highly-detailed 5 to 9 sentence paragraph for Midjourney. DO NOT write instructions like "Describe the actors", you must ACTUALLY write the visual description (e.g., "A young Egyptian professional stands in a sunlit Cairo office..."). YOU MUST COPY AND PASTE THIS EXACT SENTENCE into your prompt: "A stylized letter V with the left side formed by tech-inspired circuit board lines and nodes, transitioning from light blue to purple." Write "None" if an image is not needed.]
+    **VIDEO PROMPT:** [If a video is needed, write a massive, highly-detailed 5 to 9 sentence paragraph for a video AI generator. DO NOT write instructions like "Describe the camera", you must ACTUALLY describe it (e.g., "The camera pans slowly across a modern tech desk..."). YOU MUST COPY AND PASTE THIS EXACT SENTENCE into your prompt: "A stylized letter V with the left side formed by tech-inspired circuit board lines and nodes, transitioning from light blue to purple." Write "None" if a video is not needed.]
     **Post Content:**
-    [If Facebook/LinkedIn: Write an exhaustive 3 to 5 paragraph story. Mix English and Egyptian Arabic naturally. Tell a compelling story of a frustrated applicant finding success with Voxa's "Voice Note" revolution.]
-    [If Instagram: Deep, engaging Egyptian-English mix, bullet points, emojis. Highly relatable content.]
-    [If TikTok: Write the FULL 30-to-60 second spoken script. Include exactly what the presenter is doing with their hands, exact text overlay instructions popping on screen, and the specific trending audio vibe to use.]
+    [ONLY list the platforms chosen above. For example, if you chose Facebook and TikTok, output:]
+    - **Facebook/LinkedIn Caption:** [3-5 paragraphs, mix of English and Egyptian Arabic, highly engaging...]
+    - **TikTok Script & Text:** [Full 30-to-60 second spoken script, hand gestures, text overlay...]
+    **Stories & Reels Strategy:**
+    [ONLY output this section if Facebook or Instagram was chosen for this day.]
+    - **Concept:** [Describe an interactive Facebook/Instagram Story or a quick Reel. E.g., a "Yes/No" poll about traditional CVs, a "Day in the life" clip, or a quick application tip.]
+    - **Media Prompt:** [If it requires custom media, provide a highly detailed visual prompt. YOU MUST COPY AND PASTE THIS EXACT SENTENCE: "A stylized letter V with the left side formed by tech-inspired circuit board lines and nodes, transitioning from light blue to purple."]
+    - **Interactive Elements:** [Describe exactly what native features to use: e.g., the exact text overlay, a specific poll question with the two answer options, a slider, or a 'Apply Now' link sticker.]
     **Hashtags:** [List 3-5 tags]
     
     Output your <thinking> block first, followed immediately by the beautifully formatted Markdown text. Do not output JSON.

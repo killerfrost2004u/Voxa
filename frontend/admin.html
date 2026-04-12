@@ -798,8 +798,14 @@
         if (!app) return;
 
         const age = calculateAge(app.DateOfBirth);
-        const panelText = `Quadruple Name: ${app.FullName}\nEmail: ${app.Email}\nPhone number: ${app.Phone}\nAge: ${age}\nGraduation status: ${app.GraduationStatus}\nFaculty and university: ${app.FacultyUniversity || "N/A"}\nMilitary status: ${app.MilitaryStatus || "N/A"}\nDate of birth: ${app.DateOfBirth || "N/A"}\nNationality: ${app.Nationality}\nNational ID: ${app.NationalID}\n\nAI Assessment:\n${app.ClientPanel || "Pending AI Assessment..."}`;
+        const hasAudio = app.VoiceRecordPath && app.VoiceRecordPath !== "null" && app.VoiceRecordPath !== "No_File";
+        const voiceLink = hasAudio ? `https://pub-190756d959484d77b814116c0ba439ac.r2.dev/${app.VoiceRecordPath}` : "No audio provided";
+        const hasAudio2 = app.VoiceRecordPath2 && app.VoiceRecordPath2 !== "null" && app.VoiceRecordPath2 !== "No_File";
+        const voiceLink2 = hasAudio2 ? `\n2nd Language Note:\nhttps://pub-190756d959484d77b814116c0ba439ac.r2.dev/${app.VoiceRecordPath2}` : "";
+
+        const panelText = `Quadruple Name: ${app.FullName}\nEmail: ${app.Email}\nPhone number: ${app.Phone}\nAge: ${age}\nGraduation status: ${app.GraduationStatus}\nFaculty and university: ${app.FacultyUniversity || "N/A"}\nMilitary status: ${app.MilitaryStatus || "N/A"}\nDate of birth: ${app.DateOfBirth || "N/A"}\nNationality: ${app.Nationality}\nNational ID: ${app.NationalID}\n\nVoice Note:\n${voiceLink}${voiceLink2}\n\nAI Assessment:\n${app.ClientPanel || "Pending AI Assessment..."}`;
         const displayPanel = panelText.replace(/\n/g, "<br>");
+        const aiPanelText = `Voice Note:\n${voiceLink}${voiceLink2}\n\nAI Assessment:\n${app.ClientPanel || "No panel generated yet."}`;
 
         document.getElementById("human-modal-content").innerHTML = `
                 <div class="report-section" style="padding: 0px;">
@@ -841,16 +847,16 @@
                     <div style="background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2); padding: 12px; border-radius: 6px; margin-top: 15px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <strong style="color: var(--primary-color); font-size: 0.85rem;"><i class="fas fa-file-export"></i> Client Panel (Ready to send)</strong>
-                                <button onclick="navigator.clipboard.writeText(\`${panelText}\`); alert('Panel Copied to Clipboard!');" style="background: var(--bg-input); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; font-weight: bold;"><i class="fas fa-copy"></i> Copy Panel</button>
+                                <button onclick="navigator.clipboard.writeText(\`${panelText.replace(/`/g, '\\`')}\`); alert('Panel Copied to Clipboard!');" style="background: var(--bg-input); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; font-weight: bold;"><i class="fas fa-copy"></i> Copy Panel</button>
                             </div>
                             <p style="color: var(--text-main); font-size: 0.85rem; line-height: 1.6; margin: 0; font-family: monospace; background: var(--bg-body); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">${displayPanel}</p>
                     </div>
                     <div style="background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2); padding: 12px; border-radius: 6px; margin-top: 10px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <strong style="color: var(--primary-color); font-size: 0.85rem;"><i class="fas fa-file-export"></i> AI Client Panel (Ready to send)</strong>
-                                <button onclick="navigator.clipboard.writeText('${app.ClientPanel?.replace(/'/g, "\\'")}'); alert('Panel Copied to Clipboard!');" style="background: var(--bg-input); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; font-weight: bold;"><i class="fas fa-copy"></i> Copy AI Panel</button>
+                                <button onclick="navigator.clipboard.writeText(\`${aiPanelText.replace(/`/g, '\\`')}\`); alert('Panel Copied to Clipboard!');" style="background: var(--bg-input); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; font-weight: bold;"><i class="fas fa-copy"></i> Copy AI Panel</button>
                             </div>
-                            <p style="color: var(--text-main); font-size: 0.9rem; line-height: 1.5; margin: 0; font-style: italic; padding: 10px; background: var(--bg-body); border-radius: 4px; border: 1px solid var(--border-color);">"${app.ClientPanel || "No panel generated yet."}"</p>
+                            <p style="color: var(--text-main); font-size: 0.9rem; line-height: 1.5; margin: 0; font-style: italic; padding: 10px; background: var(--bg-body); border-radius: 4px; border: 1px solid var(--border-color);">${aiPanelText.replace(/\n/g, '<br>')}</p>
                         </div>
                 </div>`;
         document.getElementById("human-modal").style.display = "flex";
