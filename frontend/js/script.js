@@ -594,25 +594,35 @@ window.openJobDetails = function (jobId) {
       job.location || "Remote";
   if (document.getElementById("modal-hours"))
     document.getElementById("modal-hours").textContent =
-      job.hours || "Standard";
+      job.workingHours || job.hours || "Standard";
   if (document.getElementById("modal-logo"))
     document.getElementById("modal-logo").textContent = job.logo || "VO";
 
   const reqContainer = document.getElementById("modal-requirements");
   if (reqContainer) {
-    if (job.requirements) {
-      reqContainer.innerHTML = `<p class="text-block">${job.requirements}</p>`;
-    } else {
-      reqContainer.innerHTML =
-        "<p class='text-muted'>No specific requirements listed.</p>";
-    }
+    reqContainer.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="background: rgba(0, 229, 255, 0.05); padding: 10px; border-radius: 6px; border-left: 3px solid var(--primary-color);">
+          <strong style="color: var(--primary-color);"><i class="fas fa-headset"></i> Account Type:</strong>
+          <span style="color: var(--text-main); margin-left: 5px;">${job.accountType || 'N/A'}</span>
+        </div>
+        <div style="background: rgba(0, 229, 255, 0.05); padding: 10px; border-radius: 6px; border-left: 3px solid var(--primary-color);">
+          <strong style="color: var(--primary-color);"><i class="fas fa-users"></i> Target Audience:</strong>
+          <span style="color: var(--text-main); margin-left: 5px;">${job.targetAudience || 'N/A'}</span>
+        </div>
+        <div style="background: rgba(0, 229, 255, 0.05); padding: 10px; border-radius: 6px; border-left: 3px solid var(--primary-color);">
+          <strong style="color: var(--primary-color);"><i class="fas fa-calendar-check"></i> Interview Process:</strong>
+          <span style="color: var(--text-main); margin-left: 5px;">${job.interviewTime || 'N/A'}</span>
+        </div>
+      </div>
+    `;
   }
   if (document.getElementById("modal-description"))
-    document.getElementById("modal-description").textContent =
-      job.description || "No description provided.";
+    document.getElementById("modal-description").innerHTML =
+      (job.description || "No description provided.").replace(/\n/g, '<br>');
   if (document.getElementById("modal-training"))
-    document.getElementById("modal-training").textContent =
-      job.training || "Not specified.";
+    document.getElementById("modal-training").innerHTML =
+      (job.training || "Not specified.").replace(/\n/g, '<br>');
   if (document.getElementById("job-modal"))
     document.getElementById("job-modal").classList.add("open");
 };
