@@ -536,8 +536,46 @@
               introduction in the secondary language.
             </p>
 
+            <div class="voice-tabs">
+              <div
+                class="voice-tab active"
+                id="tab-record2"
+                onclick="switchVoiceMethod2('record')">
+                Record Now
+              </div>
+              <div
+                class="voice-tab"
+                id="tab-upload2"
+                onclick="switchVoiceMethod2('upload')">
+                Upload File
+              </div>
+            </div>
+
+            <div class="recorder-box" id="ui-record2">
+              <div class="timer" id="record-timer2">00:00</div>
+              <div class="min-req">Target: 01:00</div>
+              <button
+                type="button"
+                class="rec-btn btn-start"
+                id="btn-record2"
+                onclick="toggleRecording2()">
+                <i class="fas fa-microphone"></i>
+              </button>
+              <audio id="audio-playback2" controls class="audio-preview"></audio>
+              <div
+                id="recording-status2"
+                style="
+                  margin-top: 10px;
+                  font-weight: 600;
+                  color: var(--text-muted);
+                ">
+                Tap mic to start
+              </div>
+            </div>
+
             <div
-              class="recorder-box"
+              class="recorder-box hidden"
+              id="ui-upload2"
               style="border: none; padding: 0; background: transparent">
               <div class="file-upload-area" id="area-voice2">
                 <i
@@ -617,6 +655,14 @@
         audioBlob = null,
         durationSeconds = 0;
 
+      let currentMethod2 = "record";
+      let mediaRecorder2,
+        audioChunks2 = [],
+        isRecording2 = false,
+        timerInterval2,
+        audioBlob2 = null,
+        durationSeconds2 = 0;
+
       const urlParams = new URLSearchParams(window.location.search);
       const refRecruiter = urlParams.get("recruiter") || null;
       const refAgency = urlParams.get("agency") || null;
@@ -634,6 +680,32 @@
           .classList.toggle("hidden", method !== "record");
         document
           .getElementById("ui-upload")
+          .classList.toggle("hidden", method !== "upload");
+      }
+      
+      function switchVoiceMethod2(method) {
+        currentMethod2 = method;
+        document.getElementById("tab-record2").classList.remove("active");
+        document.getElementById("tab-upload2").classList.remove("active");
+        document.getElementById(`tab-${method}2`).classList.add("active");
+        document
+          .getElementById("ui-record2")
+          .classList.toggle("hidden", method !== "record");
+        document
+          .getElementById("ui-upload2")
+          .classList.toggle("hidden", method !== "upload");
+      }
+
+      function switchVoiceMethod2(method) {
+        currentMethod2 = method;
+        document.getElementById("tab-record2").classList.remove("active");
+        document.getElementById("tab-upload2").classList.remove("active");
+        document.getElementById(`tab-${method}2`).classList.add("active");
+        document
+          .getElementById("ui-record2")
+          .classList.toggle("hidden", method !== "record");
+        document
+          .getElementById("ui-upload2")
           .classList.toggle("hidden", method !== "upload");
       }
 
@@ -717,6 +789,103 @@
         }
       }
 
+      async function toggleRecording2() {
+        const btn = document.getElementById("btn-record2");
+        const status = document.getElementById("recording-status2");
+        const audioPlayer = document.getElementById("audio-playback2");
+        if (!isRecording2) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              audio: true,
+            });
+            mediaRecorder2 = new MediaRecorder(stream);
+            audioChunks2 = [];
+            mediaRecorder2.ondataavailable = (event) =>
+              audioChunks2.push(event.data);
+            mediaRecorder2.onstop = () => {
+              audioBlob2 = new Blob(audioChunks2, { type: "audio/webm" });
+              audioPlayer.src = URL.createObjectURL(audioBlob2);
+              audioPlayer.style.display = "block";
+            };
+            mediaRecorder2.start();
+            isRecording2 = true;
+            btn.className = "rec-btn btn-stop";
+            btn.innerHTML = '<i class="fas fa-stop"></i>';
+            status.textContent = "Recording...";
+            status.style.color = "#ef4444";
+            durationSeconds2 = 0;
+            timerInterval2 = setInterval(() => {
+              durationSeconds2++;
+              const mins = Math.floor(durationSeconds2 / 60).toString().padStart(2, "0");
+              const secs = (durationSeconds2 % 60).toString().padStart(2, "0");
+              document.getElementById("record-timer2").textContent = `${mins}:${secs}`;
+              if (durationSeconds2 >= 60)
+                document.getElementById("record-timer2").style.color = "#22c55e";
+            }, 1000);
+          } catch {
+            alert("Microphone access denied.");
+          }
+        } else {
+          mediaRecorder2.stop();
+          isRecording2 = false;
+          clearInterval(timerInterval2);
+          btn.className = "rec-btn btn-start";
+          btn.innerHTML = '<i class="fas fa-microphone"></i>';
+          status.textContent = "Recording Saved!";
+          status.style.color = "#22c55e";
+        }
+      }
+
+      async function toggleRecording2() {
+        const btn = document.getElementById("btn-record2");
+        const status = document.getElementById("recording-status2");
+        const audioPlayer = document.getElementById("audio-playback2");
+        if (!isRecording2) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              audio: true,
+            });
+            mediaRecorder2 = new MediaRecorder(stream);
+            audioChunks2 = [];
+            mediaRecorder2.ondataavailable = (event) =>
+              audioChunks2.push(event.data);
+            mediaRecorder2.onstop = () => {
+              audioBlob2 = new Blob(audioChunks2, { type: "audio/webm" });
+              audioPlayer.src = URL.createObjectURL(audioBlob2);
+              audioPlayer.style.display = "block";
+            };
+            mediaRecorder2.start();
+            isRecording2 = true;
+            btn.className = "rec-btn btn-stop";
+            btn.innerHTML = '<i class="fas fa-stop"></i>';
+            status.textContent = "Recording...";
+            status.style.color = "#ef4444";
+            durationSeconds2 = 0;
+            timerInterval2 = setInterval(() => {
+              durationSeconds2++;
+              const mins = Math.floor(durationSeconds2 / 60)
+                .toString()
+                .padStart(2, "0");
+              const secs = (durationSeconds2 % 60).toString().padStart(2, "0");
+              document.getElementById("record-timer2").textContent =
+                `${mins}:${secs}`;
+              if (durationSeconds2 >= 60)
+                document.getElementById("record-timer2").style.color = "#22c55e";
+            }, 1000);
+          } catch {
+            alert("Microphone access denied.");
+          }
+        } else {
+          mediaRecorder2.stop();
+          isRecording2 = false;
+          clearInterval(timerInterval2);
+          btn.className = "rec-btn btn-start";
+          btn.innerHTML = '<i class="fas fa-microphone"></i>';
+          status.textContent = "Recording Saved!";
+          status.style.color = "#22c55e";
+        }
+      }
+
       function checkMilitary() {
         const show =
           document.getElementById("app-gender").value === "Male" &&
@@ -752,15 +921,27 @@
 
             // --- BILINGUAL AUDIO HANDLING ---
             if (params.get("bilingual") === "1") {
-              const file2 = document.getElementById("app-voice2").files[0];
-              if (!file2) {
-                btn.textContent = "Submit Application";
-                btn.disabled = false;
-                return alert(
-                  "This is a bilingual role. Please upload your Second Language audio file.",
-                );
+              if (currentMethod2 === "record") {
+                if (!audioBlob2) {
+                  btn.textContent = "Submit Application";
+                  btn.disabled = false;
+                  return alert("This is a bilingual role. Please record your Second Language audio.");
+                }
+                const voiceFile2 = new File([audioBlob2], "recording2.webm", {
+                  type: "audio/webm",
+                });
+                formData.append("voiceRecord2", voiceFile2);
+              } else {
+                const file2 = document.getElementById("app-voice2").files[0];
+                if (!file2) {
+                  btn.textContent = "Submit Application";
+                  btn.disabled = false;
+                  return alert(
+                    "This is a bilingual role. Please upload your Second Language audio file.",
+                  );
+                }
+                formData.append("voiceRecord2", file2);
               }
-              formData.append("voiceRecord2", file2);
             }
 
             // 2. SAFE TEXT FIELDS
