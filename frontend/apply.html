@@ -353,17 +353,13 @@
               <div style="display: flex; gap: 8px;">
                 <select id="app-phone-code" style="flex: 0 0 110px; padding: 0.8rem 0.5rem; background-position: right 0.5rem center;">
                   <option value="+20">🇪🇬 +20</option>
-                  <option value="+966">🇸🇦 +966</option>
-                  <option value="+971">🇦🇪 +971</option>
-                  <option value="+965">🇰🇼 +965</option>
-                  <option value="+1">🇺🇸 +1</option>
-                  <option value="+44">🇬🇧 +44</option>
                 </select>
                 <input
                   type="tel"
                   id="app-phone"
                   required
                   placeholder="1xxxxxxxxx"
+                  oninput="if(this.value.startsWith('0')) this.value = this.value.substring(1);"
                   style="flex: 1;" />
               </div>
             </div>
@@ -374,17 +370,13 @@
               <div style="display: flex; gap: 8px;">
                 <select id="app-whatsapp-code" style="flex: 0 0 110px; padding: 0.8rem 0.5rem; background-position: right 0.5rem center;">
                   <option value="+20">🇪🇬 +20</option>
-                  <option value="+966">🇸🇦 +966</option>
-                  <option value="+971">🇦🇪 +971</option>
-                  <option value="+965">🇰🇼 +965</option>
-                  <option value="+1">🇺🇸 +1</option>
-                  <option value="+44">🇬🇧 +44</option>
                 </select>
                 <input
                   type="tel"
                   id="app-whatsapp"
                   required
                   placeholder="1xxxxxxxxx"
+                  oninput="if(this.value.startsWith('0')) this.value = this.value.substring(1);"
                   style="flex: 1;" />
               </div>
             </div>
@@ -987,8 +979,48 @@
           }
         });
 
+      async function populateCountryCodes() {
+        try {
+          const res = await fetch("https://restcountries.com/v3.1/all?fields=name,idd,cca2");
+          const data = await res.json();
+          
+          let countries = [];
+          data.forEach(c => {
+            if (c.idd && c.idd.root) {
+              const code = (c.idd.suffixes && c.idd.suffixes.length === 1) 
+                ? c.idd.root + c.idd.suffixes[0] 
+                : c.idd.root;
+              
+              // Convert 2-letter country code (cca2) to Emoji flag
+              const flag = c.cca2.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397));
+              
+              if (!countries.some(existing => existing.name === c.name.common)) {
+                countries.push({ name: c.name.common, code: code, flag: flag });
+              }
+            }
+          });
+
+          countries.sort((a, b) => a.name.localeCompare(b.name));
+
+          // Bring Egypt to the very top as the default
+          const egyptIdx = countries.findIndex(c => c.code === "+20" && c.name === "Egypt");
+          if (egyptIdx > -1) {
+            countries.unshift(countries.splice(egyptIdx, 1)[0]);
+          }
+
+          const optionsHtml = countries.map(c => `<option value="${c.code}">${c.flag} ${c.code} (${c.name})</option>`).join('');
+
+          document.getElementById("app-phone-code").innerHTML = optionsHtml;
+          document.getElementById("app-whatsapp-code").innerHTML = optionsHtml;
+        } catch (error) {
+          console.error("Failed to load global country codes:", error);
+        }
+      }
+
       // Initialize
       document.addEventListener("DOMContentLoaded", () => {
+        populateCountryCodes();
+
         const params = new URLSearchParams(window.location.search);
 
         if (params.get("title")) {
