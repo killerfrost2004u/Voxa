@@ -350,21 +350,43 @@
               <label
                 ><i class="fas fa-phone-alt"></i> Phone (Calls)
                 <span style="color: var(--primary-color)">*</span></label
-              ><input
-                type="tel"
-                id="app-phone"
-                required
-                placeholder="01xxxxxxxxx" />
+              <div style="display: flex; gap: 8px;">
+                <select id="app-phone-code" style="flex: 0 0 110px; padding: 0.8rem 0.5rem; background-position: right 0.5rem center;">
+                  <option value="+20">🇪🇬 +20</option>
+                  <option value="+966">🇸🇦 +966</option>
+                  <option value="+971">🇦🇪 +971</option>
+                  <option value="+965">🇰🇼 +965</option>
+                  <option value="+1">🇺🇸 +1</option>
+                  <option value="+44">🇬🇧 +44</option>
+                </select>
+                <input
+                  type="tel"
+                  id="app-phone"
+                  required
+                  placeholder="1xxxxxxxxx"
+                  style="flex: 1;" />
+              </div>
             </div>
             <div class="form-group">
               <label
                 ><i class="fab fa-whatsapp"></i> WhatsApp Number
                 <span style="color: var(--primary-color)">*</span></label
-              ><input
-                type="tel"
-                id="app-whatsapp"
-                required
-                placeholder="01xxxxxxxxx" />
+              <div style="display: flex; gap: 8px;">
+                <select id="app-whatsapp-code" style="flex: 0 0 110px; padding: 0.8rem 0.5rem; background-position: right 0.5rem center;">
+                  <option value="+20">🇪🇬 +20</option>
+                  <option value="+966">🇸🇦 +966</option>
+                  <option value="+971">🇦🇪 +971</option>
+                  <option value="+965">🇰🇼 +965</option>
+                  <option value="+1">🇺🇸 +1</option>
+                  <option value="+44">🇬🇧 +44</option>
+                </select>
+                <input
+                  type="tel"
+                  id="app-whatsapp"
+                  required
+                  placeholder="1xxxxxxxxx"
+                  style="flex: 1;" />
+              </div>
             </div>
           </div>
 
@@ -696,19 +718,6 @@
           .classList.toggle("hidden", method !== "upload");
       }
 
-      function switchVoiceMethod2(method) {
-        currentMethod2 = method;
-        document.getElementById("tab-record2").classList.remove("active");
-        document.getElementById("tab-upload2").classList.remove("active");
-        document.getElementById(`tab-${method}2`).classList.add("active");
-        document
-          .getElementById("ui-record2")
-          .classList.toggle("hidden", method !== "record");
-        document
-          .getElementById("ui-upload2")
-          .classList.toggle("hidden", method !== "upload");
-      }
-
       function validateFileUpload(input) {
         const file = input.files[0];
         const status = document.getElementById("upload-status");
@@ -836,56 +845,6 @@
         }
       }
 
-      async function toggleRecording2() {
-        const btn = document.getElementById("btn-record2");
-        const status = document.getElementById("recording-status2");
-        const audioPlayer = document.getElementById("audio-playback2");
-        if (!isRecording2) {
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-              audio: true,
-            });
-            mediaRecorder2 = new MediaRecorder(stream);
-            audioChunks2 = [];
-            mediaRecorder2.ondataavailable = (event) =>
-              audioChunks2.push(event.data);
-            mediaRecorder2.onstop = () => {
-              audioBlob2 = new Blob(audioChunks2, { type: "audio/webm" });
-              audioPlayer.src = URL.createObjectURL(audioBlob2);
-              audioPlayer.style.display = "block";
-            };
-            mediaRecorder2.start();
-            isRecording2 = true;
-            btn.className = "rec-btn btn-stop";
-            btn.innerHTML = '<i class="fas fa-stop"></i>';
-            status.textContent = "Recording...";
-            status.style.color = "#ef4444";
-            durationSeconds2 = 0;
-            timerInterval2 = setInterval(() => {
-              durationSeconds2++;
-              const mins = Math.floor(durationSeconds2 / 60)
-                .toString()
-                .padStart(2, "0");
-              const secs = (durationSeconds2 % 60).toString().padStart(2, "0");
-              document.getElementById("record-timer2").textContent =
-                `${mins}:${secs}`;
-              if (durationSeconds2 >= 60)
-                document.getElementById("record-timer2").style.color = "#22c55e";
-            }, 1000);
-          } catch {
-            alert("Microphone access denied.");
-          }
-        } else {
-          mediaRecorder2.stop();
-          isRecording2 = false;
-          clearInterval(timerInterval2);
-          btn.className = "rec-btn btn-start";
-          btn.innerHTML = '<i class="fas fa-microphone"></i>';
-          status.textContent = "Recording Saved!";
-          status.style.color = "#22c55e";
-        }
-      }
-
       function checkMilitary() {
         const show =
           document.getElementById("app-gender").value === "Male" &&
@@ -948,8 +907,6 @@
             const fields = [
               "name",
               "email",
-              "phone",
-              "whatsapp",
               "national-id",
               "nationality",
               "address",
@@ -965,6 +922,14 @@
                 formData.append(key, el.value);
               }
             });
+
+            const phoneCode = document.getElementById("app-phone-code").value;
+            const phoneNum = document.getElementById("app-phone").value;
+            formData.append("phone", phoneCode + phoneNum);
+
+            const waCode = document.getElementById("app-whatsapp-code").value;
+            const waNum = document.getElementById("app-whatsapp").value;
+            formData.append("whatsapp", waCode + waNum);
 
             // Dropdowns
             formData.append(
