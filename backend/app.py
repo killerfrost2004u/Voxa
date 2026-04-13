@@ -378,6 +378,32 @@ def get_public_jobs():
     except Exception as e: 
         return jsonify([])
 
+@app.route('/api/jobs/<int:id>', methods=['GET'])
+def get_public_job(id):
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("""SELECT * FROM "Jobs" WHERE "JobID" = %s AND "Status" = 'Active'""", (id,))
+        cols = [column[0] for column in c.description]
+        row = c.fetchone()
+        conn.close()
+        if row:
+            j = dict(zip(cols, row))
+            return jsonify({
+                "id": j.get("JobID"),
+                "title": j.get("JobTitle", "Unknown Title"),
+                "company": j.get("CompanyName", "Voxa"),
+                "location": j.get("Location") or "Remote",
+                "salary": j.get("SalaryPackage") or "Competitive",
+                "requirements": f"Account: {j.get('AccountType', 'N/A')} | Hours: {j.get('WorkingHours', 'N/A')} | Target: {j.get('TargetAudience', 'N/A')}",
+                "description": j.get("OfferDetails", ""),
+                "logo": j.get("CompanyName", "VO")[:2].upper(),
+                "bilingual": bool(j.get("RequiresSecondLanguage", False))
+            })
+        return jsonify({"error": "Job not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/admin/jobs', methods=['GET', 'POST'])
 def handle_admin_jobs():
     conn = get_db_connection()

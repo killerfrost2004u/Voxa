@@ -1,177 +1,326 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Browse Jobs | Voxa</title>
-    <link rel="icon" type="image/png" href="images/voxa-logo.png">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-
+    <link rel="icon" type="image/png" href="images/voxa-logo.png" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet" />
+  </head>
+  <body>
     <nav class="navbar">
-        <div class="container">
-            <a href="index.html" class="logo" style="display: flex; align-items: center; gap: 10px; font-weight: 700; color: white; text-decoration: none;">
-                <img src="images/voxa-logo.png" alt="Voxa Logo" style="height: 40px; width: auto; border-radius: 8px;">
-                Voxa
-            </a>
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="about.html">About Us</a></li>
-                <li><a href="jobs.html" class="active">Find Jobs</a></li>
-                <li><a href="companies.html">Companies</a></li>
-                <li><a href="salaries.html">Salaries</a></li>
-                <li><a href="contact.html">Contact Us</a></li>
-            </ul>
-            <div class="auth-buttons">
-                <a href="login.html" class="btn-text">Log In</a>
-                <a href="login.html" class="btn-primary">Sign Up</a>
-            </div>
-            <div class="menu-toggle">
-                <i class="fas fa-bars"></i>
-            </div>
+      <div class="container">
+        <a
+          href="index.html"
+          class="logo"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+          ">
+          <img
+            src="images/voxa-logo.png"
+            alt="Voxa Logo"
+            style="height: 40px; width: auto; border-radius: 8px" />
+          Voxa
+        </a>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="jobs.html" class="active">Find Jobs</a></li>
+          <li><a href="companies.html">Companies</a></li>
+          <li><a href="salaries.html">Salaries</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+        <div class="auth-buttons">
+          <a href="login.html" class="btn-text">Log In</a>
+          <a href="login.html" class="btn-primary">Sign Up</a>
         </div>
+        <div class="menu-toggle">
+          <i class="fas fa-bars"></i>
+        </div>
+      </div>
     </nav>
 
     <header class="page-header">
-        <div class="container">
-            <h1>Browse Jobs</h1>
-            <p>Find your next mission from thousands of opportunities.</p>
-        </div>
+      <div class="container">
+        <h1>Browse Jobs</h1>
+        <p>Find your next mission from thousands of opportunities.</p>
+      </div>
     </header>
     <section class="section-padding">
-        <div class="container jobs-layout">
-            <aside class="sidebar">
-                <div class="filter-group">
-                    <h3><i class="fas fa-filter"></i> Filter</h3>
+      <div class="container jobs-layout">
+        <aside class="sidebar">
+          <div class="filter-group">
+            <h3><i class="fas fa-filter"></i> Filter</h3>
 
-                    <div class="filter-item">
-                        <label>Keywords</label>
-                        <div class="input-with-icon">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="keyword-filter" placeholder="Job title..." onkeyup="applyFilters()">
-                        </div>
-                    </div>
+            <div class="filter-item">
+              <label>Keywords</label>
+              <div class="input-with-icon">
+                <i class="fas fa-search"></i>
+                <input
+                  type="text"
+                  id="keyword-filter"
+                  placeholder="Job title..."
+                  onkeyup="applyFilters()" />
+              </div>
+            </div>
 
-                    <div class="filter-item">
-                        <label>Location</label>
-                        <div class="input-with-icon">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <input type="text" id="location-filter" placeholder="City..." onkeyup="applyFilters()">
-                        </div>
-                    </div>
+            <div class="filter-item">
+              <label>Location</label>
+              <div class="input-with-icon">
+                <i class="fas fa-map-marker-alt"></i>
+                <input
+                  type="text"
+                  id="location-filter"
+                  placeholder="City..."
+                  onkeyup="applyFilters()" />
+              </div>
+            </div>
 
-                    <div class="filter-item">
-                        <label>Job Type</label>
-                        <div class="checkbox-group">
-                            <label><input type="checkbox" value="Full Time" onchange="applyFilters()"> Full Time</label>
-                            <label><input type="checkbox" value="Part Time" onchange="applyFilters()"> Part Time</label>
-                            <label><input type="checkbox" value="Rotational" onchange="applyFilters()"> Rotational</label>
-                            <label><input type="checkbox" value="Remote" onchange="applyFilters()"> Remote</label>
-                        </div>
-                    </div>
+            <div class="filter-item">
+              <label>Job Type</label>
+              <div class="checkbox-group">
+                <label
+                  ><input
+                    type="checkbox"
+                    value="Full Time"
+                    onchange="applyFilters()" />
+                  Full Time</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    value="Part Time"
+                    onchange="applyFilters()" />
+                  Part Time</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    value="Rotational"
+                    onchange="applyFilters()" />
+                  Rotational</label
+                >
+                <label
+                  ><input
+                    type="checkbox"
+                    value="Remote"
+                    onchange="applyFilters()" />
+                  Remote</label
+                >
+              </div>
+            </div>
 
-                    <div class="filter-item">
-                        <label>Min Salary</label>
-                        <input type="range" min="0" max="50" value="0" class="slider" id="salary-range" 
-                               oninput="updateSalaryLabel(this.value); applyFilters()">
-                        <div class="range-value" style="color:var(--text-muted); margin-top:5px;">
-                            Min: <span id="salary-val" style="color:var(--primary-color)">0</span>k EGP
-                        </div>
-                    </div>
+            <div class="filter-item">
+              <label>Min Salary</label>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                value="0"
+                class="slider"
+                id="salary-range"
+                oninput="
+                  updateSalaryLabel(this.value);
+                  applyFilters();
+                " />
+              <div
+                class="range-value"
+                style="color: var(--text-muted); margin-top: 5px">
+                Min:
+                <span id="salary-val" style="color: var(--primary-color)"
+                  >0</span
+                >k EGP
+              </div>
+            </div>
 
-                    <button class="btn-primary full-width" onclick="applyFilters()">Apply Filters</button>
-                    <button class="reset-btn" onclick="resetFilters()">Reset</button>
-                </div>
-            </aside>
+            <button class="btn-primary full-width" onclick="applyFilters()">
+              Apply Filters
+            </button>
+            <button class="reset-btn" onclick="resetFilters()">Reset</button>
+          </div>
+        </aside>
 
-            <main class="job-feed-wrapper">
-                <div class="feed-header">
-                    <span id="job-count">Loading Jobs...</span>
-                    <div class="sort-box">
-                        <label>Sort by:</label>
-                        <select id="sort-jobs" onchange="applyFilters()">
-                            <option value="newest">Newest</option>
-                            <option value="salary">Highest Salary</option>
-                        </select>
-                    </div>
-                </div>
+        <main class="job-feed-wrapper">
+          <div class="feed-header">
+            <span id="job-count">Loading Jobs...</span>
+            <div class="sort-box">
+              <label>Sort by:</label>
+              <select id="sort-jobs" onchange="applyFilters()">
+                <option value="newest">Newest</option>
+                <option value="salary">Highest Salary</option>
+              </select>
+            </div>
+          </div>
 
-                <div class="jobs-list" id="all-jobs-container">
-                </div>
-                
-                <div class="pagination">
-                </div>
-            </main>
-        </div>
+          <div class="jobs-list" id="all-jobs-container"></div>
+
+          <div class="pagination"></div>
+        </main>
+      </div>
     </section>
 
     <div id="job-modal" class="modal-overlay">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeJobModal()">&times;</button>
-            
-            <div class="modal-header">
-                <div id="modal-logo" class="company-logo-large" style="margin:0;">DW</div>
-                <div>
-                    <h2 id="modal-title">Job Title</h2>
-                    <p id="modal-company" class="text-muted">Company Name</p>
-                </div>
-            </div>
+      <div class="modal-content">
+        <button class="close-modal" onclick="closeJobModal()">&times;</button>
 
-            <div class="modal-grid-2">
-                <div class="info-box main-box">
-                    <i class="fas fa-money-bill-wave icon-large"></i>
-                    <div>
-                        <span class="label">Salary Package</span>
-                        <strong id="modal-salary" class="text-highlight">10k - 15k</strong>
-                    </div>
-                </div>
-
-                <div class="info-stack">
-                    <div class="info-row">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <div>
-                            <span class="label">Location</span>
-                            <strong id="modal-location">Cairo</strong>
-                        </div>
-                    </div>
-                    <div class="info-row">
-                        <i class="fas fa-clock"></i>
-                        <div>
-                            <span class="label">Working Hours</span>
-                            <strong id="modal-hours">9 AM - 5 PM</strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="modal-body">
-                <h3><i class="fas fa-file-alt"></i> Description</h3>
-                <p id="modal-description" class="text-block">...</p>
-
-                <h3><i class="fas fa-check-circle"></i> Requirements</h3>
-                <div id="modal-requirements" class="requirements-container"></div>
-                
-                <h3><i class="fas fa-chalkboard-teacher"></i> Training</h3>
-                <p id="modal-training" class="text-block">...</p>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn-primary full-width" onclick="applyForJob()">Apply Now</button>
-            </div>
+        <div class="modal-header">
+          <div id="modal-logo" class="company-logo-large" style="margin: 0">
+            DW
+          </div>
+          <div>
+            <h2 id="modal-title">Job Title</h2>
+            <p id="modal-company" class="text-muted">Company Name</p>
+          </div>
         </div>
+
+        <div class="modal-grid-2">
+          <div class="info-box main-box">
+            <i class="fas fa-money-bill-wave icon-large"></i>
+            <div>
+              <span class="label">Salary Package</span>
+              <strong id="modal-salary" class="text-highlight"
+                >10k - 15k</strong
+              >
+            </div>
+          </div>
+
+          <div class="info-stack">
+            <div class="info-row">
+              <i class="fas fa-map-marker-alt"></i>
+              <div>
+                <span class="label">Location</span>
+                <strong id="modal-location">Cairo</strong>
+              </div>
+            </div>
+            <div class="info-row">
+              <i class="fas fa-clock"></i>
+              <div>
+                <span class="label">Working Hours</span>
+                <strong id="modal-hours">9 AM - 5 PM</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-body">
+          <h3><i class="fas fa-file-alt"></i> Description</h3>
+          <p id="modal-description" class="text-block">...</p>
+
+          <h3><i class="fas fa-check-circle"></i> Requirements</h3>
+          <div id="modal-requirements" class="requirements-container"></div>
+
+          <h3><i class="fas fa-chalkboard-teacher"></i> Training</h3>
+          <p id="modal-training" class="text-block">...</p>
+        </div>
+
+        <div class="modal-footer" style="display: flex; gap: 10px">
+          <button
+            class="btn-outline full-width"
+            onclick="copyJobLink()"
+            style="
+              flex: 1;
+              border: 1px solid var(--primary-color);
+              color: var(--primary-color);
+              background: transparent;
+              cursor: pointer;
+              border-radius: 6px;
+              font-weight: bold;
+            ">
+            <i class="fas fa-link"></i> Copy Link
+          </button>
+          <button
+            class="btn-primary full-width"
+            onclick="applyForJob()"
+            style="flex: 2">
+            Apply Now
+          </button>
+        </div>
+      </div>
     </div>
 
     <footer>
-        <div class="container">
-            <div class="footer-bottom">
-                <p>&copy; 2026 Voxa. All rights reserved.</p>
-            </div>
+      <div class="container">
+        <div class="footer-bottom">
+          <p>&copy; 2026 Voxa. All rights reserved.</p>
         </div>
+      </div>
     </footer>
 
     <script src="js/script.js"></script>
-</body>
+    <script>
+      // Variable to track the currently opened job modal's ID
+      let currentShareJobId = null;
+
+      // Function to generate and copy the direct link for WhatsApp / sharing
+      function copyJobLink() {
+        if (!currentShareJobId) return;
+        const url =
+          window.location.origin +
+          window.location.pathname +
+          "?jobId=" +
+          currentShareJobId;
+        navigator.clipboard
+          .writeText(url)
+          .then(() => {
+            alert(
+              "Job link copied! You can now share it directly on WhatsApp.",
+            );
+          })
+          .catch((err) => {
+            console.error("Clipboard copy failed", err);
+          });
+      }
+
+      // Run logic to handle auto-opening the job modal if jobId is in URL
+      document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+          // Intercept openJobModal to record the job ID being viewed
+          if (typeof window.openJobModal === "function") {
+            const originalOpenJobModal = window.openJobModal;
+            window.openJobModal = function () {
+              if (arguments.length > 0) {
+                let arg = arguments[0];
+                currentShareJobId = typeof arg === "object" ? arg.id : arg;
+              }
+              originalOpenJobModal.apply(this, arguments);
+            };
+          }
+
+          // Check URL for deep linking
+          const urlParams = new URLSearchParams(window.location.search);
+          const jobId = urlParams.get("jobId");
+
+          if (jobId) {
+            const checkInterval = setInterval(() => {
+              const jobCards = document.querySelectorAll(
+                '[onclick*="openJobModal"]',
+              );
+              if (jobCards.length > 0) {
+                const targetCard = Array.from(jobCards).find((card) =>
+                  card.getAttribute("onclick").includes(jobId),
+                );
+                if (targetCard) {
+                  targetCard.click();
+                }
+                clearInterval(checkInterval);
+              }
+            }, 300);
+
+            setTimeout(() => clearInterval(checkInterval), 10000); // 10s timeout to avoid infinite polling
+          }
+        }, 500); // Wait for script.js functions to load
+      });
+    </script>
+  </body>
 </html>
