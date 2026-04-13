@@ -626,16 +626,29 @@
             </div>
           </div>
 
-          <div class="form-group" style="margin-top: 1.5rem">
-            <label
-              >Relevant Experience (Brief Text)
-              <span style="color: var(--primary-color)">*</span></label
-            >
-            <textarea
-              id="app-experience"
-              rows="3"
-              required
-              placeholder="Briefly list companies or roles..."></textarea>
+          <div class="form-grid-2" style="margin-top: 1.5rem">
+            <div class="form-group" style="margin-bottom: 0">
+              <label>Years of Experience <span style="color: var(--primary-color)">*</span></label>
+              <select id="app-exp-years" required>
+                <option value="" disabled selected>Select Experience</option>
+                <option value="0">No Experience</option>
+                <option value="1">0-1 Years</option>
+                <option value="2">1-3 Years</option>
+                <option value="3">3-5 Years</option>
+                <option value="4">5+ Years</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0">
+              <label
+                >Relevant Experience Details
+                <span style="color: var(--primary-color)">*</span></label
+              >
+              <textarea
+                id="app-experience"
+                rows="2"
+                required
+                placeholder="Briefly list companies or roles..."></textarea>
+            </div>
           </div>
 
           <div class="action-row" style="margin-top: 2rem">
@@ -887,6 +900,14 @@
               return alert("Sorry, this role accepts Egyptian nationals only.");
             }
 
+            const reqExp = parseInt(params.get("reqExp")) || 0;
+            const candidateExp = parseInt(document.getElementById("app-exp-years").value) || 0;
+            if (candidateExp < reqExp) {
+              btn.textContent = "Submit Application";
+              btn.disabled = false;
+              return alert("Sorry, you do not meet the minimum experience requirement for this role.");
+            }
+
             // 1. SAFE FILE HANDLING
             if (currentMethod === "record") {
               if (!audioBlob) throw new Error("Please record audio.");
@@ -932,7 +953,6 @@
               "nationality",
               "address",
               "english",
-              "experience",
               "dob",
               "faculty",
             ];
@@ -951,6 +971,10 @@
             const waCode = document.getElementById("app-whatsapp-code").value;
             const waNum = document.getElementById("app-whatsapp").value;
             formData.append("whatsapp", waCode + waNum);
+
+            const expLabel = document.getElementById("app-exp-years").options[document.getElementById("app-exp-years").selectedIndex].text;
+            const expText = document.getElementById("app-experience").value;
+            formData.append("experience", expLabel + " - " + expText);
 
             // Dropdowns
             formData.append(

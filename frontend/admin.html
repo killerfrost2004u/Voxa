@@ -472,15 +472,21 @@
           <select id="jEnglish">
             <option value="" disabled selected>Min. English Level</option>
             <option value="B1">B1 (Intermediate)</option>
+            <option value="B1">B1+ (Strong Intermediate)</option>
             <option value="B2">B2 (Upper Intermediate)</option>
+            <option value="B2">B2+ (Advanced Intermediate)</option>
             <option value="C1">C1 (Advanced)</option>
+            <option value="C1">C1+ (Strong Advanced)</option>
             <option value="C2">C2 (Fluent / Native)</option>
           </select>
           <select id="jSecondLang" style="display: none;">
             <option value="" disabled selected>Min. 2nd Lang Level</option>
             <option value="B1">B1 (Intermediate)</option>
+            <option value="B1">B1+ (Strong Intermediate)</option>
             <option value="B2">B2 (Upper Intermediate)</option>
+            <option value="B2">B2+ (Advanced Intermediate)</option>
             <option value="C1">C1 (Advanced)</option>
+            <option value="C1">C1+ (Strong Advanced)</option>
             <option value="C2">C2 (Fluent / Native)</option>
           </select>
           <input type="number" id="jMaxAge" placeholder="Max Age Limit (e.g. 30)" />
@@ -493,6 +499,14 @@
             <option value="" disabled selected>Graduation Requirement</option>
             <option value="Graduates Only">Graduates Only</option>
             <option value="Undergrads/Dropouts Accepted">Undergrads / Dropouts Accepted</option>
+          </select>
+          <select id="jExperience">
+            <option value="" disabled selected>Min. Experience Req.</option>
+            <option value="0">No Experience Required</option>
+            <option value="1">0-1 Years</option>
+            <option value="2">1-3 Years</option>
+            <option value="3">3-5 Years</option>
+            <option value="4">5+ Years</option>
           </select>
           <input type="text" id="jTraining" placeholder="Training Details" />
           <textarea
@@ -1128,6 +1142,7 @@
         document.getElementById("jMaxAge").value = job.MaxAge || "";
         document.getElementById("jNationality").value = job.NationalityReq || "";
         document.getElementById("jGraduation").value = job.GraduationReq || "";
+        document.getElementById("jExperience").value = job.MinExperience || "0";
         document.getElementById("jTraining").value = job.Training || "";
         document.getElementById("jOffer").value = job.OfferDetails || "";
         document.getElementById("jBilingual").value = job.RequiresSecondLanguage
@@ -1180,6 +1195,7 @@
           maxAge: parseInt(document.getElementById("jMaxAge").value) || 35,
           nationalityReq: document.getElementById("jNationality").value || "All Nationalities",
           graduationReq: document.getElementById("jGraduation").value || "Graduates Only",
+          minExperience: document.getElementById("jExperience").value || "0",
           training: document.getElementById("jTraining").value,
           offerDetails: document.getElementById("jOffer").value,
           requiresSecondLanguage: document.getElementById("jBilingual").value,

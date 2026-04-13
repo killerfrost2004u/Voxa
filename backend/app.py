@@ -97,6 +97,7 @@ def init_db():
             c.execute('ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "MaxAge" INTEGER DEFAULT 35')
             c.execute('ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "NationalityReq" TEXT DEFAULT \'All Nationalities\'')
             c.execute('ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "GraduationReq" TEXT DEFAULT \'Graduates Only\'')
+            c.execute('ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "MinExperience" TEXT DEFAULT \'0\'')
             conn.commit()
             print("✅ Database Migrations Complete (ValidatorScopes synced).")
         except Exception as e:
@@ -383,6 +384,7 @@ def get_public_jobs():
                 "maxAge": j.get("MaxAge") or 35,
                 "nationalityReq": j.get("NationalityReq") or "All Nationalities",
                 "graduationReq": j.get("GraduationReq") or "Graduates Only",
+                "minExperience": j.get("MinExperience") or "0",
                 "training": j.get("Training") or "Not specified.",
                 "requirements": f"Account: {j.get('AccountType', 'N/A')} | Hours: {j.get('WorkingHours', 'N/A')} | Target: {j.get('TargetAudience', 'N/A')}",
                 "description": j.get("OfferDetails", ""),
@@ -418,6 +420,7 @@ def get_public_job(id):
                 "maxAge": j.get("MaxAge") or 35,
                 "nationalityReq": j.get("NationalityReq") or "All Nationalities",
                 "graduationReq": j.get("GraduationReq") or "Graduates Only",
+                "minExperience": j.get("MinExperience") or "0",
                 "training": j.get("Training") or "Not specified.",
                 "requirements": f"Account: {j.get('AccountType', 'N/A')} | Hours: {j.get('WorkingHours', 'N/A')} | Target: {j.get('TargetAudience', 'N/A')}",
                 "description": j.get("OfferDetails", ""),
@@ -443,12 +446,12 @@ def handle_admin_jobs():
     if request.method == 'POST':
         d = request.get_json()
         c.execute(
-            """INSERT INTO "Jobs" ("CompanyName", "JobTitle", "AccountType", "WorkingHours", "SalaryPackage", "Location", "Training", "OfferDetails", "Status", "RequiresSecondLanguage", "InterviewType", "MinEnglishLevel", "MinSecondLangLevel", "MaxAge", "NationalityReq", "GraduationReq") 
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            """INSERT INTO "Jobs" ("CompanyName", "JobTitle", "AccountType", "WorkingHours", "SalaryPackage", "Location", "Training", "OfferDetails", "Status", "RequiresSecondLanguage", "InterviewType", "MinEnglishLevel", "MinSecondLangLevel", "MaxAge", "NationalityReq", "GraduationReq", "MinExperience") 
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
             (d.get('companyName'), d.get('jobTitle'), d.get('accountType'), d.get('workingHours'), 
              d.get('salaryPackage'), d.get('location'), 
              d.get('training'), d.get('offerDetails'), d.get('status', 'Active'), int(d.get('requiresSecondLanguage', 0)),
-             d.get('interviewType', 'Onsite Interview'), d.get('minEnglishLevel', 'B2'), d.get('minSecondLangLevel', ''), d.get('maxAge', 35), d.get('nationalityReq', 'All Nationalities'), d.get('graduationReq', 'Graduates Only'))
+             d.get('interviewType', 'Onsite Interview'), d.get('minEnglishLevel', 'B2'), d.get('minSecondLangLevel', ''), d.get('maxAge', 35), d.get('nationalityReq', 'All Nationalities'), d.get('graduationReq', 'Graduates Only'), d.get('minExperience', '0'))
         )
         conn.commit()
         conn.close()
@@ -465,13 +468,13 @@ def update_delete_job(id):
                 """UPDATE "Jobs" 
                    SET "CompanyName"=%s, "JobTitle"=%s, "AccountType"=%s, "WorkingHours"=%s, 
                        "SalaryPackage"=%s, "Location"=%s, "Training"=%s, "OfferDetails"=%s, "RequiresSecondLanguage"=%s,
-                       "InterviewType"=%s, "MinEnglishLevel"=%s, "MinSecondLangLevel"=%s, "MaxAge"=%s, "NationalityReq"=%s, "GraduationReq"=%s
+                       "InterviewType"=%s, "MinEnglishLevel"=%s, "MinSecondLangLevel"=%s, "MaxAge"=%s, "NationalityReq"=%s, "GraduationReq"=%s, "MinExperience"=%s
                    WHERE "JobID"=%s""",
                 (data.get('companyName'), data.get('jobTitle'), data.get('accountType'), 
                  data.get('workingHours'), data.get('salaryPackage'), 
                  data.get('location'), data.get('training'), 
                  data.get('offerDetails'), int(data.get('requiresSecondLanguage', 0)),
-                 data.get('interviewType'), data.get('minEnglishLevel'), data.get('minSecondLangLevel'), data.get('maxAge'), data.get('nationalityReq'), data.get('graduationReq'), id)
+                 data.get('interviewType'), data.get('minEnglishLevel'), data.get('minSecondLangLevel'), data.get('maxAge'), data.get('nationalityReq'), data.get('graduationReq'), data.get('minExperience'), id)
             )
         else:
             c.execute("""UPDATE "Jobs" SET "Status"=%s WHERE "JobID"=%s""", (data.get('status'), id))

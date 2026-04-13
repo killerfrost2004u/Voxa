@@ -600,6 +600,9 @@ window.openJobDetails = function (jobId) {
 
   const reqContainer = document.getElementById("modal-requirements");
   if (reqContainer) {
+    const expMap = { "0": "No Exp.", "1": "0-1 Years", "2": "1-3 Years", "3": "3-5 Years", "4": "5+ Years" };
+    const minExpLabel = expMap[job.minExperience || "0"] || "No Exp.";
+
     reqContainer.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 10px;">
         <div style="background: rgba(0, 229, 255, 0.05); padding: 10px; border-radius: 6px; border-left: 3px solid var(--primary-color);">
@@ -616,7 +619,7 @@ window.openJobDetails = function (jobId) {
         </div>
         <div style="background: rgba(0, 229, 255, 0.05); padding: 10px; border-radius: 6px; border-left: 3px solid var(--primary-color);">
           <strong style="color: var(--primary-color);"><i class="fas fa-user-graduate"></i> Requirements:</strong>
-          <span style="color: var(--text-main); margin-left: 5px;">Max Age: ${job.maxAge || 35} | ${job.graduationReq || 'Graduates Only'} | ${job.nationalityReq || 'All Nationalities'}</span>
+          <span style="color: var(--text-main); margin-left: 5px;">Max Age: ${job.maxAge || 35} | Exp: ${minExpLabel} | ${job.graduationReq || 'Graduates Only'} | ${job.nationalityReq || 'All Nationalities'}</span>
         </div>
       </div>
     `;
@@ -652,8 +655,9 @@ window.applyForJob = function () {
   const maxAge = job ? (job.maxAge || 99) : 99;
   const reqGrad = job && job.graduationReq === "Graduates Only" ? "1" : "0";
   const reqNat = job && job.nationalityReq === "Egyptians Only" ? "1" : "0";
+  const reqExp = job ? (job.minExperience || "0") : "0";
 
-  window.location.href = `apply.html?id=${id}&title=${encodeURIComponent(title)}&company=${encodeURIComponent(company)}&bilingual=${isBilingual}&maxAge=${maxAge}&reqGrad=${reqGrad}&reqNat=${reqNat}`;
+  window.location.href = `apply.html?id=${id}&title=${encodeURIComponent(title)}&company=${encodeURIComponent(company)}&bilingual=${isBilingual}&maxAge=${maxAge}&reqGrad=${reqGrad}&reqNat=${reqNat}&reqExp=${reqExp}`;
 };
 
 window.saveJob = function (id, title, company, logo) {
