@@ -858,6 +858,35 @@
             const formData = new FormData();
             const params = new URLSearchParams(window.location.search);
 
+            // --- STRICT JOB REQUIREMENT VALIDATIONS ---
+            const dobInput = document.getElementById("app-dob").value;
+            if (dobInput) {
+              const dob = new Date(dobInput);
+              const age = Math.abs(new Date(Date.now() - dob.getTime()).getUTCFullYear() - 1970);
+              const maxAge = parseInt(params.get("maxAge")) || 99;
+              if (age > maxAge) {
+                btn.textContent = "Submit Application";
+                btn.disabled = false;
+                return alert(`Sorry, the maximum age requirement for this role is ${maxAge} years old.`);
+              }
+            }
+
+            const reqGrad = params.get("reqGrad");
+            const gradStatus = document.getElementById("app-grad-status").value;
+            if (reqGrad === "1" && gradStatus !== "Graduated") {
+              btn.textContent = "Submit Application";
+              btn.disabled = false;
+              return alert("Sorry, this role requires you to be fully graduated.");
+            }
+
+            const reqNat = params.get("reqNat");
+            const nationality = (document.getElementById("app-nationality").value || "").toLowerCase();
+            if (reqNat === "1" && !nationality.includes("egypt")) {
+              btn.textContent = "Submit Application";
+              btn.disabled = false;
+              return alert("Sorry, this role accepts Egyptian nationals only.");
+            }
+
             // 1. SAFE FILE HANDLING
             if (currentMethod === "record") {
               if (!audioBlob) throw new Error("Please record audio.");

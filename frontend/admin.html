@@ -461,13 +461,39 @@
             id="jAccount"
             placeholder="Account Type (e.g. Real Estate)" />
           <input type="text" id="jHours" placeholder="Working Hours" />
-          <input type="text" id="jInterview" placeholder="Interview Time" />
           <input type="text" id="jSalary" placeholder="Salary Package" />
-          <input
-            type="text"
-            id="jTarget"
-            placeholder="Who can apply & Max age" />
           <input type="text" id="jLocation" placeholder="Location" />
+          
+          <select id="jInterviewType">
+            <option value="" disabled selected>Interview Type</option>
+            <option value="Onsite Interview">Onsite Interview</option>
+            <option value="Online / Call">Online / Call Interview</option>
+          </select>
+          <select id="jEnglish">
+            <option value="" disabled selected>Min. English Level</option>
+            <option value="B1">B1 (Intermediate)</option>
+            <option value="B2">B2 (Upper Intermediate)</option>
+            <option value="C1">C1 (Advanced)</option>
+            <option value="C2">C2 (Fluent / Native)</option>
+          </select>
+          <select id="jSecondLang" style="display: none;">
+            <option value="" disabled selected>Min. 2nd Lang Level</option>
+            <option value="B1">B1 (Intermediate)</option>
+            <option value="B2">B2 (Upper Intermediate)</option>
+            <option value="C1">C1 (Advanced)</option>
+            <option value="C2">C2 (Fluent / Native)</option>
+          </select>
+          <input type="number" id="jMaxAge" placeholder="Max Age Limit (e.g. 30)" />
+          <select id="jNationality">
+            <option value="" disabled selected>Nationality Requirement</option>
+            <option value="Egyptians Only">Egyptians Only</option>
+            <option value="All Nationalities">All Nationalities</option>
+          </select>
+          <select id="jGraduation">
+            <option value="" disabled selected>Graduation Requirement</option>
+            <option value="Graduates Only">Graduates Only</option>
+            <option value="Undergrads/Dropouts Accepted">Undergrads / Dropouts Accepted</option>
+          </select>
           <input type="text" id="jTraining" placeholder="Training Details" />
           <textarea
             id="jOffer"
@@ -479,6 +505,7 @@
             "></textarea>
           <select
             id="jBilingual"
+            onchange="document.getElementById('jSecondLang').style.display = this.value === '1' ? 'block' : 'none';"
             style="
               grid-column: span 3;
               font-weight: bold;
@@ -1093,15 +1120,20 @@
         document.getElementById("jTitle").value = job.JobTitle || "";
         document.getElementById("jAccount").value = job.AccountType || "";
         document.getElementById("jHours").value = job.WorkingHours || "";
-        document.getElementById("jInterview").value = job.InterviewTime || "";
         document.getElementById("jSalary").value = job.SalaryPackage || "";
-        document.getElementById("jTarget").value = job.TargetAudience || "";
         document.getElementById("jLocation").value = job.Location || "";
+        document.getElementById("jInterviewType").value = job.InterviewType || "";
+        document.getElementById("jEnglish").value = job.MinEnglishLevel || "";
+        document.getElementById("jSecondLang").value = job.MinSecondLangLevel || "";
+        document.getElementById("jMaxAge").value = job.MaxAge || "";
+        document.getElementById("jNationality").value = job.NationalityReq || "";
+        document.getElementById("jGraduation").value = job.GraduationReq || "";
         document.getElementById("jTraining").value = job.Training || "";
         document.getElementById("jOffer").value = job.OfferDetails || "";
         document.getElementById("jBilingual").value = job.RequiresSecondLanguage
           ? "1"
           : "0";
+        document.getElementById('jSecondLang').style.display = job.RequiresSecondLanguage ? 'block' : 'none';
         const submitBtn = document.getElementById("btn-submit-job");
         submitBtn.innerHTML = `<i class="fas fa-save"></i> Update Job #${id}`;
         submitBtn.style.background = "#f59e0b";
@@ -1140,10 +1172,14 @@
           jobTitle: document.getElementById("jTitle").value,
           accountType: document.getElementById("jAccount").value,
           workingHours: document.getElementById("jHours").value,
-          interviewTime: document.getElementById("jInterview").value,
           salaryPackage: document.getElementById("jSalary").value,
-          targetAudience: document.getElementById("jTarget").value,
           location: document.getElementById("jLocation").value,
+          interviewType: document.getElementById("jInterviewType").value || "Onsite Interview",
+          minEnglishLevel: document.getElementById("jEnglish").value || "B2",
+          minSecondLangLevel: document.getElementById("jSecondLang").value || "",
+          maxAge: parseInt(document.getElementById("jMaxAge").value) || 35,
+          nationalityReq: document.getElementById("jNationality").value || "All Nationalities",
+          graduationReq: document.getElementById("jGraduation").value || "Graduates Only",
           training: document.getElementById("jTraining").value,
           offerDetails: document.getElementById("jOffer").value,
           requiresSecondLanguage: document.getElementById("jBilingual").value,

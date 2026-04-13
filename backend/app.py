@@ -91,6 +91,12 @@ def init_db():
                     "Capacity" INTEGER,
                     "Booked" INTEGER DEFAULT 0
                 )''')
+            c.execute('ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "InterviewType" TEXT DEFAULT \'Onsite Interview\'')
+            c.execute('ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "MinEnglishLevel" TEXT DEFAULT \'B2\'')
+            c.execute('ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "MinSecondLangLevel" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "MaxAge" INTEGER DEFAULT 35')
+            c.execute('ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "NationalityReq" TEXT DEFAULT \'All Nationalities\'')
+            c.execute('ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "GraduationReq" TEXT DEFAULT \'Graduates Only\'')
             conn.commit()
             print("✅ Database Migrations Complete (ValidatorScopes synced).")
         except Exception as e:
@@ -371,8 +377,12 @@ def get_public_jobs():
                 "salary": j.get("SalaryPackage") or "Competitive",
                 "accountType": j.get("AccountType") or "N/A",
                 "workingHours": j.get("WorkingHours") or "N/A",
-                "targetAudience": j.get("TargetAudience") or "N/A",
-                "interviewTime": j.get("InterviewTime") or "N/A",
+                "interviewType": j.get("InterviewType") or "Onsite Interview",
+                "minEnglishLevel": j.get("MinEnglishLevel") or "B2",
+                "minSecondLangLevel": j.get("MinSecondLangLevel") or "",
+                "maxAge": j.get("MaxAge") or 35,
+                "nationalityReq": j.get("NationalityReq") or "All Nationalities",
+                "graduationReq": j.get("GraduationReq") or "Graduates Only",
                 "training": j.get("Training") or "Not specified.",
                 "requirements": f"Account: {j.get('AccountType', 'N/A')} | Hours: {j.get('WorkingHours', 'N/A')} | Target: {j.get('TargetAudience', 'N/A')}",
                 "description": j.get("OfferDetails", ""),
@@ -402,8 +412,12 @@ def get_public_job(id):
                 "salary": j.get("SalaryPackage") or "Competitive",
                 "accountType": j.get("AccountType") or "N/A",
                 "workingHours": j.get("WorkingHours") or "N/A",
-                "targetAudience": j.get("TargetAudience") or "N/A",
-                "interviewTime": j.get("InterviewTime") or "N/A",
+                "interviewType": j.get("InterviewType") or "Onsite Interview",
+                "minEnglishLevel": j.get("MinEnglishLevel") or "B2",
+                "minSecondLangLevel": j.get("MinSecondLangLevel") or "",
+                "maxAge": j.get("MaxAge") or 35,
+                "nationalityReq": j.get("NationalityReq") or "All Nationalities",
+                "graduationReq": j.get("GraduationReq") or "Graduates Only",
                 "training": j.get("Training") or "Not specified.",
                 "requirements": f"Account: {j.get('AccountType', 'N/A')} | Hours: {j.get('WorkingHours', 'N/A')} | Target: {j.get('TargetAudience', 'N/A')}",
                 "description": j.get("OfferDetails", ""),
@@ -429,11 +443,12 @@ def handle_admin_jobs():
     if request.method == 'POST':
         d = request.get_json()
         c.execute(
-            """INSERT INTO "Jobs" ("CompanyName", "JobTitle", "AccountType", "WorkingHours", "InterviewTime", "SalaryPackage", "TargetAudience", "Location", "Training", "OfferDetails", "Status", "RequiresSecondLanguage") 
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            """INSERT INTO "Jobs" ("CompanyName", "JobTitle", "AccountType", "WorkingHours", "SalaryPackage", "Location", "Training", "OfferDetails", "Status", "RequiresSecondLanguage", "InterviewType", "MinEnglishLevel", "MinSecondLangLevel", "MaxAge", "NationalityReq", "GraduationReq") 
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
             (d.get('companyName'), d.get('jobTitle'), d.get('accountType'), d.get('workingHours'), 
-             d.get('interviewTime'), d.get('salaryPackage'), d.get('targetAudience'), d.get('location'), 
-             d.get('training'), d.get('offerDetails'), d.get('status', 'Active'), int(d.get('requiresSecondLanguage', 0)))
+             d.get('salaryPackage'), d.get('location'), 
+             d.get('training'), d.get('offerDetails'), d.get('status', 'Active'), int(d.get('requiresSecondLanguage', 0)),
+             d.get('interviewType', 'Onsite Interview'), d.get('minEnglishLevel', 'B2'), d.get('minSecondLangLevel', ''), d.get('maxAge', 35), d.get('nationalityReq', 'All Nationalities'), d.get('graduationReq', 'Graduates Only'))
         )
         conn.commit()
         conn.close()
@@ -449,13 +464,14 @@ def update_delete_job(id):
             c.execute(
                 """UPDATE "Jobs" 
                    SET "CompanyName"=%s, "JobTitle"=%s, "AccountType"=%s, "WorkingHours"=%s, 
-                       "InterviewTime"=%s, "SalaryPackage"=%s, "TargetAudience"=%s, 
-                       "Location"=%s, "Training"=%s, "OfferDetails"=%s, "RequiresSecondLanguage"=%s
+                       "SalaryPackage"=%s, "Location"=%s, "Training"=%s, "OfferDetails"=%s, "RequiresSecondLanguage"=%s,
+                       "InterviewType"=%s, "MinEnglishLevel"=%s, "MinSecondLangLevel"=%s, "MaxAge"=%s, "NationalityReq"=%s, "GraduationReq"=%s
                    WHERE "JobID"=%s""",
                 (data.get('companyName'), data.get('jobTitle'), data.get('accountType'), 
-                 data.get('workingHours'), data.get('interviewTime'), data.get('salaryPackage'), 
-                 data.get('targetAudience'), data.get('location'), data.get('training'), 
-                 data.get('offerDetails'), int(data.get('requiresSecondLanguage', 0)), id)
+                 data.get('workingHours'), data.get('salaryPackage'), 
+                 data.get('location'), data.get('training'), 
+                 data.get('offerDetails'), int(data.get('requiresSecondLanguage', 0)),
+                 data.get('interviewType'), data.get('minEnglishLevel'), data.get('minSecondLangLevel'), data.get('maxAge'), data.get('nationalityReq'), data.get('graduationReq'), id)
             )
         else:
             c.execute("""UPDATE "Jobs" SET "Status"=%s WHERE "JobID"=%s""", (data.get('status'), id))

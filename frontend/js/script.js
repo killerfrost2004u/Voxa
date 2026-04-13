@@ -607,12 +607,16 @@ window.openJobDetails = function (jobId) {
           <span style="color: var(--text-main); margin-left: 5px;">${job.accountType || 'N/A'}</span>
         </div>
         <div style="background: rgba(0, 229, 255, 0.05); padding: 10px; border-radius: 6px; border-left: 3px solid var(--primary-color);">
-          <strong style="color: var(--primary-color);"><i class="fas fa-users"></i> Target Audience:</strong>
-          <span style="color: var(--text-main); margin-left: 5px;">${job.targetAudience || 'N/A'}</span>
+          <strong style="color: var(--primary-color);"><i class="fas fa-language"></i> Languages:</strong>
+          <span style="color: var(--text-main); margin-left: 5px;">Min. English: ${job.minEnglishLevel || 'B2'}${job.bilingual ? ` | 2nd Lang: ${job.minSecondLangLevel || 'B2'}` : ''}</span>
         </div>
         <div style="background: rgba(0, 229, 255, 0.05); padding: 10px; border-radius: 6px; border-left: 3px solid var(--primary-color);">
           <strong style="color: var(--primary-color);"><i class="fas fa-calendar-check"></i> Interview Process:</strong>
-          <span style="color: var(--text-main); margin-left: 5px;">${job.interviewTime || 'N/A'}</span>
+          <span style="color: var(--text-main); margin-left: 5px;">${job.interviewType || 'Onsite Interview'}</span>
+        </div>
+        <div style="background: rgba(0, 229, 255, 0.05); padding: 10px; border-radius: 6px; border-left: 3px solid var(--primary-color);">
+          <strong style="color: var(--primary-color);"><i class="fas fa-user-graduate"></i> Requirements:</strong>
+          <span style="color: var(--text-main); margin-left: 5px;">Max Age: ${job.maxAge || 35} | ${job.graduationReq || 'Graduates Only'} | ${job.nationalityReq || 'All Nationalities'}</span>
         </div>
       </div>
     `;
@@ -645,8 +649,11 @@ window.applyForJob = function () {
 
   const id = job ? job.id : 0;
   const isBilingual = job && job.bilingual ? "1" : "0";
+  const maxAge = job ? (job.maxAge || 99) : 99;
+  const reqGrad = job && job.graduationReq === "Graduates Only" ? "1" : "0";
+  const reqNat = job && job.nationalityReq === "Egyptians Only" ? "1" : "0";
 
-  window.location.href = `apply.html?id=${id}&title=${encodeURIComponent(title)}&company=${encodeURIComponent(company)}&bilingual=${isBilingual}`;
+  window.location.href = `apply.html?id=${id}&title=${encodeURIComponent(title)}&company=${encodeURIComponent(company)}&bilingual=${isBilingual}&maxAge=${maxAge}&reqGrad=${reqGrad}&reqNat=${reqNat}`;
 };
 
 window.saveJob = function (id, title, company, logo) {
