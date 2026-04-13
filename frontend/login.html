@@ -13,6 +13,57 @@
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet" />
+    <style>
+      .forgot-pass-link {
+        display: block;
+        text-align: right;
+        font-size: 0.85rem;
+        color: var(--primary-color);
+        text-decoration: none;
+        margin-top: -10px;
+        margin-bottom: 15px;
+      }
+      .forgot-pass-link:hover {
+        text-decoration: underline;
+      }
+      .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 20px 0;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+      }
+      .divider::before, .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .divider span {
+        padding: 0 10px;
+      }
+      .social-btn {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        background: var(--bg-input);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: 0.3s;
+      }
+      .social-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--text-muted);
+      }
+    </style>
   </head>
   <body>
     <nav class="navbar">
@@ -73,6 +124,7 @@
                 required
                 placeholder="Enter your password" />
             </div>
+            <a href="#" onclick="showForgotPassword()" class="forgot-pass-link">Forgot Password?</a>
             <button
               type="submit"
               class="btn-primary"
@@ -87,6 +139,13 @@
             <p class="toggle-text">
               Don't have an account? <a onclick="toggleAuth()">Sign Up here</a>
             </p>
+            <div class="divider"><span>OR</span></div>
+            <button type="button" class="social-btn" onclick="loginWithGoogle()">
+              <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="width: 20px;"> Continue with Google
+            </button>
+            <button type="button" class="social-btn" onclick="loginWithApple()">
+              <i class="fab fa-apple" style="font-size: 1.2rem;"></i> Continue with Apple
+            </button>
           </form>
         </div>
 
@@ -156,6 +215,43 @@
             <p class="toggle-text">
               Already have an account? <a onclick="toggleAuth()">Log In here</a>
             </p>
+            <div class="divider"><span>OR</span></div>
+            <button type="button" class="social-btn" onclick="loginWithGoogle()">
+              <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="width: 20px;"> Sign up with Google
+            </button>
+            <button type="button" class="social-btn" onclick="loginWithApple()">
+              <i class="fab fa-apple" style="font-size: 1.2rem;"></i> Sign up with Apple
+            </button>
+          </form>
+        </div>
+
+        <div id="forgot-password-box" class="hidden">
+          <div class="auth-header">
+            <h2>Reset Password</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem">Enter your email to receive a recovery code.</p>
+          </div>
+          <form id="forgot-form" class="auth-form" onsubmit="handleForgot(event)">
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="forgot-email" required placeholder="name@example.com" />
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px; padding: 12px; font-size: 1.05rem;">Send Recovery Code</button>
+            <p class="toggle-text">Remember your password? <a href="#" onclick="showLogin()">Log In here</a></p>
+          </form>
+        </div>
+
+        <div id="verify-box" class="hidden">
+          <div class="auth-header">
+            <h2>Verify Email</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem">We've sent a 6-digit code to your email.</p>
+          </div>
+          <form id="verify-form" class="auth-form" onsubmit="handleVerify(event)">
+            <div class="form-group">
+              <label>Verification Code</label>
+              <input type="text" id="verify-code" required placeholder="000000" maxlength="6" style="text-align: center; font-size: 1.5rem; letter-spacing: 5px;" />
+            </div>
+            <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px; padding: 12px; font-size: 1.05rem;">Verify Account</button>
+            <p class="toggle-text">Didn't receive it? <a href="#" onclick="alert('Code resent!')">Resend Code</a></p>
           </form>
         </div>
       </div>
@@ -214,5 +310,58 @@
 
     <script src="js/auth.js"></script>
     <script src="js/script.js"></script>
+    <script>
+      function showLogin() {
+        document.getElementById('login-box').classList.remove('hidden');
+        document.getElementById('signup-box').classList.add('hidden');
+        document.getElementById('forgot-password-box').classList.add('hidden');
+        document.getElementById('verify-box').classList.add('hidden');
+      }
+
+      function showForgotPassword() {
+        document.getElementById('login-box').classList.add('hidden');
+        document.getElementById('signup-box').classList.add('hidden');
+        document.getElementById('forgot-password-box').classList.remove('hidden');
+        document.getElementById('verify-box').classList.add('hidden');
+      }
+
+      function showVerifyStep() {
+        document.getElementById('login-box').classList.add('hidden');
+        document.getElementById('signup-box').classList.add('hidden');
+        document.getElementById('forgot-password-box').classList.add('hidden');
+        document.getElementById('verify-box').classList.remove('hidden');
+      }
+
+      const originalToggleAuth = window.toggleAuth;
+      window.toggleAuth = function() {
+        document.getElementById('forgot-password-box').classList.add('hidden');
+        document.getElementById('verify-box').classList.add('hidden');
+        if(typeof originalToggleAuth === 'function') {
+            originalToggleAuth();
+        } else {
+            const loginBox = document.getElementById('login-box');
+            const signupBox = document.getElementById('signup-box');
+            loginBox.classList.toggle('hidden');
+            signupBox.classList.toggle('hidden');
+        }
+      }
+
+      function loginWithGoogle() { alert("Redirecting to Google OAuth..."); }
+      function loginWithApple() { alert("Redirecting to Apple OAuth..."); }
+
+      function handleForgot(e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('button');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        setTimeout(() => { alert("Recovery code sent to your email!"); showVerifyStep(); btn.innerHTML = 'Send Recovery Code'; }, 1000);
+      }
+
+      function handleVerify(e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('button');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+        setTimeout(() => { alert("Successfully verified!"); window.location.href = "dashboard.html"; }, 1000);
+      }
+    </script>
   </body>
 </html>
