@@ -3,127 +3,133 @@
    ========================================= */
 
 .auth-page-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: calc(100vh - 80px);
-    padding: 2rem 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 80px);
+  padding: 2rem 1rem;
 }
 
 .auth-box {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    padding: 2.5rem;
-    border-radius: 12px;
-    width: 100%;
-    max-width: 450px;
-    box-shadow: var(--shadow);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 2.5rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: var(--shadow);
 }
 
 .auth-header {
-    text-align: center;
-    margin-bottom: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
 }
 
 .auth-header h2 {
-    font-size: 1.8rem;
-    color: var(--text-main);
-    margin-bottom: 0.5rem;
+  font-size: 1.8rem;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
 }
 
 .auth-form .form-group {
-    margin-bottom: 1.2rem;
+  margin-bottom: 1.2rem;
 }
 
 .auth-form label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--text-muted);
-    font-size: 0.95rem;
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  font-size: 0.95rem;
 }
 
 .auth-form input {
-    width: 100%;
-    padding: 0.8rem 1rem;
-    background: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    color: var(--text-main);
-    font-size: 1rem;
-    outline: none;
-    transition: 0.3s;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-main);
+  font-size: 1rem;
+  outline: none;
+  transition: 0.3s;
 }
 
 .auth-form input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.1);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.1);
 }
 
 /* The Legal Checkbox Styling */
 .legal-checkbox-wrapper {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    cursor: pointer;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    line-height: 1.4;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
 
-.legal-checkbox-wrapper input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    margin-top: 3px;
-    accent-color: var(--primary-color);
-    flex-shrink: 0;
+.legal-checkbox-wrapper input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+  accent-color: var(--primary-color);
+  flex-shrink: 0;
 }
 
 .toggle-text {
-    text-align: center;
-    margin-top: 1.5rem;
-    font-size: 0.9rem;
-    color: var(--text-muted);
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
 }
 
 .toggle-text a {
-    color: var(--primary-color);
-    font-weight: 600;
-    cursor: pointer;
+  color: var(--primary-color);
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .toggle-text a:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 .error-msg {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border: 1px solid #ef4444;
-    padding: 10px;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-    text-align: center;
-    display: none;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  display: none;
 }
 
 .success-msg {
-    background: rgba(16, 185, 129, 0.1);
-    color: #10b981;
-    border: 1px solid #10b981;
-    padding: 10px;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-    text-align: center;
-    display: none;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid #10b981;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  display: none;
 }
 
-.hidden { display: none !important; }
+.hidden {
+  display: none !important;
+}
 
 /* Mobile Auth Fixes */
 @media (max-width: 480px) {
-    .auth-page-wrapper { padding: 1rem; }
-    .auth-box { padding: 1.5rem; }
+  .auth-page-wrapper {
+    padding: 1rem;
+  }
+  .auth-box {
+    padding: 1.5rem;
+  }
 }

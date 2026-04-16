@@ -4,7 +4,9 @@
   "description": "Voxa is an end-to-end automated recruitment platform designed to revolutionize how companies screen candidates for communication-heavy roles. Instead of reading traditional CVs, Voxa allows candidates to apply using **Voice Notes**, which are then processed by a native multimodal AI to act as an expert technical recruiter.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "repository": {
     "type": "git",
@@ -22,6 +24,7 @@
     "@modelcontextprotocol/server-postgres": "^0.6.2",
     "@modelcontextprotocol/server-puppeteer": "^2025.5.12",
     "@playwright/test": "^1.59.1",
-    "@upstash/context7-mcp": "^2.1.6"
+    "@upstash/context7-mcp": "^2.1.6",
+    "prettier": "^3.8.3"
   }
 }

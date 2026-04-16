@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="css/style.css" />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <link rel="stylesheet" href="css/dashboard.css" />
   </head>
   <body>
@@ -23,7 +24,8 @@
           font-weight: 700;
           color: white;
           text-decoration: none;
-        ">
+        "
+      >
         <!-- <img src="images/voxa-logo.png" alt="Voxa Logo" style="height: 40px; width: auto; border-radius: 8px;"> -->
         Voxa
       </a>
@@ -75,7 +77,8 @@
             color: white;
             font-size: 1.5rem;
             cursor: pointer;
-          ">
+          "
+        >
           <i class="fas fa-bars"></i>
         </button>
       </div>
@@ -93,7 +96,8 @@
         </div>
         <button
           class="btn-primary"
-          onclick="window.location.href = 'jobs.html'">
+          onclick="window.location.href = 'jobs.html'"
+        >
           Find New Hunt
         </button>
       </div>
@@ -169,7 +173,8 @@
         <div
           class="jobs-list"
           id="saved-jobs-container"
-          style="display: grid; gap: 1rem"></div>
+          style="display: grid; gap: 1rem"
+        ></div>
       </div>
 
       <div id="tab-settings" class="tab-content">
@@ -181,7 +186,8 @@
             border-radius: 12px;
             border: 1px solid var(--border-color);
             max-width: 600px;
-          ">
+          "
+        >
           <div class="form-group">
             <label>Full Name</label>
             <input type="text" id="settings-name" />
@@ -192,14 +198,16 @@
               type="email"
               id="settings-email"
               disabled
-              style="opacity: 0.5; cursor: not-allowed" />
+              style="opacity: 0.5; cursor: not-allowed"
+            />
           </div>
           <div class="form-group">
             <label>Job Title</label>
             <input
               type="text"
               id="settings-title"
-              placeholder="e.g. Software Engineer" />
+              placeholder="e.g. Software Engineer"
+            />
           </div>
           <button class="btn-primary" onclick="saveSettings()">
             Save Changes
@@ -211,87 +219,85 @@
     <script src="js/script.js"></script>
     <script>
       // Init Dashboard Logic
-      document.addEventListener("DOMContentLoaded", async () => {
-        const userStr = localStorage.getItem("user");
+      document.addEventListener('DOMContentLoaded', async () => {
+        const userStr = localStorage.getItem('user')
         if (!userStr) {
-          window.location.href = "login.html";
-          return;
+          window.location.href = 'login.html'
+          return
         }
-        const user = JSON.parse(userStr);
+        const user = JSON.parse(userStr)
 
         // Populate User Info
-        document.getElementById("user-name").textContent = user.name;
-        document.getElementById("header-name").textContent =
-          user.name.split(" ")[0];
-        document.getElementById("user-avatar").textContent = user.name
+        document.getElementById('user-name').textContent = user.name
+        document.getElementById('header-name').textContent =
+          user.name.split(' ')[0]
+        document.getElementById('user-avatar').textContent = user.name
           .charAt(0)
-          .toUpperCase();
+          .toUpperCase()
 
         // Populate Settings Form
-        document.getElementById("settings-name").value = user.name;
-        document.getElementById("settings-email").value =
-          user.email || "hunter@darkwolves.com";
+        document.getElementById('settings-name').value = user.name
+        document.getElementById('settings-email').value =
+          user.email || 'hunter@darkwolves.com'
 
         // --- FETCH DATA FROM BACKEND ---
-        await fetchAndRenderDashboard(user.email);
+        await fetchAndRenderDashboard(user.email)
 
         // Load Saved Jobs (from local storage for now, or update logic if you add backend for saved jobs)
-        loadSavedJobs();
-      });
+        loadSavedJobs()
+      })
 
       async function fetchAndRenderDashboard(email) {
         try {
           // Fetch the logged-in user's applications based on their email
           const response = await fetch(
-            `https://voxa-pi-three.vercel.app/api/dashboard/${email}`,
-          );
-          if (!response.ok) throw new Error("Failed to fetch dashboard data");
+            `https://voxa-pi-three.vercel.app/api/dashboard/${email}`
+          )
+          if (!response.ok) throw new Error('Failed to fetch dashboard data')
 
           // The backend returns the array directly now
-          const apps = await response.json();
+          const apps = await response.json()
 
           // Update Total Applications Count
-          document.getElementById("stat-applied").textContent = apps.length;
+          document.getElementById('stat-applied').textContent = apps.length
 
           // Helper to format the SQL Date nicely (e.g., "Mar 1, 2026")
           const formatDate = (dateString) => {
-            if (!dateString) return "N/A";
-            return new Date(dateString).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            });
-          };
+            if (!dateString) return 'N/A'
+            return new Date(dateString).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            })
+          }
 
           // Render Dashboard Table (First 5 Recent Hunts)
-          const dashTableBody = document.querySelector(
-            "#dashboard-table tbody",
-          );
+          const dashTableBody = document.querySelector('#dashboard-table tbody')
           dashTableBody.innerHTML = apps.length
-            ? ""
-            : '<tr><td colspan="4" style="text-align:center; color:#666;">No hunts started yet.</td></tr>';
+            ? ''
+            : '<tr><td colspan="4" style="text-align:center; color:#666;">No hunts started yet.</td></tr>'
 
           apps.slice(0, 5).forEach((app) => {
             // STRICT CANDIDATE STATUS LOGIC
-            let displayStatus = "In Review";
-            let statusColor = "#333";
-            let textColor = "#aaa";
+            let displayStatus = 'In Review'
+            let statusColor = '#333'
+            let textColor = '#aaa'
 
-            if (app.Status === "Accepted") {
-              displayStatus = "Accepted";
-              statusColor = "#064e3b";
-              textColor = "#34d399";
-            } else if (app.Status === "Alternative Offered") {
-              displayStatus = "Alternative Offered";
-              statusColor = "#78350f";
-              textColor = "#fbbf24";
-            } else if (app.Status === "Rejected") {
-              displayStatus = "Rejected";
-              statusColor = "#7f1d1d";
-              textColor = "#fca5a5";
+            if (app.Status === 'Accepted') {
+              displayStatus = 'Accepted'
+              statusColor = '#064e3b'
+              textColor = '#34d399'
+            } else if (app.Status === 'Alternative Offered') {
+              displayStatus = 'Alternative Offered'
+              statusColor = '#78350f'
+              textColor = '#fbbf24'
+            } else if (app.Status === 'Rejected') {
+              displayStatus = 'Rejected'
+              statusColor = '#7f1d1d'
+              textColor = '#fca5a5'
             }
 
-            const finalBadge = `<span class="status-badge" style="background:${statusColor}; color:${textColor}; border: 1px solid ${textColor};">${displayStatus}</span>`;
+            const finalBadge = `<span class="status-badge" style="background:${statusColor}; color:${textColor}; border: 1px solid ${textColor};">${displayStatus}</span>`
 
             dashTableBody.innerHTML += `
                         <tr>
@@ -300,11 +306,11 @@
                             <td>${formatDate(app.SubmittedAt)}</td>
                             <td>${finalBadge}</td>
                         </tr>
-                    `;
-          });
+                    `
+          })
 
           // Update Header for the Full Applications Table to show "AI Grade" instead of "Action"
-          const appHeader = document.querySelector("#applications-table thead");
+          const appHeader = document.querySelector('#applications-table thead')
           if (appHeader) {
             appHeader.innerHTML = `
                         <tr>
@@ -314,47 +320,47 @@
                             <th>Status</th>
                             <th>AI Grade</th>
                         </tr>
-                    `;
+                    `
           }
 
           // Render Full Applications Table
           const appTableBody = document.querySelector(
-            "#applications-table tbody",
-          );
+            '#applications-table tbody'
+          )
           appTableBody.innerHTML = apps.length
-            ? ""
-            : '<tr><td colspan="5" style="text-align:center; color:#666;">No applications yet.</td></tr>';
+            ? ''
+            : '<tr><td colspan="5" style="text-align:center; color:#666;">No applications yet.</td></tr>'
 
           apps.forEach((app) => {
             // STRICT CANDIDATE STATUS LOGIC
-            let displayStatus = "In Review";
-            let statusColor = "#333";
-            let textColor = "#aaa";
+            let displayStatus = 'In Review'
+            let statusColor = '#333'
+            let textColor = '#aaa'
 
-            if (app.Status === "Accepted") {
-              displayStatus = "Accepted";
-              statusColor = "#064e3b";
-              textColor = "#34d399";
-            } else if (app.Status === "Alternative Offered") {
-              displayStatus = "Alternative Offered";
-              statusColor = "#78350f";
-              textColor = "#fbbf24";
-            } else if (app.Status === "Rejected") {
-              displayStatus = "Rejected";
-              statusColor = "#7f1d1d";
-              textColor = "#fca5a5";
+            if (app.Status === 'Accepted') {
+              displayStatus = 'Accepted'
+              statusColor = '#064e3b'
+              textColor = '#34d399'
+            } else if (app.Status === 'Alternative Offered') {
+              displayStatus = 'Alternative Offered'
+              statusColor = '#78350f'
+              textColor = '#fbbf24'
+            } else if (app.Status === 'Rejected') {
+              displayStatus = 'Rejected'
+              statusColor = '#7f1d1d'
+              textColor = '#fca5a5'
             }
 
-            const finalBadge = `<span class="status-badge" style="background:${statusColor}; color:${textColor}; border: 1px solid ${textColor};">${displayStatus}</span>`;
+            const finalBadge = `<span class="status-badge" style="background:${statusColor}; color:${textColor}; border: 1px solid ${textColor};">${displayStatus}</span>`
 
             // Only show the AI grade to the candidate IF they have been officially validated by the admin.
             // Otherwise, keep it as a loading hourglass.
             const aiGrade =
-              app.Status === "Accepted" ||
-              app.Status === "Alternative Offered" ||
-              app.Status === "Rejected"
+              app.Status === 'Accepted' ||
+              app.Status === 'Alternative Offered' ||
+              app.Status === 'Rejected'
                 ? app.AI_Rating
-                : '<i class="fas fa-hourglass-half" style="color:#666;"></i>';
+                : '<i class="fas fa-hourglass-half" style="color:#666;"></i>'
 
             appTableBody.innerHTML += `
                         <tr>
@@ -364,28 +370,28 @@
                             <td>${finalBadge}</td>
                             <td style="color:var(--primary-color); font-weight:bold;">${aiGrade}</td>
                         </tr>
-                    `;
-          });
+                    `
+          })
         } catch (error) {
-          console.error("Dashboard Load Error:", error);
-          document.querySelector("#dashboard-table tbody").innerHTML =
-            '<tr><td colspan="4" style="text-align:center; color:#ef4444;">Failed to load data. Make sure backend is running.</td></tr>';
+          console.error('Dashboard Load Error:', error)
+          document.querySelector('#dashboard-table tbody').innerHTML =
+            '<tr><td colspan="4" style="text-align:center; color:#ef4444;">Failed to load data. Make sure backend is running.</td></tr>'
         }
       }
 
       function loadSavedJobs() {
-        const saved = JSON.parse(localStorage.getItem("my_saved_jobs")) || [];
-        document.getElementById("stat-saved").textContent = saved.length;
+        const saved = JSON.parse(localStorage.getItem('my_saved_jobs')) || []
+        document.getElementById('stat-saved').textContent = saved.length
 
-        const container = document.getElementById("saved-jobs-container");
+        const container = document.getElementById('saved-jobs-container')
         container.innerHTML = saved.length
-          ? ""
-          : '<p style="color:#666;">No saved jobs.</p>';
+          ? ''
+          : '<p style="color:#666;">No saved jobs.</p>'
 
         saved.forEach((job) => {
           container.innerHTML += `
                     <div class="job-card-wide">
-                        <div class="logo-box">${job.logo || "DW"}</div>
+                        <div class="logo-box">${job.logo || 'DW'}</div>
                         <div class="job-info">
                             <h3>${job.title}</h3>
                             <div class="company">${job.company}</div>
@@ -395,41 +401,41 @@
                             <button class="btn-remove" onclick="removeSavedJob(${job.id})" style="background:transparent; border:1px solid #333; color:#aaa; padding:0.6rem; border-radius:6px; margin-left:10px; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </div>
-                `;
-        });
+                `
+        })
       }
 
       window.removeSavedJob = function (id) {
-        let saved = JSON.parse(localStorage.getItem("my_saved_jobs")) || [];
-        saved = saved.filter((j) => j.id !== id);
-        localStorage.setItem("my_saved_jobs", JSON.stringify(saved));
-        loadSavedJobs();
-      };
+        let saved = JSON.parse(localStorage.getItem('my_saved_jobs')) || []
+        saved = saved.filter((j) => j.id !== id)
+        localStorage.setItem('my_saved_jobs', JSON.stringify(saved))
+        loadSavedJobs()
+      }
 
       function switchTab(tabName, element) {
         document
-          .querySelectorAll(".tab-content")
-          .forEach((tab) => tab.classList.remove("active"));
-        document.getElementById(`tab-${tabName}`).classList.add("active");
+          .querySelectorAll('.tab-content')
+          .forEach((tab) => tab.classList.remove('active'))
+        document.getElementById(`tab-${tabName}`).classList.add('active')
         document
-          .querySelectorAll(".nav-item")
-          .forEach((item) => item.classList.remove("active"));
-        if (element) element.classList.add("active");
+          .querySelectorAll('.nav-item')
+          .forEach((item) => item.classList.remove('active'))
+        if (element) element.classList.add('active')
       }
 
       function saveSettings() {
-        const newName = document.getElementById("settings-name").value;
-        const user = JSON.parse(localStorage.getItem("user"));
-        user.name = newName;
-        localStorage.setItem("user", JSON.stringify(user));
-        alert("Profile Updated!");
-        location.reload();
+        const newName = document.getElementById('settings-name').value
+        const user = JSON.parse(localStorage.getItem('user'))
+        user.name = newName
+        localStorage.setItem('user', JSON.stringify(user))
+        alert('Profile Updated!')
+        location.reload()
       }
 
       function logout() {
-        if (confirm("Leave the pack?")) {
-          localStorage.removeItem("user");
-          window.location.href = "login.html";
+        if (confirm('Leave the pack?')) {
+          localStorage.removeItem('user')
+          window.location.href = 'login.html'
         }
       }
     </script>

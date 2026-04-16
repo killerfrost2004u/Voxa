@@ -1,70 +1,95 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Salaries | Voxa</title>
-    <link rel="icon" type="image/png" href="images/voxa-logo.png">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-
+    <link rel="icon" type="image/png" href="images/voxa-logo.png" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
     <nav class="navbar">
-        <div class="container">
-            <a href="index.html" class="logo" style="display: flex; align-items: center; gap: 10px; font-weight: 700; color: white; text-decoration: none;">
-                <img src="images/voxa-logo.png" alt="Voxa Logo" style="height: 40px; width: auto; border-radius: 8px;">
-                Voxa
-            </a>
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="about.html">About Us</a></li>
-                <li><a href="jobs.html">Find Jobs</a></li>
-                <li><a href="companies.html">Companies</a></li>
-                <li><a href="salaries.html" class="active">Salaries</a></li>
-                <li><a href="contact.html">Contact Us</a></li>
-            </ul>
-            <div class="auth-buttons">
-                <a href="login.html" class="btn-text">Log In</a>
-                <a href="login.html" class="btn-primary">Sign Up</a>
-            </div>
-            <div class="menu-toggle">
-                <i class="fas fa-bars"></i>
-            </div>
+      <div class="container">
+        <a
+          href="index.html"
+          class="logo"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+          "
+        >
+          <img
+            src="images/voxa-logo.png"
+            alt="Voxa Logo"
+            style="height: 40px; width: auto; border-radius: 8px"
+          />
+          Voxa
+        </a>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="jobs.html">Find Jobs</a></li>
+          <li><a href="companies.html">Companies</a></li>
+          <li><a href="salaries.html" class="active">Salaries</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+        <div class="auth-buttons">
+          <a href="login.html" class="btn-text">Log In</a>
+          <a href="login.html" class="btn-primary">Sign Up</a>
         </div>
+        <div class="menu-toggle">
+          <i class="fas fa-bars"></i>
+        </div>
+      </div>
     </nav>
 
     <header class="page-header bg-green">
-        <div class="container">
-            <h1>Market Salaries</h1>
-            <p>Explore compensation packages across different roles.</p>
-            
-            <div class="search-bar" style="margin-top: 2rem; max-width: 600px;">
-                <div class="input-group">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="salary-search" placeholder="Search for a job title (e.g. Telesales)..." onkeyup="filterSalaries()">
-                </div>
-            </div>
+      <div class="container">
+        <h1>Market Salaries</h1>
+        <p>Explore compensation packages across different roles.</p>
+
+        <div class="search-bar" style="margin-top: 2rem; max-width: 600px">
+          <div class="input-group">
+            <i class="fas fa-search"></i>
+            <input
+              type="text"
+              id="salary-search"
+              placeholder="Search for a job title (e.g. Telesales)..."
+              onkeyup="filterSalaries()"
+            />
+          </div>
         </div>
+      </div>
     </header>
 
     <section class="section-padding">
-        <div class="container">
-            <div class="salaries-list" id="salaries-container">
-                <p style="text-align:center; color:#888;">Loading salary data...</p>
-            </div>
+      <div class="container">
+        <div class="salaries-list" id="salaries-container">
+          <p style="text-align: center; color: #888">Loading salary data...</p>
         </div>
+      </div>
     </section>
 
     <footer>
-        <div class="container">
-            <div class="footer-bottom">
-                <p>&copy; 2026 Voxa. All rights reserved.</p>
-            </div>
+      <div class="container">
+        <div class="footer-bottom">
+          <p>&copy; 2026 Voxa. All rights reserved.</p>
         </div>
+      </div>
     </footer>
 
     <script src="js/script.js"></script>
-</body>
+  </body>
 </html>

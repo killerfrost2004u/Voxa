@@ -1,91 +1,134 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Company Profile | Voxa</title>
-    <link rel="icon" type="image/png" href="images/voxa-logo.png">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-
+    <link rel="icon" type="image/png" href="images/voxa-logo.png" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
     <nav class="navbar">
-        <div class="container">
-            <a href="index.html" class="logo" style="display: flex; align-items: center; gap: 10px; font-weight: 700; color: white; text-decoration: none;">
-                <img src="images/voxa-logo.png" alt="Voxa Logo" style="height: 40px; width: auto; border-radius: 8px;">
-                Voxa
-            </a>
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="about.html">About Us</a></li>
-                <li><a href="jobs.html">Find Jobs</a></li>
-                <li><a href="companies.html" class="active">Companies</a></li>
-                <li><a href="salaries.html">Salaries</a></li>
-                <li><a href="contact.html">Contact Us</a></li>
-            </ul>
-            <div class="auth-buttons">
-                <a href="login.html" class="btn-text">Log In</a>
-                <a href="login.html" class="btn-primary">Sign Up</a>
-            </div>
-            <div class="menu-toggle">
-                <i class="fas fa-bars"></i>
-            </div>
+      <div class="container">
+        <a
+          href="index.html"
+          class="logo"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+          "
+        >
+          <img
+            src="images/voxa-logo.png"
+            alt="Voxa Logo"
+            style="height: 40px; width: auto; border-radius: 8px"
+          />
+          Voxa
+        </a>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="jobs.html">Find Jobs</a></li>
+          <li><a href="companies.html" class="active">Companies</a></li>
+          <li><a href="salaries.html">Salaries</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+        <div class="auth-buttons">
+          <a href="login.html" class="btn-text">Log In</a>
+          <a href="login.html" class="btn-primary">Sign Up</a>
         </div>
+        <div class="menu-toggle">
+          <i class="fas fa-bars"></i>
+        </div>
+      </div>
     </nav>
 
     <header class="page-header" id="company-profile-header">
-        <div class="container">
-            <h1>Loading Profile...</h1>
-        </div>
+      <div class="container">
+        <h1>Loading Profile...</h1>
+      </div>
     </header>
 
     <section class="section-padding">
-        <div class="container">
-            <h2 style="margin-bottom:2rem; color:white;">Open Positions</h2>
-            <div class="jobs-list" id="company-jobs-container">
-                </div>
-        </div>
+      <div class="container">
+        <h2 style="margin-bottom: 2rem; color: white">Open Positions</h2>
+        <div class="jobs-list" id="company-jobs-container"></div>
+      </div>
     </section>
 
     <div id="job-modal" class="modal-overlay">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeJobModal()">&times;</button>
-            <div class="modal-header">
-                <div id="modal-logo" class="company-logo-large" style="margin:0;">DW</div>
-                <div>
-                    <h2 id="modal-title">Job Title</h2>
-                    <p id="modal-company" class="text-muted">Company Name</p>
-                </div>
-            </div>
-            <div class="modal-grid-2">
-                <div class="info-box main-box">
-                    <i class="fas fa-money-bill-wave icon-large"></i>
-                    <div><span class="label">Salary Package</span><strong id="modal-salary" class="text-highlight">...</strong></div>
-                </div>
-                <div class="info-stack">
-                    <div class="info-row"><i class="fas fa-map-marker-alt"></i><div><span class="label">Location</span><strong id="modal-location">...</strong></div></div>
-                    <div class="info-row"><i class="fas fa-clock"></i><div><span class="label">Working Hours</span><strong id="modal-hours">...</strong></div></div>
-                </div>
-            </div>
-            <div class="modal-body">
-                <h3><i class="fas fa-file-alt"></i> Description</h3><p id="modal-description" class="text-block">...</p>
-                <h3><i class="fas fa-check-circle"></i> Requirements</h3><div id="modal-requirements" class="requirements-container"></div>
-                <h3><i class="fas fa-chalkboard-teacher"></i> Training</h3><p id="modal-training" class="text-block">...</p>
-            </div>
-            <div class="modal-footer"><button class="btn-primary full-width" onclick="applyForJob()">Apply Now</button></div>
+      <div class="modal-content">
+        <button class="close-modal" onclick="closeJobModal()">&times;</button>
+        <div class="modal-header">
+          <div id="modal-logo" class="company-logo-large" style="margin: 0">
+            DW
+          </div>
+          <div>
+            <h2 id="modal-title">Job Title</h2>
+            <p id="modal-company" class="text-muted">Company Name</p>
+          </div>
         </div>
+        <div class="modal-grid-2">
+          <div class="info-box main-box">
+            <i class="fas fa-money-bill-wave icon-large"></i>
+            <div>
+              <span class="label">Salary Package</span
+              ><strong id="modal-salary" class="text-highlight">...</strong>
+            </div>
+          </div>
+          <div class="info-stack">
+            <div class="info-row">
+              <i class="fas fa-map-marker-alt"></i>
+              <div>
+                <span class="label">Location</span
+                ><strong id="modal-location">...</strong>
+              </div>
+            </div>
+            <div class="info-row">
+              <i class="fas fa-clock"></i>
+              <div>
+                <span class="label">Working Hours</span
+                ><strong id="modal-hours">...</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-body">
+          <h3><i class="fas fa-file-alt"></i> Description</h3>
+          <p id="modal-description" class="text-block">...</p>
+          <h3><i class="fas fa-check-circle"></i> Requirements</h3>
+          <div id="modal-requirements" class="requirements-container"></div>
+          <h3><i class="fas fa-chalkboard-teacher"></i> Training</h3>
+          <p id="modal-training" class="text-block">...</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-primary full-width" onclick="applyForJob()">
+            Apply Now
+          </button>
+        </div>
+      </div>
     </div>
 
     <footer>
-        <div class="container">
-            <div class="footer-bottom">
-                <p>&copy; 2026 Voxa. All rights reserved.</p>
-            </div>
+      <div class="container">
+        <div class="footer-bottom">
+          <p>&copy; 2026 Voxa. All rights reserved.</p>
         </div>
+      </div>
     </footer>
 
     <script src="js/script.js"></script>
-</body>
+  </body>
 </html>

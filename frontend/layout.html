@@ -1,40 +1,52 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Voxa | AI Recruitment</title>
-    <link rel="icon" type="image/png" href="images/voxa-logo.png">
+    <link rel="icon" type="image/png" href="images/voxa-logo.png" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body { background-color: #0a192f; color: white; font-family: sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+      body {
+        background-color: #0a192f;
+        color: white;
+        font-family: sans-serif;
+      }
+      .glass {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
     </style>
-</head>
-<body class="flex flex-col min-h-screen">
-
+  </head>
+  <body class="flex flex-col min-h-screen">
     <nav class="fixed top-0 w-full z-50 glass border-b-0">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-20">
-                <a href="/" class="text-2xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-                    VOXA
-                </a>
-                <div class="hidden md:flex space-x-8">
-                    <a href="/" class="hover:text-blue-400 transition">Home</a>
-                    <a href="/jobs" class="hover:text-blue-400 transition">Career Opportunities</a>
-                    <a href="/dashboard" class="hover:text-blue-400 transition">Dashboard</a>
-                </div>
-            </div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-20">
+          <a
+            href="/"
+            class="text-2xl font-extrabold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500"
+          >
+            VOXA
+          </a>
+          <div class="hidden md:flex space-x-8">
+            <a href="/" class="hover:text-blue-400 transition">Home</a>
+            <a href="/jobs" class="hover:text-blue-400 transition"
+              >Career Opportunities</a
+            >
+            <a href="/dashboard" class="hover:text-blue-400 transition"
+              >Dashboard</a
+            >
+          </div>
         </div>
+      </div>
     </nav>
 
-    <div class="pt-20 flex-grow">
-        {% block content %}{% endblock %}
-    </div>
+    <div class="pt-20 flex-grow">{% block content %}{% endblock %}</div>
 
     <script>
-        lucide.createIcons();
+      lucide.createIcons()
     </script>
-</body>
+  </body>
 </html>

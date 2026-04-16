@@ -8,10 +8,12 @@
     <link rel="stylesheet" href="css/style.css" />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet" />
+      rel="stylesheet"
+    />
     <style>
       select {
         width: 100%;
@@ -21,9 +23,9 @@
         border-radius: 6px;
         outline: none;
         color: var(--text-main);
-        font-family: "Inter", sans-serif;
+        font-family: 'Inter', sans-serif;
         appearance: none;
-        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a3a3a3%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+        background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a3a3a3%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
         background-repeat: no-repeat;
         background-position: right 1rem center;
         background-size: 0.8rem auto;
@@ -86,7 +88,7 @@
       }
       .timer {
         font-size: 2rem;
-        font-family: "Inter", monospace;
+        font-family: 'Inter', monospace;
         color: #fff;
         margin-bottom: 0.5rem;
         font-weight: 700;
@@ -207,11 +209,13 @@
             font-weight: 700;
             color: white;
             text-decoration: none;
-          ">
+          "
+        >
           <img
             src="images/voxa-logo.png"
             alt="Voxa Logo"
-            style="height: 40px; width: auto; border-radius: 8px" />
+            style="height: 40px; width: auto; border-radius: 8px"
+          />
           Voxa
         </a>
         <ul class="nav-links">
@@ -237,7 +241,8 @@
               margin-bottom: 2rem;
               border-bottom: 1px solid var(--border-color);
               padding-bottom: 1rem;
-            ">
+            "
+          >
             <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem">
               Job Application
             </h2>
@@ -247,12 +252,14 @@
                 font-weight: 600;
                 font-size: 1.1rem;
               "
-              id="apply-job-title">
+              id="apply-job-title"
+            >
               Loading...
             </p>
             <p
               style="color: var(--text-muted); font-size: 0.9rem"
-              id="apply-company">
+              id="apply-company"
+            >
               ...
             </p>
           </div>
@@ -264,7 +271,8 @@
               margin-bottom: 1rem;
               border-bottom: 1px solid var(--border-color);
               padding-bottom: 0.5rem;
-            ">
+            "
+          >
             Personal Details
           </h3>
 
@@ -277,7 +285,8 @@
                 type="text"
                 id="app-name"
                 required
-                placeholder="Your Name" />
+                placeholder="Your Name"
+              />
             </div>
             <div class="form-group">
               <label
@@ -287,7 +296,8 @@
                 type="email"
                 id="app-email"
                 required
-                placeholder="email@example.com" />
+                placeholder="email@example.com"
+              />
             </div>
           </div>
 
@@ -301,7 +311,8 @@
                 id="app-national-id"
                 required
                 placeholder="14-digit ID"
-                maxlength="14" />
+                maxlength="14"
+              />
             </div>
             <div class="form-group">
               <label
@@ -311,7 +322,8 @@
                 type="text"
                 id="app-nationality"
                 required
-                placeholder="Egyptian" />
+                placeholder="Egyptian"
+              />
             </div>
           </div>
 
@@ -330,7 +342,8 @@
                 type="text"
                 id="app-faculty"
                 required
-                placeholder="e.g. Cairo University" />
+                placeholder="e.g. Cairo University"
+              />
             </div>
           </div>
 
@@ -342,16 +355,25 @@
               type="text"
               id="app-address"
               required
-              placeholder="Street, City, Governorate" />
+              placeholder="Street, City, Governorate"
+            />
           </div>
 
           <div class="form-grid-2">
             <div class="form-group">
               <label
                 ><i class="fas fa-phone-alt"></i> Phone (Calls)
-                <span style="color: var(--primary-color)">*</span></label>
-              <div style="display: flex; gap: 8px;">
-                <select id="app-phone-code" style="flex: 0 0 110px; padding: 0.8rem 0.5rem; background-position: right 0.5rem center;">
+                <span style="color: var(--primary-color)">*</span></label
+              >
+              <div style="display: flex; gap: 8px">
+                <select
+                  id="app-phone-code"
+                  style="
+                    flex: 0 0 110px;
+                    padding: 0.8rem 0.5rem;
+                    background-position: right 0.5rem center;
+                  "
+                >
                   <option value="+20">🇪🇬 +20</option>
                 </select>
                 <input
@@ -359,16 +381,28 @@
                   id="app-phone"
                   required
                   placeholder="1xxxxxxxxx"
-                  oninput="if(this.value.startsWith('0')) this.value = this.value.substring(1);"
-                  style="flex: 1;" />
+                  oninput="
+                    if (this.value.startsWith('0'))
+                      this.value = this.value.substring(1)
+                  "
+                  style="flex: 1"
+                />
               </div>
             </div>
             <div class="form-group">
               <label
                 ><i class="fab fa-whatsapp"></i> WhatsApp Number
-                <span style="color: var(--primary-color)">*</span></label>
-              <div style="display: flex; gap: 8px;">
-                <select id="app-whatsapp-code" style="flex: 0 0 110px; padding: 0.8rem 0.5rem; background-position: right 0.5rem center;">
+                <span style="color: var(--primary-color)">*</span></label
+              >
+              <div style="display: flex; gap: 8px">
+                <select
+                  id="app-whatsapp-code"
+                  style="
+                    flex: 0 0 110px;
+                    padding: 0.8rem 0.5rem;
+                    background-position: right 0.5rem center;
+                  "
+                >
                   <option value="+20">🇪🇬 +20</option>
                 </select>
                 <input
@@ -376,8 +410,12 @@
                   id="app-whatsapp"
                   required
                   placeholder="1xxxxxxxxx"
-                  oninput="if(this.value.startsWith('0')) this.value = this.value.substring(1);"
-                  style="flex: 1;" />
+                  oninput="
+                    if (this.value.startsWith('0'))
+                      this.value = this.value.substring(1)
+                  "
+                  style="flex: 1"
+                />
               </div>
             </div>
           </div>
@@ -389,7 +427,8 @@
               margin: 1.5rem 0 1rem 0;
               border-bottom: 1px solid var(--border-color);
               padding-bottom: 0.5rem;
-            ">
+            "
+          >
             Education & Status
           </h3>
 
@@ -420,7 +459,8 @@
             <div
               class="form-group hidden"
               id="military-group"
-              style="margin-bottom: 0">
+              style="margin-bottom: 0"
+            >
               <label
                 >Military Status
                 <span style="color: var(--primary-color)">*</span></label
@@ -445,7 +485,8 @@
                 color: var(--text-muted);
                 margin-bottom: 0.5rem;
                 text-align: center;
-              ">
+              "
+            >
               Please introduce yourself and your experience in English.
             </p>
 
@@ -453,13 +494,15 @@
               <div
                 class="voice-tab active"
                 id="tab-record"
-                onclick="switchVoiceMethod('record')">
+                onclick="switchVoiceMethod('record')"
+              >
                 Record Now
               </div>
               <div
                 class="voice-tab"
                 id="tab-upload"
-                onclick="switchVoiceMethod('upload')">
+                onclick="switchVoiceMethod('upload')"
+              >
                 Upload File
               </div>
             </div>
@@ -471,7 +514,8 @@
                 type="button"
                 class="rec-btn btn-start"
                 id="btn-record"
-                onclick="toggleRecording()">
+                onclick="toggleRecording()"
+              >
                 <i class="fas fa-microphone"></i>
               </button>
               <audio id="audio-playback" controls class="audio-preview"></audio>
@@ -481,7 +525,8 @@
                   margin-top: 10px;
                   font-weight: 600;
                   color: var(--text-muted);
-                ">
+                "
+              >
                 Tap mic to start
               </div>
             </div>
@@ -489,7 +534,8 @@
             <div
               class="recorder-box hidden"
               id="ui-upload"
-              style="border: none; padding: 0; background: transparent">
+              style="border: none; padding: 0; background: transparent"
+            >
               <div class="file-upload-area">
                 <i class="fas fa-cloud-upload-alt upload-icon"></i>
                 <span class="upload-text">Drag & Drop audio file here</span>
@@ -503,7 +549,8 @@
                   type="file"
                   id="voice-upload-input"
                   accept="audio/*"
-                  onchange="validateFileUpload(this)" />
+                  onchange="validateFileUpload(this)"
+                />
               </div>
               <div
                 id="upload-status"
@@ -511,7 +558,8 @@
                   margin-top: 15px;
                   font-weight: 600;
                   color: var(--text-muted);
-                ">
+                "
+              >
                 No file selected
               </div>
             </div>
@@ -525,7 +573,8 @@
               margin-top: 2rem;
               border-top: 1px solid var(--border-color);
               padding-top: 1.5rem;
-            ">
+            "
+          >
             <label
               style="
                 color: var(--primary-color);
@@ -535,7 +584,8 @@
                 align-items: center;
                 justify-content: center;
                 gap: 8px;
-              ">
+              "
+            >
               <i class="fas fa-globe"></i> Second Language Audio
               <span style="color: #ef4444">*</span>
             </label>
@@ -545,7 +595,8 @@
                 color: var(--text-muted);
                 margin-bottom: 1rem;
                 text-align: center;
-              ">
+              "
+            >
               This role requires bilingual proficiency. Please upload a 1-minute
               introduction in the secondary language.
             </p>
@@ -554,13 +605,15 @@
               <div
                 class="voice-tab active"
                 id="tab-record2"
-                onclick="switchVoiceMethod2('record')">
+                onclick="switchVoiceMethod2('record')"
+              >
                 Record Now
               </div>
               <div
                 class="voice-tab"
                 id="tab-upload2"
-                onclick="switchVoiceMethod2('upload')">
+                onclick="switchVoiceMethod2('upload')"
+              >
                 Upload File
               </div>
             </div>
@@ -572,17 +625,23 @@
                 type="button"
                 class="rec-btn btn-start"
                 id="btn-record2"
-                onclick="toggleRecording2()">
+                onclick="toggleRecording2()"
+              >
                 <i class="fas fa-microphone"></i>
               </button>
-              <audio id="audio-playback2" controls class="audio-preview"></audio>
+              <audio
+                id="audio-playback2"
+                controls
+                class="audio-preview"
+              ></audio>
               <div
                 id="recording-status2"
                 style="
                   margin-top: 10px;
                   font-weight: 600;
                   color: var(--text-muted);
-                ">
+                "
+              >
                 Tap mic to start
               </div>
             </div>
@@ -590,11 +649,13 @@
             <div
               class="recorder-box hidden"
               id="ui-upload2"
-              style="border: none; padding: 0; background: transparent">
+              style="border: none; padding: 0; background: transparent"
+            >
               <div class="file-upload-area" id="area-voice2">
                 <i
                   class="fas fa-cloud-upload-alt upload-icon"
-                  id="icon-voice2"></i>
+                  id="icon-voice2"
+                ></i>
                 <span class="upload-text">Upload 2nd Language Audio</span>
                 <span class="upload-subtext"
                   >Click to browse (MP3, WAV, OGG)</span
@@ -612,7 +673,8 @@
                     height: 100%;
                     opacity: 0;
                     cursor: pointer;
-                  " />
+                  "
+                />
               </div>
               <div
                 id="upload-status2"
@@ -620,7 +682,8 @@
                   margin-top: 15px;
                   font-weight: 600;
                   color: var(--text-muted);
-                ">
+                "
+              >
                 No file selected
               </div>
             </div>
@@ -628,7 +691,10 @@
 
           <div class="form-grid-2" style="margin-top: 1.5rem">
             <div class="form-group" style="margin-bottom: 0">
-              <label>Years of Experience <span style="color: var(--primary-color)">*</span></label>
+              <label
+                >Years of Experience
+                <span style="color: var(--primary-color)">*</span></label
+              >
               <select id="app-exp-years" required>
                 <option value="" disabled selected>Select Experience</option>
                 <option value="0">No Experience</option>
@@ -647,7 +713,8 @@
                 id="app-experience"
                 rows="2"
                 required
-                placeholder="Briefly list companies or roles..."></textarea>
+                placeholder="Briefly list companies or roles..."
+              ></textarea>
             </div>
           </div>
 
@@ -656,13 +723,15 @@
               type="button"
               class="btn-secondary"
               onclick="window.history.back()"
-              style="flex: 1">
+              style="flex: 1"
+            >
               Cancel
             </button>
             <button
               type="submit"
               class="btn-primary"
-              style="flex: 2; padding: 12px; font-size: 1.05rem">
+              style="flex: 2; padding: 12px; font-size: 1.05rem"
+            >
               Submit Application
             </button>
           </div>
@@ -673,431 +742,466 @@
     <script src="js/script.js"></script>
 
     <script>
-      let currentMethod = "record";
-      let uploadedFile = null;
+      let currentMethod = 'record'
+      let uploadedFile = null
       let mediaRecorder,
         audioChunks = [],
         isRecording = false,
         timerInterval,
         audioBlob = null,
-        durationSeconds = 0;
+        durationSeconds = 0
 
-      let currentMethod2 = "record";
+      let currentMethod2 = 'record'
       let mediaRecorder2,
         audioChunks2 = [],
         isRecording2 = false,
         timerInterval2,
         audioBlob2 = null,
-        durationSeconds2 = 0;
+        durationSeconds2 = 0
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const refRecruiter = urlParams.get("recruiter") || null;
-      const refAgency = urlParams.get("agency") || null;
-      const refUnit = urlParams.get("unit") || null;
-      const refTeam = urlParams.get("team") || null;
+      const urlParams = new URLSearchParams(window.location.search)
+      const refRecruiter = urlParams.get('recruiter') || null
+      const refAgency = urlParams.get('agency') || null
+      const refUnit = urlParams.get('unit') || null
+      const refTeam = urlParams.get('team') || null
 
       function switchVoiceMethod(method) {
-        currentMethod = method;
+        currentMethod = method
         document
-          .querySelectorAll(".voice-tab")
-          .forEach((t) => t.classList.remove("active"));
-        document.getElementById(`tab-${method}`).classList.add("active");
+          .querySelectorAll('.voice-tab')
+          .forEach((t) => t.classList.remove('active'))
+        document.getElementById(`tab-${method}`).classList.add('active')
         document
-          .getElementById("ui-record")
-          .classList.toggle("hidden", method !== "record");
+          .getElementById('ui-record')
+          .classList.toggle('hidden', method !== 'record')
         document
-          .getElementById("ui-upload")
-          .classList.toggle("hidden", method !== "upload");
+          .getElementById('ui-upload')
+          .classList.toggle('hidden', method !== 'upload')
       }
-      
+
       function switchVoiceMethod2(method) {
-        currentMethod2 = method;
-        document.getElementById("tab-record2").classList.remove("active");
-        document.getElementById("tab-upload2").classList.remove("active");
-        document.getElementById(`tab-${method}2`).classList.add("active");
+        currentMethod2 = method
+        document.getElementById('tab-record2').classList.remove('active')
+        document.getElementById('tab-upload2').classList.remove('active')
+        document.getElementById(`tab-${method}2`).classList.add('active')
         document
-          .getElementById("ui-record2")
-          .classList.toggle("hidden", method !== "record");
+          .getElementById('ui-record2')
+          .classList.toggle('hidden', method !== 'record')
         document
-          .getElementById("ui-upload2")
-          .classList.toggle("hidden", method !== "upload");
+          .getElementById('ui-upload2')
+          .classList.toggle('hidden', method !== 'upload')
       }
 
       function validateFileUpload(input) {
-        const file = input.files[0];
-        const status = document.getElementById("upload-status");
-        const icon = document.querySelector(".upload-icon");
-        uploadedFile = null;
+        const file = input.files[0]
+        const status = document.getElementById('upload-status')
+        const icon = document.querySelector('.upload-icon')
+        uploadedFile = null
         if (!file) {
-          status.textContent = "No file selected";
-          return;
+          status.textContent = 'No file selected'
+          return
         }
-        status.textContent = `File Selected: ${file.name}`;
-        status.style.color = "#22c55e";
-        icon.className = "fas fa-check-circle upload-icon";
-        uploadedFile = file;
+        status.textContent = `File Selected: ${file.name}`
+        status.style.color = '#22c55e'
+        icon.className = 'fas fa-check-circle upload-icon'
+        uploadedFile = file
       }
 
       function validateFile2(input) {
-        const file = input.files[0];
-        const status = document.getElementById("upload-status2");
-        const icon = document.getElementById("icon-voice2");
-        const area = document.getElementById("area-voice2");
+        const file = input.files[0]
+        const status = document.getElementById('upload-status2')
+        const icon = document.getElementById('icon-voice2')
+        const area = document.getElementById('area-voice2')
         if (!file) {
-          status.textContent = "No file selected";
-          return;
+          status.textContent = 'No file selected'
+          return
         }
-        status.textContent = `File Selected: ${file.name}`;
-        status.style.color = "#22c55e";
-        icon.className = "fas fa-check-circle upload-icon";
-        area.style.borderColor = "var(--primary-color)";
+        status.textContent = `File Selected: ${file.name}`
+        status.style.color = '#22c55e'
+        icon.className = 'fas fa-check-circle upload-icon'
+        area.style.borderColor = 'var(--primary-color)'
       }
 
       async function toggleRecording() {
-        const btn = document.getElementById("btn-record");
-        const status = document.getElementById("recording-status");
-        const audioPlayer = document.getElementById("audio-playback");
+        const btn = document.getElementById('btn-record')
+        const status = document.getElementById('recording-status')
+        const audioPlayer = document.getElementById('audio-playback')
         if (!isRecording) {
           try {
             const stream = await navigator.mediaDevices.getUserMedia({
               audio: true,
-            });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
+            })
+            mediaRecorder = new MediaRecorder(stream)
+            audioChunks = []
             mediaRecorder.ondataavailable = (event) =>
-              audioChunks.push(event.data);
+              audioChunks.push(event.data)
             mediaRecorder.onstop = () => {
-              audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-              audioPlayer.src = URL.createObjectURL(audioBlob);
-              audioPlayer.style.display = "block";
-            };
-            mediaRecorder.start();
-            isRecording = true;
-            btn.className = "rec-btn btn-stop";
-            btn.innerHTML = '<i class="fas fa-stop"></i>';
-            status.textContent = "Recording...";
-            status.style.color = "#ef4444";
-            durationSeconds = 0;
+              audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
+              audioPlayer.src = URL.createObjectURL(audioBlob)
+              audioPlayer.style.display = 'block'
+            }
+            mediaRecorder.start()
+            isRecording = true
+            btn.className = 'rec-btn btn-stop'
+            btn.innerHTML = '<i class="fas fa-stop"></i>'
+            status.textContent = 'Recording...'
+            status.style.color = '#ef4444'
+            durationSeconds = 0
             timerInterval = setInterval(() => {
-              durationSeconds++;
+              durationSeconds++
               const mins = Math.floor(durationSeconds / 60)
                 .toString()
-                .padStart(2, "0");
-              const secs = (durationSeconds % 60).toString().padStart(2, "0");
-              document.getElementById("record-timer").textContent =
-                `${mins}:${secs}`;
+                .padStart(2, '0')
+              const secs = (durationSeconds % 60).toString().padStart(2, '0')
+              document.getElementById('record-timer').textContent =
+                `${mins}:${secs}`
               if (durationSeconds >= 90)
-                document.getElementById("record-timer").style.color = "#22c55e";
-            }, 1000);
+                document.getElementById('record-timer').style.color = '#22c55e'
+            }, 1000)
           } catch {
-            alert("Microphone access denied.");
+            alert('Microphone access denied.')
           }
         } else {
-          mediaRecorder.stop();
-          isRecording = false;
-          clearInterval(timerInterval);
-          btn.className = "rec-btn btn-start";
-          btn.innerHTML = '<i class="fas fa-microphone"></i>';
-          status.textContent = "Recording Saved!";
-          status.style.color = "#22c55e";
+          mediaRecorder.stop()
+          isRecording = false
+          clearInterval(timerInterval)
+          btn.className = 'rec-btn btn-start'
+          btn.innerHTML = '<i class="fas fa-microphone"></i>'
+          status.textContent = 'Recording Saved!'
+          status.style.color = '#22c55e'
         }
       }
 
       async function toggleRecording2() {
-        const btn = document.getElementById("btn-record2");
-        const status = document.getElementById("recording-status2");
-        const audioPlayer = document.getElementById("audio-playback2");
+        const btn = document.getElementById('btn-record2')
+        const status = document.getElementById('recording-status2')
+        const audioPlayer = document.getElementById('audio-playback2')
         if (!isRecording2) {
           try {
             const stream = await navigator.mediaDevices.getUserMedia({
               audio: true,
-            });
-            mediaRecorder2 = new MediaRecorder(stream);
-            audioChunks2 = [];
+            })
+            mediaRecorder2 = new MediaRecorder(stream)
+            audioChunks2 = []
             mediaRecorder2.ondataavailable = (event) =>
-              audioChunks2.push(event.data);
+              audioChunks2.push(event.data)
             mediaRecorder2.onstop = () => {
-              audioBlob2 = new Blob(audioChunks2, { type: "audio/webm" });
-              audioPlayer.src = URL.createObjectURL(audioBlob2);
-              audioPlayer.style.display = "block";
-            };
-            mediaRecorder2.start();
-            isRecording2 = true;
-            btn.className = "rec-btn btn-stop";
-            btn.innerHTML = '<i class="fas fa-stop"></i>';
-            status.textContent = "Recording...";
-            status.style.color = "#ef4444";
-            durationSeconds2 = 0;
+              audioBlob2 = new Blob(audioChunks2, { type: 'audio/webm' })
+              audioPlayer.src = URL.createObjectURL(audioBlob2)
+              audioPlayer.style.display = 'block'
+            }
+            mediaRecorder2.start()
+            isRecording2 = true
+            btn.className = 'rec-btn btn-stop'
+            btn.innerHTML = '<i class="fas fa-stop"></i>'
+            status.textContent = 'Recording...'
+            status.style.color = '#ef4444'
+            durationSeconds2 = 0
             timerInterval2 = setInterval(() => {
-              durationSeconds2++;
-              const mins = Math.floor(durationSeconds2 / 60).toString().padStart(2, "0");
-              const secs = (durationSeconds2 % 60).toString().padStart(2, "0");
-              document.getElementById("record-timer2").textContent = `${mins}:${secs}`;
+              durationSeconds2++
+              const mins = Math.floor(durationSeconds2 / 60)
+                .toString()
+                .padStart(2, '0')
+              const secs = (durationSeconds2 % 60).toString().padStart(2, '0')
+              document.getElementById('record-timer2').textContent =
+                `${mins}:${secs}`
               if (durationSeconds2 >= 60)
-                document.getElementById("record-timer2").style.color = "#22c55e";
-            }, 1000);
+                document.getElementById('record-timer2').style.color = '#22c55e'
+            }, 1000)
           } catch {
-            alert("Microphone access denied.");
+            alert('Microphone access denied.')
           }
         } else {
-          mediaRecorder2.stop();
-          isRecording2 = false;
-          clearInterval(timerInterval2);
-          btn.className = "rec-btn btn-start";
-          btn.innerHTML = '<i class="fas fa-microphone"></i>';
-          status.textContent = "Recording Saved!";
-          status.style.color = "#22c55e";
+          mediaRecorder2.stop()
+          isRecording2 = false
+          clearInterval(timerInterval2)
+          btn.className = 'rec-btn btn-start'
+          btn.innerHTML = '<i class="fas fa-microphone"></i>'
+          status.textContent = 'Recording Saved!'
+          status.style.color = '#22c55e'
         }
       }
 
       function checkMilitary() {
         const show =
-          document.getElementById("app-gender").value === "Male" &&
-          document.getElementById("app-grad-status").value === "Graduated";
+          document.getElementById('app-gender').value === 'Male' &&
+          document.getElementById('app-grad-status').value === 'Graduated'
         document
-          .getElementById("military-group")
-          .classList.toggle("hidden", !show);
+          .getElementById('military-group')
+          .classList.toggle('hidden', !show)
       }
 
       document
-        .getElementById("application-form")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
-          const btn = e.target.querySelector('button[type="submit"]');
-          btn.textContent = "Uploading...";
-          btn.disabled = true;
+        .getElementById('application-form')
+        .addEventListener('submit', async function (e) {
+          e.preventDefault()
+          const btn = e.target.querySelector('button[type="submit"]')
+          btn.textContent = 'Uploading...'
+          btn.disabled = true
 
           try {
-            const formData = new FormData();
-            const params = new URLSearchParams(window.location.search);
+            const formData = new FormData()
+            const params = new URLSearchParams(window.location.search)
 
             // --- STRICT JOB REQUIREMENT VALIDATIONS ---
-            const dobInput = document.getElementById("app-dob").value;
+            const dobInput = document.getElementById('app-dob').value
             if (dobInput) {
-              const dob = new Date(dobInput);
-              const age = Math.abs(new Date(Date.now() - dob.getTime()).getUTCFullYear() - 1970);
-              const maxAge = parseInt(params.get("maxAge")) || 99;
+              const dob = new Date(dobInput)
+              const age = Math.abs(
+                new Date(Date.now() - dob.getTime()).getUTCFullYear() - 1970
+              )
+              const maxAge = parseInt(params.get('maxAge')) || 99
               if (age > maxAge) {
-                btn.textContent = "Submit Application";
-                btn.disabled = false;
-                return alert(`Sorry, the maximum age requirement for this role is ${maxAge} years old.`);
+                btn.textContent = 'Submit Application'
+                btn.disabled = false
+                return alert(
+                  `Sorry, the maximum age requirement for this role is ${maxAge} years old.`
+                )
               }
             }
 
-            const reqGrad = params.get("reqGrad");
-            const gradStatus = document.getElementById("app-grad-status").value;
-            if (reqGrad === "1" && gradStatus !== "Graduated") {
-              btn.textContent = "Submit Application";
-              btn.disabled = false;
-              return alert("Sorry, this role requires you to be fully graduated.");
+            const reqGrad = params.get('reqGrad')
+            const gradStatus = document.getElementById('app-grad-status').value
+            if (reqGrad === '1' && gradStatus !== 'Graduated') {
+              btn.textContent = 'Submit Application'
+              btn.disabled = false
+              return alert(
+                'Sorry, this role requires you to be fully graduated.'
+              )
             }
 
-            const reqNat = params.get("reqNat");
-            const nationality = (document.getElementById("app-nationality").value || "").toLowerCase();
-            if (reqNat === "1" && !nationality.includes("egypt")) {
-              btn.textContent = "Submit Application";
-              btn.disabled = false;
-              return alert("Sorry, this role accepts Egyptian nationals only.");
+            const reqNat = params.get('reqNat')
+            const nationality = (
+              document.getElementById('app-nationality').value || ''
+            ).toLowerCase()
+            if (reqNat === '1' && !nationality.includes('egypt')) {
+              btn.textContent = 'Submit Application'
+              btn.disabled = false
+              return alert('Sorry, this role accepts Egyptian nationals only.')
             }
 
-            const reqExp = parseInt(params.get("reqExp")) || 0;
-            const candidateExp = parseInt(document.getElementById("app-exp-years").value) || 0;
+            const reqExp = parseInt(params.get('reqExp')) || 0
+            const candidateExp =
+              parseInt(document.getElementById('app-exp-years').value) || 0
             if (candidateExp < reqExp) {
-              btn.textContent = "Submit Application";
-              btn.disabled = false;
-              return alert("Sorry, you do not meet the minimum experience requirement for this role.");
+              btn.textContent = 'Submit Application'
+              btn.disabled = false
+              return alert(
+                'Sorry, you do not meet the minimum experience requirement for this role.'
+              )
             }
 
             // 1. SAFE FILE HANDLING
-            if (currentMethod === "record") {
-              if (!audioBlob) throw new Error("Please record audio.");
-              const voiceFile = new File([audioBlob], "recording.webm", {
-                type: "audio/webm",
-              });
-              formData.append("voiceRecord", voiceFile);
+            if (currentMethod === 'record') {
+              if (!audioBlob) throw new Error('Please record audio.')
+              const voiceFile = new File([audioBlob], 'recording.webm', {
+                type: 'audio/webm',
+              })
+              formData.append('voiceRecord', voiceFile)
             } else {
-              if (!uploadedFile) throw new Error("Please select a file.");
-              formData.append("voiceRecord", uploadedFile);
+              if (!uploadedFile) throw new Error('Please select a file.')
+              formData.append('voiceRecord', uploadedFile)
             }
 
             // --- BILINGUAL AUDIO HANDLING ---
-            if (params.get("bilingual") === "1") {
-              if (currentMethod2 === "record") {
+            if (params.get('bilingual') === '1') {
+              if (currentMethod2 === 'record') {
                 if (!audioBlob2) {
-                  btn.textContent = "Submit Application";
-                  btn.disabled = false;
-                  return alert("This is a bilingual role. Please record your Second Language audio.");
-                }
-                const voiceFile2 = new File([audioBlob2], "recording2.webm", {
-                  type: "audio/webm",
-                });
-                formData.append("voiceRecord2", voiceFile2);
-              } else {
-                const file2 = document.getElementById("app-voice2").files[0];
-                if (!file2) {
-                  btn.textContent = "Submit Application";
-                  btn.disabled = false;
+                  btn.textContent = 'Submit Application'
+                  btn.disabled = false
                   return alert(
-                    "This is a bilingual role. Please upload your Second Language audio file.",
-                  );
+                    'This is a bilingual role. Please record your Second Language audio.'
+                  )
                 }
-                formData.append("voiceRecord2", file2);
+                const voiceFile2 = new File([audioBlob2], 'recording2.webm', {
+                  type: 'audio/webm',
+                })
+                formData.append('voiceRecord2', voiceFile2)
+              } else {
+                const file2 = document.getElementById('app-voice2').files[0]
+                if (!file2) {
+                  btn.textContent = 'Submit Application'
+                  btn.disabled = false
+                  return alert(
+                    'This is a bilingual role. Please upload your Second Language audio file.'
+                  )
+                }
+                formData.append('voiceRecord2', file2)
               }
             }
 
             // 2. SAFE TEXT FIELDS
             const fields = [
-              "name",
-              "email",
-              "national-id",
-              "nationality",
-              "address",
-              "english",
-              "dob",
-              "faculty",
-            ];
+              'name',
+              'email',
+              'national-id',
+              'nationality',
+              'address',
+              'english',
+              'dob',
+              'faculty',
+            ]
             fields.forEach((id) => {
-              const el = document.getElementById("app-" + id);
+              const el = document.getElementById('app-' + id)
               if (el) {
-                const key = id === "national-id" ? "nationalId" : id;
-                formData.append(key, el.value);
+                const key = id === 'national-id' ? 'nationalId' : id
+                formData.append(key, el.value)
               }
-            });
+            })
 
-            const phoneCode = document.getElementById("app-phone-code").value;
-            const phoneNum = document.getElementById("app-phone").value;
-            formData.append("phone", phoneCode + phoneNum);
+            const phoneCode = document.getElementById('app-phone-code').value
+            const phoneNum = document.getElementById('app-phone').value
+            formData.append('phone', phoneCode + phoneNum)
 
-            const waCode = document.getElementById("app-whatsapp-code").value;
-            const waNum = document.getElementById("app-whatsapp").value;
-            formData.append("whatsapp", waCode + waNum);
+            const waCode = document.getElementById('app-whatsapp-code').value
+            const waNum = document.getElementById('app-whatsapp').value
+            formData.append('whatsapp', waCode + waNum)
 
-            const expLabel = document.getElementById("app-exp-years").options[document.getElementById("app-exp-years").selectedIndex].text;
-            const expText = document.getElementById("app-experience").value;
-            formData.append("experience", expLabel + " - " + expText);
+            const expLabel =
+              document.getElementById('app-exp-years').options[
+                document.getElementById('app-exp-years').selectedIndex
+              ].text
+            const expText = document.getElementById('app-experience').value
+            formData.append('experience', expLabel + ' - ' + expText)
 
             // Dropdowns
             formData.append(
-              "gender",
-              document.getElementById("app-gender").value,
-            );
+              'gender',
+              document.getElementById('app-gender').value
+            )
             formData.append(
-              "gradStatus",
-              document.getElementById("app-grad-status").value,
-            );
-            const mil = document.getElementById("app-military");
-            formData.append("militaryStatus", mil ? mil.value : "N/A");
+              'gradStatus',
+              document.getElementById('app-grad-status').value
+            )
+            const mil = document.getElementById('app-military')
+            formData.append('militaryStatus', mil ? mil.value : 'N/A')
 
             // Hidden Data (Job specifics)
-            formData.append("title", params.get("title") || "General");
-            formData.append("company", params.get("company") || "Voxa");
-            formData.append("ref", params.get("ref") || "Direct/Organic");
+            formData.append('title', params.get('title') || 'General')
+            formData.append('company', params.get('company') || 'Voxa')
+            formData.append('ref', params.get('ref') || 'Direct/Organic')
 
             // 🚀 Matrix Global Referral Tracking
-            const storedRef = JSON.parse(localStorage.getItem("voxa_referral"));
-            if (params.get("recruiter")) {
-              formData.append("recruiterSource", params.get("recruiter"));
-              formData.append("agencyName", params.get("agency") || "Voxa");
-              formData.append("unitName", params.get("unit") || "Direct");
-              formData.append("teamName", params.get("team") || "Direct");
+            const storedRef = JSON.parse(localStorage.getItem('voxa_referral'))
+            if (params.get('recruiter')) {
+              formData.append('recruiterSource', params.get('recruiter'))
+              formData.append('agencyName', params.get('agency') || 'Voxa')
+              formData.append('unitName', params.get('unit') || 'Direct')
+              formData.append('teamName', params.get('team') || 'Direct')
             } else if (storedRef) {
-              formData.append("recruiterSource", storedRef.recruiter);
-              formData.append("agencyName", storedRef.agency);
-              formData.append("unitName", storedRef.unit);
-              formData.append("teamName", storedRef.team);
+              formData.append('recruiterSource', storedRef.recruiter)
+              formData.append('agencyName', storedRef.agency)
+              formData.append('unitName', storedRef.unit)
+              formData.append('teamName', storedRef.team)
             }
 
             // 3. SEND
             const res = await fetch(
-              "https://voxa-pi-three.vercel.app/api/apply",
+              'https://voxa-pi-three.vercel.app/api/apply',
               {
-                method: "POST",
+                method: 'POST',
                 body: formData,
-              },
-            );
+              }
+            )
 
-            const result = await res.json();
+            const result = await res.json()
 
             if (res.ok) {
-              alert("Application Received! Analyzing in background...");
-              window.location.href = "dashboard.html";
+              alert('Application Received! Analyzing in background...')
+              window.location.href = 'dashboard.html'
             } else {
-              throw new Error(result.error || "Server Error");
+              throw new Error(result.error || 'Server Error')
             }
           } catch (err) {
-            console.error(err);
-            alert("Submission Failed: " + err.message);
-            btn.textContent = "Submit Application";
-            btn.disabled = false;
+            console.error(err)
+            alert('Submission Failed: ' + err.message)
+            btn.textContent = 'Submit Application'
+            btn.disabled = false
           }
-        });
+        })
 
       async function populateCountryCodes() {
         try {
-          const res = await fetch("https://restcountries.com/v3.1/all?fields=name,idd,cca2");
-          const data = await res.json();
-          
-          let countries = [];
-          data.forEach(c => {
+          const res = await fetch(
+            'https://restcountries.com/v3.1/all?fields=name,idd,cca2'
+          )
+          const data = await res.json()
+
+          let countries = []
+          data.forEach((c) => {
             if (c.idd && c.idd.root) {
-              const code = (c.idd.suffixes && c.idd.suffixes.length === 1) 
-                ? c.idd.root + c.idd.suffixes[0] 
-                : c.idd.root;
-              
+              const code =
+                c.idd.suffixes && c.idd.suffixes.length === 1
+                  ? c.idd.root + c.idd.suffixes[0]
+                  : c.idd.root
+
               // Convert 2-letter country code (cca2) to Emoji flag
-              const flag = c.cca2.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397));
-              
-              if (!countries.some(existing => existing.name === c.name.common)) {
-                countries.push({ name: c.name.common, code: code, flag: flag });
+              const flag = c.cca2
+                .toUpperCase()
+                .replace(/./g, (char) =>
+                  String.fromCodePoint(char.charCodeAt(0) + 127397)
+                )
+
+              if (
+                !countries.some((existing) => existing.name === c.name.common)
+              ) {
+                countries.push({ name: c.name.common, code: code, flag: flag })
               }
             }
-          });
+          })
 
-          countries.sort((a, b) => a.name.localeCompare(b.name));
+          countries.sort((a, b) => a.name.localeCompare(b.name))
 
           // Bring Egypt to the very top as the default
-          const egyptIdx = countries.findIndex(c => c.code === "+20" && c.name === "Egypt");
+          const egyptIdx = countries.findIndex(
+            (c) => c.code === '+20' && c.name === 'Egypt'
+          )
           if (egyptIdx > -1) {
-            countries.unshift(countries.splice(egyptIdx, 1)[0]);
+            countries.unshift(countries.splice(egyptIdx, 1)[0])
           }
 
-          const optionsHtml = countries.map(c => `<option value="${c.code}">${c.flag} ${c.code} (${c.name})</option>`).join('');
+          const optionsHtml = countries
+            .map(
+              (c) =>
+                `<option value="${c.code}">${c.flag} ${c.code} (${c.name})</option>`
+            )
+            .join('')
 
-          document.getElementById("app-phone-code").innerHTML = optionsHtml;
-          document.getElementById("app-whatsapp-code").innerHTML = optionsHtml;
+          document.getElementById('app-phone-code').innerHTML = optionsHtml
+          document.getElementById('app-whatsapp-code').innerHTML = optionsHtml
         } catch (error) {
-          console.error("Failed to load global country codes:", error);
+          console.error('Failed to load global country codes:', error)
         }
       }
 
       // Initialize
-      document.addEventListener("DOMContentLoaded", () => {
-        populateCountryCodes();
+      document.addEventListener('DOMContentLoaded', () => {
+        populateCountryCodes()
 
-        const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(window.location.search)
 
-        if (params.get("title")) {
-          document.getElementById("apply-job-title").textContent =
-            params.get("title");
+        if (params.get('title')) {
+          document.getElementById('apply-job-title').textContent =
+            params.get('title')
         }
-        if (params.get("company")) {
-          document.getElementById("apply-company").textContent =
-            params.get("company");
+        if (params.get('company')) {
+          document.getElementById('apply-company').textContent =
+            params.get('company')
         }
 
-        const user = JSON.parse(localStorage.getItem("user"));
+        const user = JSON.parse(localStorage.getItem('user'))
         if (user) {
-          document.getElementById("app-name").value = user.name || "";
-          document.getElementById("app-email").value = user.email || "";
+          document.getElementById('app-name').value = user.name || ''
+          document.getElementById('app-email').value = user.email || ''
         }
 
-        if (params.get("bilingual") === "1") {
-          const bilingualGroup = document.getElementById("bilingual-group");
+        if (params.get('bilingual') === '1') {
+          const bilingualGroup = document.getElementById('bilingual-group')
           if (bilingualGroup) {
-            bilingualGroup.style.display = "block";
+            bilingualGroup.style.display = 'block'
           }
         }
-      });
+      })
     </script>
   </body>
 </html>

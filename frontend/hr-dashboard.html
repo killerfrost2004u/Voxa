@@ -9,7 +9,8 @@
     <link rel="stylesheet" href="css/dashboard.css" />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <style>
       .dashboard-header {
         background: var(--bg-card);
@@ -208,16 +209,19 @@
             color: var(--primary-color);
             font-weight: 600;
             margin-bottom: 10px;
-          "></p>
+          "
+        ></p>
       </div>
       <div>
         <div
           id="workspace-switcher"
-          style="display: inline-flex; gap: 10px; margin-right: 15px"></div>
+          style="display: inline-flex; gap: 10px; margin-right: 15px"
+        ></div>
         <button
           onclick="window.logout()"
           class="btn-outline"
-          style="padding: 8px 15px">
+          style="padding: 8px 15px"
+        >
           Logout
         </button>
       </div>
@@ -228,7 +232,8 @@
         <button
           class="tab-btn active"
           onclick="switchTab('jobs')"
-          id="tab-jobs">
+          id="tab-jobs"
+        >
           <i class="fas fa-briefcase"></i> Job Postings
         </button>
         <button class="tab-btn" onclick="switchTab('crm')" id="tab-crm">
@@ -248,41 +253,50 @@
             <input
               type="text"
               id="jCompany"
-              placeholder="Client Company Name (e.g. Teleperformance)" />
+              placeholder="Client Company Name (e.g. Teleperformance)"
+            />
             <input
               type="text"
               id="jTitle"
-              placeholder="Job Title (e.g. Bilingual Agent)" />
+              placeholder="Job Title (e.g. Bilingual Agent)"
+            />
             <input
               type="text"
               id="jAccount"
-              placeholder="Account Type (e.g. Travel, Real Estate)" />
+              placeholder="Account Type (e.g. Travel, Real Estate)"
+            />
 
             <input
               type="text"
               id="jHours"
-              placeholder="Working Hours / Shifts" />
+              placeholder="Working Hours / Shifts"
+            />
             <input
               type="text"
               id="jInterview"
-              placeholder="Interview Time/Process" />
+              placeholder="Interview Time/Process"
+            />
             <input
               type="text"
               id="jSalary"
-              placeholder="Salary Package (e.g. 15k EGP + Bonus)" />
+              placeholder="Salary Package (e.g. 15k EGP + Bonus)"
+            />
 
             <input
               type="text"
               id="jTarget"
-              placeholder="Target Audience / Max Age" />
+              placeholder="Target Audience / Max Age"
+            />
             <input
               type="text"
               id="jLocation"
-              placeholder="Location (e.g. Maadi, WFH)" />
+              placeholder="Location (e.g. Maadi, WFH)"
+            />
             <input
               type="text"
               id="jTraining"
-              placeholder="Training Details (Duration/Paid?)" />
+              placeholder="Training Details (Duration/Paid?)"
+            />
 
             <select id="jExperience">
               <option value="" disabled selected>Min. Experience Req.</option>
@@ -296,11 +310,8 @@
             <textarea
               id="jOffer"
               placeholder="Extra specific requirements or benefits..."
-              style="
-                grid-column: span 3;
-                resize: vertical;
-                min-height: 60px;
-              "></textarea>
+              style="grid-column: span 3; resize: vertical; min-height: 60px"
+            ></textarea>
 
             <select id="jBilingual" style="grid-column: span 3">
               <option value="0">🇺🇸 English Only (1 Voice Note Required)</option>
@@ -313,7 +324,8 @@
               id="btn-submit-job"
               onclick="saveJobData()"
               class="btn-primary"
-              style="grid-column: span 3">
+              style="grid-column: span 3"
+            >
               + Publish Job to Website
             </button>
           </div>
@@ -324,13 +336,15 @@
               text-align: left;
               border-collapse: collapse;
               margin-top: 20px;
-            ">
+            "
+          >
             <thead>
               <tr
                 style="
                   border-bottom: 1px solid var(--border-color);
                   color: var(--text-muted);
-                ">
+                "
+              >
                 <th style="padding: 10px">ID</th>
                 <th style="padding: 10px">Role & Company</th>
                 <th style="padding: 10px">Package</th>
@@ -357,17 +371,20 @@
               justify-content: space-between;
               align-items: center;
               margin-bottom: 20px;
-            ">
+            "
+          >
             <h3>
               <i
                 class="fas fa-building"
-                style="color: var(--primary-color)"></i>
+                style="color: var(--primary-color)"
+              ></i>
               Company Acquisition Pipeline
             </h3>
             <button
               class="btn-outline"
               onclick="window.openLeadModal()"
-              style="background: var(--primary-color); color: black">
+              style="background: var(--primary-color); color: black"
+            >
               + Add New Lead
             </button>
           </div>
@@ -439,21 +456,58 @@
             <select id="slotAgency" required>
               <option value="" disabled selected>Select Agency...</option>
             </select>
-            <input type="text" id="slotTime" placeholder="Time Block (e.g. 10:00 AM - 12:00 PM)" />
-            <input type="number" id="slotCapacity" placeholder="Slots DAILY (e.g. 10)" />
-            
-            <div style="grid-column: span 3; margin-top: 5px;">
-              <label style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px; display: block;">Select Interview Days (Remaining of week / Next week)</label>
-              <div id="week-days-container" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                  <!-- Rendered via JS -->
+            <input
+              type="text"
+              id="slotTime"
+              placeholder="Time Block (e.g. 10:00 AM - 12:00 PM)"
+            />
+            <input
+              type="number"
+              id="slotCapacity"
+              placeholder="Slots DAILY (e.g. 10)"
+            />
+
+            <div style="grid-column: span 3; margin-top: 5px">
+              <label
+                style="
+                  color: var(--text-muted);
+                  font-size: 0.85rem;
+                  margin-bottom: 10px;
+                  display: block;
+                "
+                >Select Interview Days (Remaining of week / Next week)</label
+              >
+              <div
+                id="week-days-container"
+                style="display: flex; gap: 10px; flex-wrap: wrap"
+              >
+                <!-- Rendered via JS -->
               </div>
             </div>
-            <button onclick="createSlot()" class="btn-primary" style="grid-column: span 3; margin-top: 10px;">+ Create Slot Blocks</button>
+            <button
+              onclick="createSlot()"
+              class="btn-primary"
+              style="grid-column: span 3; margin-top: 10px"
+            >
+              + Create Slot Blocks
+            </button>
           </div>
-          
-          <table style="width: 100%; text-align: left; border-collapse: collapse; margin-top: 20px;">
+
+          <table
+            style="
+              width: 100%;
+              text-align: left;
+              border-collapse: collapse;
+              margin-top: 20px;
+            "
+          >
             <thead>
-              <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
+              <tr
+                style="
+                  border-bottom: 1px solid var(--border-color);
+                  color: var(--text-muted);
+                "
+              >
                 <th style="padding: 10px">Job & Agency</th>
                 <th style="padding: 10px">Time Blocks</th>
                 <th style="padding: 10px">Total Capacity</th>
@@ -463,7 +517,9 @@
             </thead>
             <tbody id="slots-table-body">
               <tr>
-                <td colspan="5" style="text-align: center; padding: 20px">Loading...</td>
+                <td colspan="5" style="text-align: center; padding: 20px">
+                  Loading...
+                </td>
               </tr>
             </tbody>
           </table>
@@ -484,7 +540,8 @@
             type="text"
             id="leadCompany"
             placeholder="e.g. Teleperformance"
-            required />
+            required
+          />
 
           <label style="font-size: 0.85rem; color: var(--text-muted)"
             >Contact Person</label
@@ -492,7 +549,8 @@
           <input
             type="text"
             id="leadContact"
-            placeholder="e.g. John Doe (HR Manager)" />
+            placeholder="e.g. John Doe (HR Manager)"
+          />
 
           <label style="font-size: 0.85rem; color: var(--text-muted)"
             >Pipeline Stage</label
@@ -509,13 +567,15 @@
           <input
             type="text"
             id="leadAction"
-            placeholder="e.g. Call tomorrow at 2 PM" />
+            placeholder="e.g. Call tomorrow at 2 PM"
+          />
 
           <button
             type="button"
             onclick="saveLeadData()"
             class="btn-primary"
-            id="btn-submit-lead">
+            id="btn-submit-lead"
+          >
             Save Lead
           </button>
           <button type="button" class="btn-cancel" onclick="closeLeadModal()">
@@ -526,108 +586,122 @@
     </div>
 
     <script>
-      let adminJobsData = [];
-      let editingJobId = null;
+      let adminJobsData = []
+      let editingJobId = null
 
-      const userStr = localStorage.getItem("user");
-      if (!userStr) window.location.href = "login.html";
-      const user = JSON.parse(userStr);
+      const userStr = localStorage.getItem('user')
+      if (!userStr) window.location.href = 'login.html'
+      const user = JSON.parse(userStr)
+      const isVoxaHR =
+        !user.agencyName ||
+        user.agencyName === 'Voxa' ||
+        user.agencyName === 'voxa'
 
-      const userRoles = (user.role || "").split(",").map((r) => r.trim());
+      const userRoles = (user.role || '').split(',').map((r) => r.trim())
       if (
-        !userRoles.includes("HR") &&
-        !userRoles.includes("CEO") &&
-        !userRoles.includes("SuperAdmin")
+        !userRoles.includes('HR') &&
+        !userRoles.includes('CEO') &&
+        !userRoles.includes('TopManagement') &&
+        !userRoles.includes('SuperAdmin')
       ) {
-        alert("Unauthorized. HR Access Required.");
-        window.location.href = "login.html";
+        alert('Unauthorized. HR Access Required.')
+        window.location.href = 'login.html'
       }
 
-      document.getElementById("roleBadge").innerText =
-        `${user.role} | ${user.agencyName}`;
+      document.getElementById('roleBadge').innerText =
+        `${user.role} | ${user.agencyName}`
 
       // WORKSPACE SWITCHER LOGIC
-      const switcher = document.getElementById("workspace-switcher");
+      const switcher = document.getElementById('workspace-switcher')
       if (userRoles.length > 1) {
-        if (userRoles.includes("Validator"))
-          switcher.innerHTML += `<button onclick="window.location.href='validator.html'" class="btn-outline"><i class="fas fa-check-double"></i> Validator Desk</button>`;
+        if (userRoles.includes('Validator'))
+          switcher.innerHTML += `<button onclick="window.location.href='validator.html'" class="btn-outline"><i class="fas fa-check-double"></i> Validator Desk</button>`
         if (
-          userRoles.includes("Leader") ||
-          userRoles.includes("UnitManager") ||
-          userRoles.includes("CEO")
+          userRoles.includes('Leader') ||
+          userRoles.includes('UnitManager') ||
+          userRoles.includes('CEO')
         )
-          switcher.innerHTML += `<button onclick="window.location.href='agency-dashboard.html'" class="btn-outline"><i class="fas fa-users"></i> Agency Desk</button>`;
+          switcher.innerHTML += `<button onclick="window.location.href='agency-dashboard.html'" class="btn-outline"><i class="fas fa-users"></i> Agency Desk</button>`
       }
 
       window.onload = async () => {
-        await loadAdminJobs();
-        loadSlots();
-        loadCRMLeads();
-        populateSlotDropdowns();
-        renderSlotDays();
-      };
+        if (!isVoxaHR) {
+          document.getElementById('tab-jobs').style.display = 'none'
+          document.querySelector('.job-form').style.display = 'none'
+          switchTab('crm')
+        }
+        await loadAdminJobs()
+        loadSlots()
+        loadCRMLeads()
+        populateSlotDropdowns()
+        renderSlotDays()
+      }
 
       function switchTab(tab) {
-        document.getElementById("section-jobs").style.display = "none";
-        document.getElementById("section-crm").style.display = "none";
-        document.getElementById("section-slots").style.display = "none";
-        document.getElementById("tab-jobs").classList.remove("active");
-        document.getElementById("tab-crm").classList.remove("active");
-        document.getElementById("tab-slots").classList.remove("active");
+        document.getElementById('section-jobs').style.display = 'none'
+        document.getElementById('section-crm').style.display = 'none'
+        document.getElementById('section-slots').style.display = 'none'
+        document.getElementById('tab-jobs').classList.remove('active')
+        document.getElementById('tab-crm').classList.remove('active')
+        document.getElementById('tab-slots').classList.remove('active')
 
-        document.getElementById(`section-${tab}`).style.display = "block";
-        document.getElementById(`tab-${tab}`).classList.add("active");
+        document.getElementById(`section-${tab}`).style.display = 'block'
+        document.getElementById(`tab-${tab}`).classList.add('active')
       }
 
       async function populateSlotDropdowns() {
         try {
-          const res = await fetch("https://voxa-pi-three.vercel.app/api/structure");
-          const structure = await res.json();
-          const agencySelect = document.getElementById("slotAgency");
-          
+          const res = await fetch(
+            'https://voxa-pi-three.vercel.app/api/structure'
+          )
+          const structure = await res.json()
+          const agencySelect = document.getElementById('slotAgency')
+
           if (agencySelect) {
-            agencySelect.innerHTML = '<option value="" disabled selected>Select Agency...</option>';
+            agencySelect.innerHTML =
+              '<option value="" disabled selected>Select Agency...</option>'
             for (let agency in structure) {
-              agencySelect.innerHTML += `<option value="${agency}">${agency}</option>`;
+              agencySelect.innerHTML += `<option value="${agency}">${agency}</option>`
             }
             if (user.agencyName && !structure[user.agencyName]) {
-              agencySelect.innerHTML += `<option value="${user.agencyName}">${user.agencyName}</option>`;
+              agencySelect.innerHTML += `<option value="${user.agencyName}">${user.agencyName}</option>`
             }
             if (user.agencyName) {
-              agencySelect.value = user.agencyName;
+              agencySelect.value = user.agencyName
             }
           }
-        } catch(e) {
-          console.error("Failed to load agency structure", e);
+        } catch (e) {
+          console.error('Failed to load agency structure', e)
         }
       }
 
       // --- JOB MANAGEMENT API (Shared with Admin) ---
       async function loadAdminJobs() {
-        const tbody = document.getElementById("jobs-table-body");
+        const tbody = document.getElementById('jobs-table-body')
         try {
           const res = await fetch(
-            "https://voxa-pi-three.vercel.app/api/admin/jobs",
-          );
-          adminJobsData = await res.json();
+            'https://voxa-pi-three.vercel.app/api/admin/jobs'
+          )
+          adminJobsData = await res.json()
 
           // Populate the Slot Jobs Dropdown
-          const jobSelect = document.getElementById("slotJob");
+          const jobSelect = document.getElementById('slotJob')
           if (jobSelect) {
-            jobSelect.innerHTML = '<option value="" disabled selected>Select Job Offer...</option>';
-            const addedJobs = new Set();
-            adminJobsData.forEach(j => {
-              const optionText = `${j.CompanyName} - ${j.JobTitle}`;
+            jobSelect.innerHTML =
+              '<option value="" disabled selected>Select Job Offer...</option>'
+            const addedJobs = new Set()
+            adminJobsData.forEach((j) => {
+              const optionText = `${j.CompanyName} - ${j.JobTitle}`
               if (!addedJobs.has(optionText)) {
-                addedJobs.add(optionText);
-                jobSelect.innerHTML += `<option value="${j.JobTitle}">${optionText}</option>`;
+                addedJobs.add(optionText)
+                jobSelect.innerHTML += `<option value="${j.JobTitle}">${optionText}</option>`
               }
-            });
+            })
           }
 
           if (adminJobsData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 20px; color:var(--text-muted);">No jobs published yet.</td></tr>`;
-            return;
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 20px; color:var(--text-muted);">No jobs published yet.</td></tr>`
+            return
           }
 
           tbody.innerHTML = adminJobsData
@@ -637,75 +711,88 @@
                     <td style="padding: 10px;">#${j.JobID}</td>
                     <td style="padding: 10px;"><b>${j.JobTitle}</b><br><small style="color:var(--primary-color);">${j.CompanyName}</small></td>
                     <td style="padding: 10px; color: var(--text-muted); font-size: 0.9rem;">${j.SalaryPackage}</td>
-                    <td style="padding: 10px;"><button onclick="toggleJobStatus(${j.JobID}, '${j.Status}')" style="background:${j.Status === "Active" ? "rgba(0, 229, 255, 0.1)" : "rgba(245, 158, 11, 0.1)"}; color:${j.Status === "Active" ? "var(--primary-color)" : "#f59e0b"}; border:1px solid; border-radius:4px; padding: 4px 8px; cursor:pointer;">${j.Status}</button></td>
                     <td style="padding: 10px;">
-                        <button onclick="editJob(${j.JobID})" style="background:none; border:none; color:var(--primary-color); cursor:pointer; margin-right: 12px;"><i class="fas fa-edit"></i> Edit</button>
+                        ${isVoxaHR ? `<button onclick="toggleJobStatus(${j.JobID}, '${j.Status}')" style="background:${j.Status === 'Active' ? 'rgba(0, 229, 255, 0.1)' : 'rgba(245, 158, 11, 0.1)'}; color:${j.Status === 'Active' ? 'var(--primary-color)' : '#f59e0b'}; border:1px solid; border-radius:4px; padding: 4px 8px; cursor:pointer;">${j.Status}</button>` : `<span style="background:${j.Status === 'Active' ? 'rgba(0, 229, 255, 0.1)' : 'rgba(245, 158, 11, 0.1)'}; color:${j.Status === 'Active' ? 'var(--primary-color)' : '#f59e0b'}; border:1px solid; border-radius:4px; padding: 4px 8px; font-weight: bold;">${j.Status}</span>`}
                     </td>
-                </tr>`,
+                    <td style="padding: 10px;">
+                        ${isVoxaHR ? `<button onclick="editJob(${j.JobID})" style="background:none; border:none; color:var(--primary-color); cursor:pointer; margin-right: 12px;"><i class="fas fa-edit"></i> Edit</button>` : `<span style="color:var(--text-muted); font-size: 0.85rem;"><i class="fas fa-lock"></i> Restricted</span>`}
+                    </td>
+                </tr>`
             )
-            .join("");
+            .join('')
         } catch (e) {
-          console.error(e);
+          console.error(e)
         }
       }
 
       window.editJob = function (id) {
-        const job = adminJobsData.find((j) => j.JobID === id);
-        if (!job) return;
-        editingJobId = id;
-        document.getElementById("jCompany").value = job.CompanyName || "";
-        document.getElementById("jTitle").value = job.JobTitle || "";
-        document.getElementById("jAccount").value = job.AccountType || "";
-        document.getElementById("jHours").value = job.WorkingHours || "";
-        document.getElementById("jInterview").value = job.InterviewTime || "";
-        document.getElementById("jSalary").value = job.SalaryPackage || "";
-        document.getElementById("jTarget").value = job.TargetAudience || "";
-        document.getElementById("jLocation").value = job.Location || "";
-        document.getElementById("jTraining").value = job.Training || "";
-        document.getElementById("jOffer").value = job.OfferDetails || "";
-        document.getElementById("jBilingual").value = job.RequiresSecondLanguage
-          ? "1"
-          : "0";
+        const job = adminJobsData.find((j) => j.JobID === id)
+        if (!job) return
+        editingJobId = id
+        document.getElementById('jCompany').value = job.CompanyName || ''
+        document.getElementById('jTitle').value = job.JobTitle || ''
+        document.getElementById('jAccount').value = job.AccountType || ''
+        document.getElementById('jHours').value = job.WorkingHours || ''
+        document.getElementById('jInterview').value = job.InterviewTime || ''
+        document.getElementById('jSalary').value = job.SalaryPackage || ''
+        document.getElementById('jTarget').value = job.TargetAudience || ''
+        document.getElementById('jLocation').value = job.Location || ''
+        document.getElementById('jTraining').value = job.Training || ''
+        document.getElementById('jOffer').value = job.OfferDetails || ''
+        document.getElementById('jBilingual').value = job.RequiresSecondLanguage
+          ? '1'
+          : '0'
 
-        const submitBtn = document.getElementById("btn-submit-job");
-        submitBtn.innerHTML = `<i class="fas fa-save"></i> Update Published Job`;
-        submitBtn.style.background = "#f59e0b";
-      };
+        const submitBtn = document.getElementById('btn-submit-job')
+        submitBtn.innerHTML = `<i class="fas fa-save"></i> Update Published Job`
+        submitBtn.style.background = '#f59e0b'
+      }
 
       // --- HR SLOTS API ---
       async function loadSlots() {
-          try {
-              const res = await fetch('https://voxa-pi-three.vercel.app/api/hr/slots');
-              const slots = await res.json();
-              const tbody = document.getElementById("slots-table-body");
-              if (slots.length === 0) {
-                  tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px">No slots created yet.</td></tr>';
-                  return;
-              }
-              
-              // 1. Group slots by Job and Agency
-              const grouped = {};
-              slots.forEach(s => {
-                  const job = adminJobsData.find(j => j.JobTitle === s.JobTitle);
-                  const displayTitle = job ? `${job.CompanyName} - ${s.JobTitle}` : s.JobTitle;
-                  const key = `${displayTitle}|${s.AgencyName}`;
-                  
-                  if (!grouped[key]) {
-                      grouped[key] = { displayTitle, agencyName: s.AgencyName, totalCapacity: 0, totalBooked: 0, slots: [] };
-                  }
-                  grouped[key].totalCapacity += s.Capacity;
-                  grouped[key].totalBooked += s.Booked;
-                  grouped[key].slots.push(s);
-              });
+        try {
+          const res = await fetch(
+            'https://voxa-pi-three.vercel.app/api/hr/slots'
+          )
+          const slots = await res.json()
+          const tbody = document.getElementById('slots-table-body')
+          if (slots.length === 0) {
+            tbody.innerHTML =
+              '<tr><td colspan="5" style="text-align: center; padding: 20px">No slots created yet.</td></tr>'
+            return
+          }
 
-              // 2. Render Accordion View
-              let html = '';
-              let groupIndex = 0;
-              for (const key in grouped) {
-                  const group = grouped[key];
-                  
-                  // Summary Row
-                  html += `
+          // 1. Group slots by Job and Agency
+          const grouped = {}
+          slots.forEach((s) => {
+            const job = adminJobsData.find((j) => j.JobTitle === s.JobTitle)
+            const displayTitle = job
+              ? `${job.CompanyName} - ${s.JobTitle}`
+              : s.JobTitle
+            const key = `${displayTitle}|${s.AgencyName}`
+
+            if (!grouped[key]) {
+              grouped[key] = {
+                displayTitle,
+                agencyName: s.AgencyName,
+                totalCapacity: 0,
+                totalBooked: 0,
+                slots: [],
+              }
+            }
+            grouped[key].totalCapacity += s.Capacity
+            grouped[key].totalBooked += s.Booked
+            grouped[key].slots.push(s)
+          })
+
+          // 2. Render Accordion View
+          let html = ''
+          let groupIndex = 0
+          for (const key in grouped) {
+            const group = grouped[key]
+
+            // Summary Row
+            html += `
                   <tr style="border-bottom: 1px solid var(--border-color); background: rgba(0, 229, 255, 0.05); cursor: pointer; transition: background 0.2s;" onclick="toggleSlotGroup('group-${groupIndex}')" onmouseover="this.style.background='rgba(0, 229, 255, 0.1)'" onmouseout="this.style.background='rgba(0, 229, 255, 0.05)'">
                       <td style="padding: 12px 10px;">
                           <i class="fas fa-chevron-right" id="icon-group-${groupIndex}" style="margin-right: 10px; color: var(--primary-color); transition: transform 0.3s; width: 15px; text-align: center;"></i>
@@ -717,10 +804,13 @@
                       <td style="padding: 12px 10px; color: var(--primary-color); font-weight: bold;">${group.totalBooked}</td>
                       <td style="padding: 12px 10px;"></td>
                   </tr>
-                  `;
+                  `
 
-                  // Detailed Daily Rows (Hidden by Default)
-                  html += group.slots.sort((a,b) => new Date(a.SlotDate) - new Date(b.SlotDate)).map(s => `
+            // Detailed Daily Rows (Hidden by Default)
+            html += group.slots
+              .sort((a, b) => new Date(a.SlotDate) - new Date(b.SlotDate))
+              .map(
+                (s) => `
                   <tr class="group-${groupIndex}-slots" style="border-bottom: 1px solid var(--border-color); display: none; background: var(--bg-card);">
                       <td style="padding: 10px 10px 10px 40px; color: var(--text-muted); border-left: 2px solid var(--primary-color);">↳ Daily Block</td>
                       <td style="padding: 10px;">${s.SlotDate} <br><small style="color: var(--primary-color);">${s.SlotTime}</small></td>
@@ -730,173 +820,207 @@
                           <button onclick="deleteSlot(${s.SlotID})" style="background:rgba(239, 68, 68, 0.1); border:1px solid #ef4444; color:#ef4444; padding: 4px 8px; border-radius: 4px; cursor:pointer; font-size: 0.8rem; transition: 0.2s;" onmouseover="this.style.background='#ef4444'; this.style.color='#fff';" onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444';"><i class="fas fa-trash"></i> Delete</button>
                       </td>
                   </tr>
-                  `).join("");
-                  
-                  groupIndex++;
-              }
-              tbody.innerHTML = html;
-          } catch(e) { console.error(e); }
+                  `
+              )
+              .join('')
+
+            groupIndex++
+          }
+          tbody.innerHTML = html
+        } catch (e) {
+          console.error(e)
+        }
       }
 
-      window.toggleSlotGroup = function(groupId) {
-          const rows = document.querySelectorAll('.' + groupId + '-slots');
-          const icon = document.getElementById('icon-' + groupId);
-          let isHidden = true;
-          rows.forEach(r => {
-              if (r.style.display === "none" || r.style.display === "") {
-                  r.style.display = "table-row";
-                  isHidden = false;
-              } else {
-                  r.style.display = "none";
-              }
-          });
-          if (icon) {
-              icon.style.transform = isHidden ? "rotate(0deg)" : "rotate(90deg)";
+      window.toggleSlotGroup = function (groupId) {
+        const rows = document.querySelectorAll('.' + groupId + '-slots')
+        const icon = document.getElementById('icon-' + groupId)
+        let isHidden = true
+        rows.forEach((r) => {
+          if (r.style.display === 'none' || r.style.display === '') {
+            r.style.display = 'table-row'
+            isHidden = false
+          } else {
+            r.style.display = 'none'
           }
+        })
+        if (icon) {
+          icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(90deg)'
+        }
       }
 
       function renderSlotDays() {
-          const container = document.getElementById("week-days-container");
-          if (!container) return;
-          
-          let today = new Date();
-          let datesHtml = '';
-          
-          // Generate the next 14 days so HR can pick any upcoming days 
-          // covering the remaining of this week and the next week.
-          for(let i = 1; i <= 14; i++) {
-              let d = new Date();
-              d.setDate(today.getDate() + i);
-              let dateStr = d.toISOString().split('T')[0];
-              let display = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-              
-              // Highlight weekends (Friday=5, Saturday=6) by lowering opacity slightly
-              let isWeekend = (d.getDay() === 5 || d.getDay() === 6);
-              let opacity = isWeekend ? '0.6' : '1';
-              
-              datesHtml += `
+        const container = document.getElementById('week-days-container')
+        if (!container) return
+
+        let today = new Date()
+        let datesHtml = ''
+
+        // Generate the next 14 days so HR can pick any upcoming days
+        // covering the remaining of this week and the next week.
+        for (let i = 1; i <= 14; i++) {
+          let d = new Date()
+          d.setDate(today.getDate() + i)
+          let dateStr = d.toISOString().split('T')[0]
+          let display = d.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+          })
+
+          // Highlight weekends (Friday=5, Saturday=6) by lowering opacity slightly
+          let isWeekend = d.getDay() === 5 || d.getDay() === 6
+          let opacity = isWeekend ? '0.6' : '1'
+
+          datesHtml += `
               <label style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; opacity: ${opacity};">
                   <input type="checkbox" class="slot-day-cb" value="${dateStr}"> 
                   <span style="font-size: 0.9rem;">${display}</span>
-              </label>`;
-          }
-          container.innerHTML = datesHtml;
+              </label>`
+        }
+        container.innerHTML = datesHtml
       }
-      
-      window.createSlot = async function() {
-          const selectedDates = Array.from(document.querySelectorAll('.slot-day-cb:checked')).map(cb => cb.value);
-          const jobTitle = document.getElementById("slotJob").value;
-          const agencyName = document.getElementById("slotAgency").value;
-          const time = document.getElementById("slotTime").value;
-          const capacity = document.getElementById("slotCapacity").value;
-          
-          if (!jobTitle || !agencyName || !time || !capacity) {
-              return alert("Please completely fill out the job, agency, time, and capacity fields.");
-          }
-          if (selectedDates.length === 0) {
-              return alert("Please select at least one day for the interview slots.");
+
+      window.createSlot = async function () {
+        const selectedDates = Array.from(
+          document.querySelectorAll('.slot-day-cb:checked')
+        ).map((cb) => cb.value)
+        const jobTitle = document.getElementById('slotJob').value
+        const agencyName = document.getElementById('slotAgency').value
+        const time = document.getElementById('slotTime').value
+        const capacity = document.getElementById('slotCapacity').value
+
+        if (!jobTitle || !agencyName || !time || !capacity) {
+          return alert(
+            'Please completely fill out the job, agency, time, and capacity fields.'
+          )
+        }
+        if (selectedDates.length === 0) {
+          return alert(
+            'Please select at least one day for the interview slots.'
+          )
+        }
+
+        const btn = document.querySelector('button[onclick="createSlot()"]')
+        const originalText = btn.innerText
+        btn.innerText = 'Creating slots...'
+        btn.disabled = true
+
+        try {
+          // Loop through each selected date and create a daily capacity block
+          for (const date of selectedDates) {
+            const payload = { jobTitle, agencyName, date, time, capacity }
+            await fetch('https://voxa-pi-three.vercel.app/api/hr/slots', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            })
           }
 
-          const btn = document.querySelector('button[onclick="createSlot()"]');
-          const originalText = btn.innerText;
-          btn.innerText = "Creating slots...";
-          btn.disabled = true;
-
-          try {
-              // Loop through each selected date and create a daily capacity block
-              for (const date of selectedDates) {
-                  const payload = { jobTitle, agencyName, date, time, capacity };
-                  await fetch('https://voxa-pi-three.vercel.app/api/hr/slots', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-              }
-              
-              document.querySelectorAll('.slot-day-cb:checked').forEach(cb => cb.checked = false);
-              loadSlots();
-          } catch(e) {
-              alert("An error occurred while creating the slots.");
-          } finally {
-              btn.innerText = originalText;
-              btn.disabled = false;
-          }
+          document
+            .querySelectorAll('.slot-day-cb:checked')
+            .forEach((cb) => (cb.checked = false))
+          loadSlots()
+        } catch (e) {
+          alert('An error occurred while creating the slots.')
+        } finally {
+          btn.innerText = originalText
+          btn.disabled = false
+        }
       }
-      
-      window.deleteSlot = async function(id) {
-          await fetch(`https://voxa-pi-three.vercel.app/api/hr/slots/${id}`, { method: 'DELETE' });
-          loadSlots();
+
+      window.deleteSlot = async function (id) {
+        await fetch(`https://voxa-pi-three.vercel.app/api/hr/slots/${id}`, {
+          method: 'DELETE',
+        })
+        loadSlots()
       }
 
       window.saveJobData = async function () {
+        if (!isVoxaHR)
+          return alert('Unauthorized. Only Voxa HR can manage job postings.')
+
         const payload = {
-          companyName: document.getElementById("jCompany").value,
-          jobTitle: document.getElementById("jTitle").value,
-          accountType: document.getElementById("jAccount").value,
-          workingHours: document.getElementById("jHours").value,
-          salaryPackage: document.getElementById("jSalary").value,
-          location: document.getElementById("jLocation").value,
-          interviewType: document.getElementById("jInterviewType").value || "Onsite Interview",
-          minEnglishLevel: document.getElementById("jEnglish").value || "B2",
-          minSecondLangLevel: document.getElementById("jSecondLang").value || "",
-          maxAge: parseInt(document.getElementById("jMaxAge").value) || 35,
-          nationalityReq: document.getElementById("jNationality").value || "All Nationalities",
-          graduationReq: document.getElementById("jGraduation").value || "Graduates Only",
-          minExperience: document.getElementById("jExperience").value || "0",
-          training: document.getElementById("jTraining").value,
-          offerDetails: document.getElementById("jOffer").value,
-          requiresSecondLanguage: document.getElementById("jBilingual").value,
-        };
-        if (!payload.jobTitle) return alert("Job Title is required!");
-        const submitBtn = document.getElementById("btn-submit-job");
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = "Saving...";
+          companyName: document.getElementById('jCompany').value,
+          jobTitle: document.getElementById('jTitle').value,
+          accountType: document.getElementById('jAccount').value,
+          workingHours: document.getElementById('jHours').value,
+          salaryPackage: document.getElementById('jSalary').value,
+          location: document.getElementById('jLocation').value,
+          interviewType:
+            document.getElementById('jInterviewType').value ||
+            'Onsite Interview',
+          minEnglishLevel: document.getElementById('jEnglish').value || 'B2',
+          minSecondLangLevel:
+            document.getElementById('jSecondLang').value || '',
+          maxAge: parseInt(document.getElementById('jMaxAge').value) || 35,
+          nationalityReq:
+            document.getElementById('jNationality').value ||
+            'All Nationalities',
+          graduationReq:
+            document.getElementById('jGraduation').value || 'Graduates Only',
+          minExperience: document.getElementById('jExperience').value || '0',
+          training: document.getElementById('jTraining').value,
+          offerDetails: document.getElementById('jOffer').value,
+          requiresSecondLanguage: document.getElementById('jBilingual').value,
+        }
+        if (!payload.jobTitle) return alert('Job Title is required!')
+        const submitBtn = document.getElementById('btn-submit-job')
+        const originalText = submitBtn.innerHTML
+        submitBtn.innerHTML = 'Saving...'
         try {
           if (editingJobId) {
             await fetch(
               `https://voxa-pi-three.vercel.app/api/admin/jobs/${editingJobId}`,
               {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-              },
-            );
+              }
+            )
           } else {
-            await fetch("https://voxa-pi-three.vercel.app/api/admin/jobs", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
+            await fetch('https://voxa-pi-three.vercel.app/api/admin/jobs', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload),
-            });
+            })
           }
-          editingJobId = null;
+          editingJobId = null
           document
-            .querySelectorAll(".job-form input, .job-form textarea")
-            .forEach((el) => (el.value = ""));
-          submitBtn.innerHTML = `+ Publish Job to Website`;
-          submitBtn.style.background = "var(--primary-color)";
-          loadAdminJobs();
+            .querySelectorAll('.job-form input, .job-form textarea')
+            .forEach((el) => (el.value = ''))
+          submitBtn.innerHTML = `+ Publish Job to Website`
+          submitBtn.style.background = 'var(--primary-color)'
+          loadAdminJobs()
         } catch (e) {
-          alert("Failed to save.");
-          submitBtn.innerHTML = originalText;
+          alert('Failed to save.')
+          submitBtn.innerHTML = originalText
         }
-      };
+      }
 
       window.toggleJobStatus = async function (id, currentStatus) {
-        const newStatus = currentStatus === "Active" ? "On Hold" : "Active";
+        if (!isVoxaHR)
+          return alert('Unauthorized. Only Voxa HR can manage job postings.')
+
+        const newStatus = currentStatus === 'Active' ? 'On Hold' : 'Active'
         await fetch(`https://voxa-pi-three.vercel.app/api/admin/jobs/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: newStatus }),
-        });
-        loadAdminJobs();
-      };
+        })
+        loadAdminJobs()
+      }
 
       window.logout = function () {
-        localStorage.removeItem("user");
-        window.location.href = "login.html";
-      };
+        localStorage.removeItem('user')
+        window.location.href = 'login.html'
+      }
       // --- GLOBALS ---
-      let crmLeadsData = [];
+      let crmLeadsData = []
 
       // --- CRM MODAL LOGIC ---
       window.openLeadModal = function (leadId = null) {
-        const modal = document.getElementById("leadModal");
+        const modal = document.getElementById('leadModal')
 
         // Bulletproof CSS override to force visibility
         modal.style.cssText = `
@@ -913,67 +1037,66 @@
               opacity: 1 !important;
               visibility: visible !important;
               pointer-events: auto !important;
-          `;
+          `
 
-        if (leadId && typeof leadId === "number") {
-          const lead = crmLeadsData.find((l) => l.LeadID === leadId);
+        if (leadId && typeof leadId === 'number') {
+          const lead = crmLeadsData.find((l) => l.LeadID === leadId)
           if (lead) {
-            document.getElementById("leadId").value = lead.LeadID;
-            document.getElementById("leadCompany").value = lead.CompanyName;
-            document.getElementById("leadContact").value = lead.ContactName;
-            document.getElementById("leadStatus").value = lead.Status;
-            document.getElementById("leadAction").value = lead.ActionItem;
-            document.getElementById("btn-submit-lead").innerText =
-              "Update Lead";
+            document.getElementById('leadId').value = lead.LeadID
+            document.getElementById('leadCompany').value = lead.CompanyName
+            document.getElementById('leadContact').value = lead.ContactName
+            document.getElementById('leadStatus').value = lead.Status
+            document.getElementById('leadAction').value = lead.ActionItem
+            document.getElementById('btn-submit-lead').innerText = 'Update Lead'
           }
         } else {
-          document.getElementById("leadId").value = "";
-          document.getElementById("leadCompany").value = "";
-          document.getElementById("leadContact").value = "";
-          document.getElementById("leadStatus").value = "Prospect";
-          document.getElementById("leadAction").value = "";
-          document.getElementById("btn-submit-lead").innerText = "Save Lead";
+          document.getElementById('leadId').value = ''
+          document.getElementById('leadCompany').value = ''
+          document.getElementById('leadContact').value = ''
+          document.getElementById('leadStatus').value = 'Prospect'
+          document.getElementById('leadAction').value = ''
+          document.getElementById('btn-submit-lead').innerText = 'Save Lead'
         }
-      };
+      }
 
       window.closeLeadModal = function () {
-        const modal = document.getElementById("leadModal");
-        if (modal) modal.style.cssText = "display: none !important;";
-      };
+        const modal = document.getElementById('leadModal')
+        if (modal) modal.style.cssText = 'display: none !important;'
+      }
 
       // --- CRM API LOGIC ---
       async function loadCRMLeads() {
         try {
           // Note: You will need to create this endpoint in your backend
           const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/hr/leads?agency=${encodeURIComponent(user.agencyName)}`,
-          );
-          crmLeadsData = await res.json();
+            `https://voxa-pi-three.vercel.app/api/hr/leads?agency=${encodeURIComponent(user.agencyName)}`
+          )
+          crmLeadsData = await res.json()
 
-          const colProspects = document.getElementById("col-prospects");
-          const colMeetings = document.getElementById("col-meetings");
-          const colSigned = document.getElementById("col-signed");
+          const colProspects = document.getElementById('col-prospects')
+          const colMeetings = document.getElementById('col-meetings')
+          const colSigned = document.getElementById('col-signed')
 
-          colProspects.innerHTML = "";
-          colMeetings.innerHTML = "";
-          colSigned.innerHTML = "";
+          colProspects.innerHTML = ''
+          colMeetings.innerHTML = ''
+          colSigned.innerHTML = ''
           let countP = 0,
             countM = 0,
-            countS = 0;
+            countS = 0
 
           crmLeadsData.forEach((lead) => {
-            const initials = lead.CompanyName.substring(0, 2).toUpperCase();
+            const initials = lead.CompanyName.substring(0, 2).toUpperCase()
 
             // Determine icon and color based on status
-            let icon = "fa-clock";
-            let color = "#f59e0b";
-            if (lead.Status === "Meeting") {
-              icon = "fa-calendar";
-              color = "#00e5ff";
+            let icon = 'fa-clock'
+            let color = '#f59e0b'
+            if (lead.Status === 'Meeting') {
+              icon = 'fa-calendar'
+              color = '#00e5ff'
             }
-            if (lead.Status === "Signed") {
-              icon = "fa-check-circle";
-              color = "#10b981";
+            if (lead.Status === 'Signed') {
+              icon = 'fa-check-circle'
+              color = '#10b981'
             }
 
             const cardHtml = `
@@ -982,63 +1105,63 @@
                             <div class="company-logo-placeholder">${initials}</div>
                             <strong>${lead.CompanyName}</strong>
                         </div>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin:0;">Contact: ${lead.ContactName || "N/A"}</p>
-                        <p style="font-size: 0.8rem; color: ${color}; margin-top:5px;"><i class="fas ${icon}"></i> ${lead.ActionItem || "No action set"}</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin:0;">Contact: ${lead.ContactName || 'N/A'}</p>
+                        <p style="font-size: 0.8rem; color: ${color}; margin-top:5px;"><i class="fas ${icon}"></i> ${lead.ActionItem || 'No action set'}</p>
                     </div>
-                  `;
+                  `
 
-            if (lead.Status === "Prospect") {
-              colProspects.innerHTML += cardHtml;
-              countP++;
-            } else if (lead.Status === "Meeting") {
-              colMeetings.innerHTML += cardHtml;
-              countM++;
-            } else if (lead.Status === "Signed") {
-              colSigned.innerHTML += cardHtml;
-              countS++;
+            if (lead.Status === 'Prospect') {
+              colProspects.innerHTML += cardHtml
+              countP++
+            } else if (lead.Status === 'Meeting') {
+              colMeetings.innerHTML += cardHtml
+              countM++
+            } else if (lead.Status === 'Signed') {
+              colSigned.innerHTML += cardHtml
+              countS++
             }
-          });
+          })
 
-          document.getElementById("count-prospects").innerText = countP;
-          document.getElementById("count-meetings").innerText = countM;
-          document.getElementById("count-signed").innerText = countS;
+          document.getElementById('count-prospects').innerText = countP
+          document.getElementById('count-meetings').innerText = countM
+          document.getElementById('count-signed').innerText = countS
         } catch (e) {
-          console.error("Failed to load CRM leads", e);
+          console.error('Failed to load CRM leads', e)
         }
       }
 
       async function saveLeadData() {
         const payload = {
           agencyName: user.agencyName,
-          companyName: document.getElementById("leadCompany").value,
-          contactName: document.getElementById("leadContact").value,
-          status: document.getElementById("leadStatus").value,
-          actionItem: document.getElementById("leadAction").value,
-        };
+          companyName: document.getElementById('leadCompany').value,
+          contactName: document.getElementById('leadContact').value,
+          status: document.getElementById('leadStatus').value,
+          actionItem: document.getElementById('leadAction').value,
+        }
 
-        if (!payload.companyName) return alert("Company name is required!");
+        if (!payload.companyName) return alert('Company name is required!')
 
-        const leadId = document.getElementById("leadId").value;
+        const leadId = document.getElementById('leadId').value
         const url = leadId
           ? `https://voxa-pi-three.vercel.app/api/hr/leads/${leadId}`
-          : `https://voxa-pi-three.vercel.app/api/hr/leads`;
-        const method = leadId ? "PUT" : "POST";
+          : `https://voxa-pi-three.vercel.app/api/hr/leads`
+        const method = leadId ? 'PUT' : 'POST'
 
-        const btn = document.getElementById("btn-submit-lead");
-        btn.innerText = "Saving...";
+        const btn = document.getElementById('btn-submit-lead')
+        btn.innerText = 'Saving...'
 
         try {
           await fetch(url, {
             method: method,
-            headers: { "Content-Type": "application/json" },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
-          });
-          closeLeadModal();
-          loadCRMLeads(); // Reload the board
+          })
+          closeLeadModal()
+          loadCRMLeads() // Reload the board
         } catch (e) {
-          console.error(e);
-          alert("Error saving lead");
-          btn.innerText = "Save Lead";
+          console.error(e)
+          alert('Error saving lead')
+          btn.innerText = 'Save Lead'
         }
       }
     </script>

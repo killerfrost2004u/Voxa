@@ -11,21 +11,21 @@ load_dotenv()
 # Configure this to match your local LLM server (Ollama, LM Studio, etc.)
 # Default below is for Ollama. For LM Studio, you might use http://localhost:1234/v1
 LOCAL_LLM_URL = os.getenv("LOCAL_LLM_URL", "http://localhost:11434/v1")
-LOCAL_MODEL_NAME = os.getenv("LOCAL_MODEL_NAME", "llama3.2") 
+LOCAL_MODEL_NAME = os.getenv("LOCAL_MODEL_NAME", "phi3:mini") 
 
 client = OpenAI(base_url=LOCAL_LLM_URL, api_key="local-no-key-required")
 
 def update_platform_rules():
-    current_date = datetime.date.today().strftime("%B %Y")
-    print(f"🔍 Fetching the absolute latest social media algorithms and guidelines for {current_date}...")
+    current_time = datetime.datetime.now().strftime("%A, %B %d, %Y at %I:%M %p")
+    print(f"🔍 Fetching the absolute latest social media algorithms and guidelines for {current_time}...")
     
     prompt = f"""
     <role>
-    You are a Master Social Media Algorithm Expert and Elite SEO Strategist operating in {current_date}. Your absolute specialty is the Egyptian digital landscape.
+    You are a Master Social Media Algorithm Expert and Elite SEO Strategist operating on {current_time}. Your absolute specialty is the Egyptian digital landscape. Your analytical depth is comparable to top-tier models like Gemini 3.1 Pro.
     </role>
     
     <task>
-    Generate an ULTRA-DETAILED, highly analytical master JSON report.
+    Generate an ULTRA-DETAILED, highly analytical master JSON report. EVERY single string value inside the JSON MUST be massive (at least 3-4 paragraphs long), containing specific actionable data, exact percentages, times, and rules. Do NOT write short summaries.
     You MUST clearly separate the core platform guidelines from the high-reach/viral engagement tactics. 
     Your primary target demographic is EGYPT (Cairo Time/EET).
     Do NOT write short summaries. Detail EXACTLY when to post in Egypt for maximum reach, what specific content formats to use, and how to avoid being flagged as a bot or spam.
@@ -38,12 +38,12 @@ def update_platform_rules():
     </anti_ai_rules>
     
     <thinking_process>
-    You are equipped with a Deep-Thinking Protocol. Before writing the final JSON, you MUST exhaustively plan your work inside <thinking>...</thinking> tags. 
-    Inside the <thinking> block, analyze the Egyptian market, calculate the exact best posting times in Cairo, and map out heavy strategies to avoid bot-detection. Be verbose, meticulous, and analytical in your thinking.
+    You are equipped with a Deep-Thinking Protocol. Before writing the final JSON, you MUST exhaustively plan your work inside <think>...</think> tags. Your thinking must be exceptionally verbose and demonstrate a deep understanding of social media algorithms.
+    Inside the <think> block (minimum 1000 words), analyze the current state of each platform's algorithm (LinkedIn, Facebook, Instagram, TikTok) for the Egyptian market. Discuss recent changes, content types being prioritized (e.g., short-form video, carousels, text posts), and the specific signals that trigger bot detection. Be meticulous, and analytical in your thinking.
     </thinking_process>
 
     <output_format>
-    After your <thinking> block, you must output ONLY a valid JSON object. Do not include markdown formatting like ```json. Do not include the <thinking> block inside the JSON.
+    After your <think> block, you must output ONLY a valid JSON object. Do not include markdown formatting like ```json. Do not include the <think> block inside the JSON. Make sure there are NO trailing commas.
     The JSON must exactly match this structure:
     {{
         "linkedin": {{
@@ -83,6 +83,9 @@ def update_platform_rules():
         
         result_text = response.choices[0].message.content.strip()
         
+        # Strip the <think> block first so any curly braces inside don't confuse the regex
+        result_text = re.sub(r'<think>.*?</think>\s*', '', result_text, flags=re.DOTALL)
+        
         # Safely extract ONLY the JSON object using regex
         match = re.search(r'\{.*\}', result_text, re.DOTALL)
         if not match:
@@ -90,8 +93,25 @@ def update_platform_rules():
             
         json_str = match.group(0)
         
-        # Validate that it parses correctly before saving it
-        parsed_json = json.loads(json_str)
+        # Clean up common JSON errors from small models (like trailing commas)
+        json_str = re.sub(r',\s*([\}\]])', r'\1', json_str)
+        
+        try:
+            # Validate that it parses correctly before saving it
+            parsed_json = json.loads(json_str)
+        except json.JSONDecodeError as e:
+            print(f"\n❌ AI generated invalid or incomplete JSON: {e}")
+            print("   This often happens if the model's response was cut off due to token limits.")
+            
+            if len(json_str) > 200:
+                print("\n   Here's the tail end of the response where the error likely occurred:")
+                print("   ..." + json_str[-200:])
+            else:
+                print("\n   Raw extracted text that failed to parse:")
+                print(json_str)
+            
+            print("\n   💡 Recommendation: Try using a model with a larger context window or a less verbose prompt if this issue persists.")
+            return
         
         file_path = os.path.join(os.path.dirname(__file__), "platform_guidelines.json")
         with open(file_path, "w", encoding="utf-8") as f:

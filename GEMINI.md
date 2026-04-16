@@ -11,6 +11,7 @@ Voxa is an AI-powered HR recruitment platform that allows candidates to apply vi
 - **State Management:** Rely on standard DOM manipulation and `localStorage` (as seen in `frontend/js/script.js`).
 
 ### UI/UX & Design "Skills"
+
 - **Modern Aesthetics:** Use CSS variables (`:root`) for consistent theming. Ensure ample whitespace (`padding`, `gap`), rounded corners (`border-radius: 8px` to `12px`), and subtle `box-shadow` for depth.
 - **Responsive Layouts:** Always default to CSS Flexbox or Grid. Ensure mobile responsiveness via `@media` queries (e.g., collapsing 2-column grids to 1-column on mobile).
 - **Interactivity:** Add smooth micro-interactions (`transition: all 0.3s ease`) to buttons, cards, and links. Use appropriate `hover` and `active` states.

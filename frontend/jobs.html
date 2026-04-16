@@ -8,10 +8,12 @@
     <link rel="stylesheet" href="css/style.css" />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet" />
+      rel="stylesheet"
+    />
   </head>
   <body>
     <nav class="navbar">
@@ -26,11 +28,13 @@
             font-weight: 700;
             color: white;
             text-decoration: none;
-          ">
+          "
+        >
           <img
             src="images/voxa-logo.png"
             alt="Voxa Logo"
-            style="height: 40px; width: auto; border-radius: 8px" />
+            style="height: 40px; width: auto; border-radius: 8px"
+          />
           Voxa
         </a>
         <ul class="nav-links">
@@ -71,7 +75,8 @@
                   type="text"
                   id="keyword-filter"
                   placeholder="Job title..."
-                  onkeyup="applyFilters()" />
+                  onkeyup="applyFilters()"
+                />
               </div>
             </div>
 
@@ -83,7 +88,8 @@
                   type="text"
                   id="location-filter"
                   placeholder="City..."
-                  onkeyup="applyFilters()" />
+                  onkeyup="applyFilters()"
+                />
               </div>
             </div>
 
@@ -94,28 +100,32 @@
                   ><input
                     type="checkbox"
                     value="Full Time"
-                    onchange="applyFilters()" />
+                    onchange="applyFilters()"
+                  />
                   Full Time</label
                 >
                 <label
                   ><input
                     type="checkbox"
                     value="Part Time"
-                    onchange="applyFilters()" />
+                    onchange="applyFilters()"
+                  />
                   Part Time</label
                 >
                 <label
                   ><input
                     type="checkbox"
                     value="Rotational"
-                    onchange="applyFilters()" />
+                    onchange="applyFilters()"
+                  />
                   Rotational</label
                 >
                 <label
                   ><input
                     type="checkbox"
                     value="Remote"
-                    onchange="applyFilters()" />
+                    onchange="applyFilters()"
+                  />
                   Remote</label
                 >
               </div>
@@ -131,12 +141,14 @@
                 class="slider"
                 id="salary-range"
                 oninput="
-                  updateSalaryLabel(this.value);
-                  applyFilters();
-                " />
+                  updateSalaryLabel(this.value)
+                  applyFilters()
+                "
+              />
               <div
                 class="range-value"
-                style="color: var(--text-muted); margin-top: 5px">
+                style="color: var(--text-muted); margin-top: 5px"
+              >
                 Min:
                 <span id="salary-val" style="color: var(--primary-color)"
                   >0</span
@@ -236,13 +248,15 @@
               cursor: pointer;
               border-radius: 6px;
               font-weight: bold;
-            ">
+            "
+          >
             <i class="fas fa-link"></i> Copy Link
           </button>
           <button
             class="btn-primary full-width"
             onclick="applyForJob()"
-            style="flex: 2">
+            style="flex: 2"
+          >
             Apply Now
           </button>
         </div>
@@ -260,67 +274,65 @@
     <script src="js/script.js"></script>
     <script>
       // Variable to track the currently opened job modal's ID
-      let currentShareJobId = null;
+      let currentShareJobId = null
 
       // Function to generate and copy the direct link for WhatsApp / sharing
       function copyJobLink() {
-        if (!currentShareJobId) return;
+        if (!currentShareJobId) return
         const url =
           window.location.origin +
           window.location.pathname +
-          "?jobId=" +
-          currentShareJobId;
+          '?jobId=' +
+          currentShareJobId
         navigator.clipboard
           .writeText(url)
           .then(() => {
-            alert(
-              "Job link copied! You can now share it directly on WhatsApp.",
-            );
+            alert('Job link copied! You can now share it directly on WhatsApp.')
           })
           .catch((err) => {
-            console.error("Clipboard copy failed", err);
-          });
+            console.error('Clipboard copy failed', err)
+          })
       }
 
       // Run logic to handle auto-opening the job modal if jobId is in URL
-      document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           // Intercept openJobModal to record the job ID being viewed
-          if (typeof window.openJobModal === "function") {
-            const originalOpenJobModal = window.openJobModal;
+          if (typeof window.openJobModal === 'function') {
+            const originalOpenJobModal = window.openJobModal
             window.openJobModal = function () {
               if (arguments.length > 0) {
-                let arg = arguments[0];
-                currentShareJobId = typeof arg === "object" ? arg.id : arg;
+                let arg = arguments[0]
+                currentShareJobId = typeof arg === 'object' ? arg.id : arg
               }
-              originalOpenJobModal.apply(this, arguments);
-            };
+              originalOpenJobModal.apply(this, arguments)
+            }
           }
 
           // Check URL for deep linking
-          const urlParams = new URLSearchParams(window.location.search);
-          const jobId = urlParams.get("jobId");
+          const urlParams = new URLSearchParams(window.location.search)
+          const jobId = urlParams.get('jobId')
 
           if (jobId) {
             const checkInterval = setInterval(() => {
               const jobCards = document.querySelectorAll(
-                '[onclick*="openJobModal"]',
-              );
+                '[onclick*="openJobModal"]'
+              )
               if (jobCards.length > 0) {
                 const targetCard = Array.from(jobCards).find((card) =>
-                  card.getAttribute("onclick").includes(jobId),
-                );
+                  card.getAttribute('onclick').includes(jobId)
+                )
                 if (targetCard) {
-                  targetCard.click();
+                  targetCard.click()
                 }
-                clearInterval(checkInterval);
+                clearInterval(checkInterval)
               }
-            }, 300);
+            }, 300)
 
-            setTimeout(() => clearInterval(checkInterval), 10000); // 10s timeout to avoid infinite polling
+            setTimeout(() => clearInterval(checkInterval), 10000) // 10s timeout to avoid infinite polling
           }
-        }, 500); // Wait for script.js functions to load
-      });
+        }, 500) // Wait for script.js functions to load
+      })
     </script>
   </body>
 </html>

@@ -9,7 +9,8 @@
     <link rel="stylesheet" href="css/dashboard.css" />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <style>
       .dashboard-header {
         background: var(--bg-card);
@@ -291,7 +292,8 @@
             color: var(--primary-color);
             font-weight: 600;
             margin-bottom: 10px;
-          "></p>
+          "
+        ></p>
         <button
           class="btn-copy-link"
           style="
@@ -302,8 +304,25 @@
             border-radius: 6px;
             cursor: pointer;
             transition: 0.2s;
-          ">
+          "
+        >
           <i class="fas fa-link"></i> Copy My Candidate Invite Link
+        </button>
+        <button
+          class="btn-copy-staff-link"
+          onclick="window.openInviteModal()"
+          style="
+            background: var(--bg-input);
+            color: #10b981;
+            border: 1px dashed #10b981;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-left: 10px;
+          "
+        >
+          <i class="fas fa-user-plus"></i> Copy Staff Invite Link
         </button>
       </div>
       <button class="btn-outline btn-logout" style="padding: 8px 15px">
@@ -311,7 +330,8 @@
       </button>
       <div
         id="workspace-switcher"
-        style="display: inline-flex; gap: 10px; margin-right: 15px"></div>
+        style="display: inline-flex; gap: 10px; margin-right: 15px"
+      ></div>
     </div>
 
     <div class="container">
@@ -319,14 +339,16 @@
         <div class="kpi-box">
           <i
             class="fas fa-users"
-            style="font-size: 1.5rem; color: var(--text-muted)"></i>
+            style="font-size: 1.5rem; color: var(--text-muted)"
+          ></i>
           <div class="kpi-value" id="kpi-total">0</div>
           <div class="kpi-label">Total Candidates</div>
         </div>
         <div class="kpi-box">
           <i
             class="fas fa-check-circle"
-            style="font-size: 1.5rem; color: #10b981"></i>
+            style="font-size: 1.5rem; color: #10b981"
+          ></i>
           <div class="kpi-value" id="kpi-accepted" style="color: #10b981">
             0
           </div>
@@ -335,7 +357,8 @@
         <div class="kpi-box">
           <i
             class="fas fa-times-circle"
-            style="font-size: 1.5rem; color: #ef4444"></i>
+            style="font-size: 1.5rem; color: #ef4444"
+          ></i>
           <div class="kpi-value" id="kpi-rejected" style="color: #ef4444">
             0
           </div>
@@ -355,13 +378,15 @@
           display: none;
           border: 1px solid #f59e0b;
           background: rgba(245, 158, 11, 0.05);
-        ">
+        "
+      >
         <h3 style="margin-bottom: 20px; color: #f59e0b">
           <i class="fas fa-bell"></i> Action Required: Pending Staff Approvals
         </h3>
         <div style="overflow-x: auto">
           <table
-            style="width: 100%; text-align: left; border-collapse: collapse">
+            style="width: 100%; text-align: left; border-collapse: collapse"
+          >
             <thead>
               <tr style="border-bottom: 1px solid var(--border-color)">
                 <th style="padding: 10px">Name</th>
@@ -378,25 +403,29 @@
       <div
         class="leaderboard-card"
         id="staff-directory-section"
-        style="display: none">
+        style="display: none"
+      >
         <h3
           style="
             margin-bottom: 20px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
-          ">
+          "
+        >
           <i class="fas fa-user-cog" style="color: var(--primary-color)"></i>
           Staff Directory & Promotions
         </h3>
         <div style="overflow-x: auto">
           <table
-            style="width: 100%; text-align: left; border-collapse: collapse">
+            style="width: 100%; text-align: left; border-collapse: collapse"
+          >
             <thead>
               <tr
                 style="
                   border-bottom: 1px solid var(--border-color);
                   color: var(--text-muted);
-                ">
+                "
+              >
                 <th style="padding: 10px">Staff Member</th>
                 <th style="padding: 10px">Current Role</th>
                 <th style="padding: 10px">Placement</th>
@@ -420,7 +449,8 @@
             margin-bottom: 20px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
-          ">
+          "
+        >
           <i class="fas fa-trophy" style="color: var(--primary-color)"></i>
           Performance Leaderboard
         </h3>
@@ -435,19 +465,22 @@
             margin-bottom: 20px;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
-          ">
+          "
+        >
           <i class="fas fa-users" style="color: var(--primary-color)"></i>
           Candidate Pipeline
         </h3>
         <div style="overflow-x: auto">
           <table
-            style="width: 100%; text-align: left; border-collapse: collapse">
+            style="width: 100%; text-align: left; border-collapse: collapse"
+          >
             <thead>
               <tr
                 style="
                   border-bottom: 1px solid var(--border-color);
                   color: var(--text-muted);
-                ">
+                "
+              >
                 <th style="padding: 10px">Candidate Name</th>
                 <th style="padding: 10px">Hierarchy Lineage</th>
                 <th style="padding: 10px">Status</th>
@@ -479,10 +512,12 @@
             font-weight: 600;
             display: block;
             margin-bottom: 8px;
-          ">
+          "
+        >
           <i
             class="fas fa-briefcase"
-            style="color: var(--primary-color); margin-right: 5px"></i>
+            style="color: var(--primary-color); margin-right: 5px"
+          ></i>
           Target Job Offer
         </label>
         <select id="modalJob" required onchange="updateModalSlots()">
@@ -496,10 +531,12 @@
             font-weight: 600;
             display: block;
             margin-bottom: 8px;
-          ">
+          "
+        >
           <i
             class="fas fa-calendar-check"
-            style="color: var(--primary-color); margin-right: 5px"></i>
+            style="color: var(--primary-color); margin-right: 5px"
+          ></i>
           Available HR Slots
         </label>
         <select id="modalSlot" required>
@@ -514,10 +551,12 @@
             display: block;
             margin-bottom: 8px;
             margin-top: 15px;
-          ">
+          "
+        >
           <i
             class="fas fa-file-signature"
-            style="color: var(--primary-color); margin-right: 5px"></i>
+            style="color: var(--primary-color); margin-right: 5px"
+          ></i>
           Candidate Panel Summary
         </label>
         <textarea
@@ -525,11 +564,8 @@
           rows="4"
           placeholder="Write candidate strengths, QA notes, and profile highlights for the client..."
           required
-          style="
-            resize: vertical;
-            min-height: 100px;
-            line-height: 1.5;
-          "></textarea>
+          style="resize: vertical; min-height: 100px; line-height: 1.5"
+        ></textarea>
 
         <button type="button" class="btn-schedule btn-submit-schedule">
           Confirm Slot & Save Panel
@@ -537,7 +573,8 @@
         <button
           type="button"
           class="btn-cancel btn-close"
-          data-modal="scheduleModal">
+          data-modal="scheduleModal"
+        >
           Cancel
         </button>
       </div>
@@ -556,7 +593,8 @@
             font-weight: bold;
             margin-bottom: 15px;
             color: var(--primary-color);
-          "></p>
+          "
+        ></p>
 
         <div
           id="validator-scopes-group"
@@ -567,7 +605,8 @@
             padding: 15px;
             border-radius: 8px;
             border: 1px dashed var(--primary-color);
-          ">
+          "
+        >
           <label
             style="
               font-size: 0.85rem;
@@ -581,7 +620,8 @@
           >
           <div
             id="validatorScopesCheckboxes"
-            style="display: flex; flex-wrap: wrap; gap: 10px"></div>
+            style="display: flex; flex-wrap: wrap; gap: 10px"
+          ></div>
         </div>
 
         <label style="font-size: 0.85rem; color: var(--text-muted)"
@@ -592,6 +632,10 @@
           <label id="role-opt-ceo">
             <input type="checkbox" class="role-cb" value="CEO" />
             <div class="role-card"><i class="fas fa-crown"></i> CEO</div>
+          </label>
+          <label id="role-opt-top">
+            <input type="checkbox" class="role-cb" value="TopManagement" />
+            <div class="role-card"><i class="fas fa-star"></i> Top Mgmt</div>
           </label>
           <label id="role-opt-hr">
             <input type="checkbox" class="role-cb" value="HR" />
@@ -628,7 +672,8 @@
           type="text"
           id="editStaffUnit"
           placeholder="Type or click a suggestion below..."
-          autocomplete="off" />
+          autocomplete="off"
+        />
         <div id="unitSuggestions" class="suggestion-pills"></div>
 
         <label style="font-size: 0.85rem; color: var(--text-muted)"
@@ -638,19 +683,50 @@
           type="text"
           id="editStaffTeam"
           placeholder="Type or click a suggestion below..."
-          autocomplete="off" />
+          autocomplete="off"
+        />
         <div id="teamSuggestions" class="suggestion-pills"></div>
 
         <button
           type="button"
           class="btn-schedule btn-submit-promote"
-          style="background: var(--primary-color); color: black">
+          style="background: var(--primary-color); color: black"
+        >
           Save Changes
         </button>
         <button
           type="button"
           class="btn-cancel btn-close"
-          data-modal="promoteModal">
+          data-modal="promoteModal"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="inviteStaffModal">
+      <div class="modal-card">
+        <h3 style="margin-bottom: 15px">
+          <i class="fas fa-user-plus" style="color: #10b981"></i> Generate Staff
+          Invite Link
+        </h3>
+        <label style="font-size: 0.85rem; color: var(--text-muted)"
+          >Select Role to Invite</label
+        >
+        <select id="inviteRoleSelect"></select>
+        <button
+          type="button"
+          class="btn-schedule"
+          onclick="generateAndCopyInvite()"
+          style="margin-top: 15px; background: #10b981"
+        >
+          Copy Invite Link
+        </button>
+        <button
+          type="button"
+          class="btn-cancel btn-close"
+          data-modal="inviteStaffModal"
+        >
           Cancel
         </button>
       </div>
@@ -661,7 +737,8 @@
         <h3 style="margin-bottom: 15px">
           <i
             class="fas fa-file-invoice"
-            style="color: var(--primary-color)"></i>
+            style="color: var(--primary-color)"
+          ></i>
           Candidate Details
         </h3>
         <div
@@ -677,7 +754,8 @@
             max-height: 50vh;
             overflow-y: auto;
             color: white;
-          "></div>
+          "
+        ></div>
         <button
           type="button"
           class="btn-cancel btn-close"
@@ -687,7 +765,8 @@
             padding: 10px;
             border-radius: 6px;
             margin-top: 20px;
-          ">
+          "
+        >
           Close Panel
         </button>
       </div>
@@ -695,118 +774,124 @@
 
     <script>
       // --- 1. GLOBAL VARIABLES ---
-      let allCandidates = [];
-      let allStaff = [];
-      let globalJobsData = [];
-      let currentAgencySlots = [];
+      let allCandidates = []
+      let allStaff = []
+      let globalJobsData = []
+      let currentAgencySlots = []
 
-      const userStr = localStorage.getItem("user");
-      if (!userStr) window.location.href = "login.html";
-      const user = JSON.parse(userStr);
-      if (user.role === "Candidate") window.location.href = "login.html";
+      const userStr = localStorage.getItem('user')
+      if (!userStr) window.location.href = 'login.html'
+      const user = JSON.parse(userStr)
+      if (user.role === 'Candidate') window.location.href = 'login.html'
 
-      const userRole = user.role || "";
-      const isCEO = userRole.includes("CEO");
-      const isUM = userRole.includes("UnitManager");
-      const isLeader = userRole.includes("Leader");
-      const isRecruiterOnly = !isCEO && !isUM && !isLeader;
+      const userRole = user.role || ''
+      const isCEO = userRole.includes('CEO')
+      const isTopManagement = userRole.includes('TopManagement')
+      const isAgencyAdmin = isCEO || isTopManagement
+      const isUM = userRole.includes('UnitManager')
+      const isLeader = userRole.includes('Leader')
+      const isRecruiterOnly = !isAgencyAdmin && !isUM && !isLeader
 
-      document.getElementById("dashboardTitle").innerText = isCEO
-        ? "Agency Command Center"
+      document.getElementById('dashboardTitle').innerText = isAgencyAdmin
+        ? 'Agency Command Center'
         : isUM
-          ? "Unit Workspace"
+          ? 'Unit Workspace'
           : isLeader
-            ? "Team Workspace"
-            : "My Recruitment Dashboard";
+            ? 'Team Workspace'
+            : 'My Recruitment Dashboard'
 
-      let roleString = `${userRole} | ${user.agencyName}`;
-      if (user.unitName) roleString += ` | ${user.unitName}`;
-      if (user.teamName) roleString += ` | ${user.teamName}`;
-      document.getElementById("roleBadge").innerText = roleString;
+      let roleString = `${userRole} | ${user.agencyName}`
+      if (user.unitName) roleString += ` | ${user.unitName}`
+      if (user.teamName) roleString += ` | ${user.teamName}`
+      document.getElementById('roleBadge').innerText = roleString
 
       if (isRecruiterOnly)
-        document.getElementById("leaderboard-container").style.display = "none";
+        document.getElementById('leaderboard-container').style.display = 'none'
       if (isCEO || isUM)
-        document.getElementById("staff-directory-section").style.display =
-          "block";
+        document.getElementById('staff-directory-section').style.display =
+          'block'
 
       window.onload = async () => {
-        const userRoles = (user.role || "").split(",").map((r) => r.trim());
-        const switcher = document.getElementById("workspace-switcher");
+        const userRoles = (user.role || '').split(',').map((r) => r.trim())
+        const switcher = document.getElementById('workspace-switcher')
 
         if (userRoles.length > 1) {
           if (
-            userRoles.includes("Validator") &&
-            !window.location.pathname.includes("validator.html")
+            userRoles.includes('Validator') &&
+            !window.location.pathname.includes('validator.html')
           ) {
-            switcher.innerHTML += `<button onclick="window.location.href='validator.html'" class="btn-outline"><i class="fas fa-check-double"></i> Validator Desk</button>`;
+            switcher.innerHTML += `<button onclick="window.location.href='validator.html'" class="btn-outline"><i class="fas fa-check-double"></i> Validator Desk</button>`
           }
           if (
-            (userRoles.includes("Leader") ||
-              userRoles.includes("UnitManager") ||
-              userRoles.includes("CEO")) &&
-            !window.location.pathname.includes("agency-dashboard.html")
+            (userRoles.includes('Leader') ||
+              userRoles.includes('UnitManager') ||
+              userRoles.includes('CEO')) &&
+            !window.location.pathname.includes('agency-dashboard.html')
           ) {
-            switcher.innerHTML += `<button onclick="window.location.href='agency-dashboard.html'" class="btn-outline"><i class="fas fa-users"></i> Agency Desk</button>`;
+            switcher.innerHTML += `<button onclick="window.location.href='agency-dashboard.html'" class="btn-outline"><i class="fas fa-users"></i> Agency Desk</button>`
           }
-          if (userRoles.includes("HR")) {
-            switcher.innerHTML += `<button onclick="window.location.href='hr-dashboard.html'" class="btn-outline"><i class="fas fa-briefcase"></i> HR Desk</button>`;
+          if (userRoles.includes('HR')) {
+            switcher.innerHTML += `<button onclick="window.location.href='hr-dashboard.html'" class="btn-outline"><i class="fas fa-briefcase"></i> HR Desk</button>`
           }
         }
-        
-        try {
-          const jRes = await fetch("https://voxa-pi-three.vercel.app/api/admin/jobs");
-          globalJobsData = await jRes.json();
-        } catch(e) { console.error("Could not load jobs", e); }
 
-        await fetchCandidates();
+        try {
+          const jRes = await fetch(
+            'https://voxa-pi-three.vercel.app/api/admin/jobs'
+          )
+          globalJobsData = await jRes.json()
+        } catch (e) {
+          console.error('Could not load jobs', e)
+        }
+
+        await fetchCandidates()
         if (!isRecruiterOnly) {
-          await fetchPendingStaff();
-          await fetchLeaderboard();
+          await fetchPendingStaff()
+          await fetchLeaderboard()
         }
-        if (isCEO || isUM) {
-          await fetchStaffDirectory();
+        if (isAgencyAdmin || isUM) {
+          await fetchStaffDirectory()
         }
-      };
+      }
 
       // --- 🚀 NEW: SMART SUGGESTION PILLS GENERATOR ---
       function populateStructureDropdowns() {
-        const units = new Set();
-        const teams = new Set();
+        const units = new Set()
+        const teams = new Set()
 
         allStaff.forEach((s) => {
-          if (s.unit && s.unit.trim() !== "" && s.unit !== "None")
-            units.add(s.unit.trim());
-          if (s.team && s.team.trim() !== "" && s.team !== "None")
-            teams.add(s.team.trim());
-        });
+          if (s.unit && s.unit.trim() !== '' && s.unit !== 'None')
+            units.add(s.unit.trim())
+          if (s.team && s.team.trim() !== '' && s.team !== 'None')
+            teams.add(s.team.trim())
+        })
 
-        const unitList = document.getElementById("unitSuggestions");
-        const teamList = document.getElementById("teamSuggestions");
+        const unitList = document.getElementById('unitSuggestions')
+        const teamList = document.getElementById('teamSuggestions')
 
         // Generate clickable pills that instantly populate the target input field when clicked
         if (unitList) {
           unitList.innerHTML = Array.from(units)
             .map(
               (u) =>
-                `<span class="suggestion-pill" data-target="editStaffUnit">${u}</span>`,
+                `<span class="suggestion-pill" data-target="editStaffUnit">${u}</span>`
             )
-            .join("");
+            .join('')
         }
         if (teamList) {
           teamList.innerHTML = Array.from(teams)
             .map(
               (t) =>
-                `<span class="suggestion-pill" data-target="editStaffTeam">${t}</span>`,
+                `<span class="suggestion-pill" data-target="editStaffTeam">${t}</span>`
             )
-            .join("");
+            .join('')
         }
       }
 
       // --- THE FIX: FORCING VISIBILITY ---
       function forceShowModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (!modal) return;
+        const modal = document.getElementById(modalId)
+        if (!modal) return
         modal.style.cssText = `
               display: flex !important;
               position: fixed !important;
@@ -821,161 +906,158 @@
               opacity: 1 !important;
               visibility: visible !important;
               pointer-events: auto !important;
-          `;
+          `
       }
 
       function forceHideModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) modal.style.cssText = "display: none !important;";
+        const modal = document.getElementById(modalId)
+        if (modal) modal.style.cssText = 'display: none !important;'
       }
 
       // --- BULLETPROOF EVENT DELEGATION ---
-      document.addEventListener("click", function (e) {
+      document.addEventListener('click', function (e) {
         // Check for Button clicks
-        const targetBtn = e.target.closest("button");
+        const targetBtn = e.target.closest('button')
         if (targetBtn) {
-          if (targetBtn.classList.contains("btn-details")) {
-            e.preventDefault();
-            window.openViewPanel(targetBtn.getAttribute("data-id"));
-            return;
-          } else if (targetBtn.classList.contains("btn-schedule-call")) {
-            e.preventDefault();
+          if (targetBtn.classList.contains('btn-details')) {
+            e.preventDefault()
+            window.openViewPanel(targetBtn.getAttribute('data-id'))
+            return
+          } else if (targetBtn.classList.contains('btn-schedule-call')) {
+            e.preventDefault()
             window.openScheduleModal(
-              targetBtn.getAttribute("data-id"),
-              targetBtn.getAttribute("data-job"),
-            );
-            return;
-          } else if (targetBtn.classList.contains("btn-promote")) {
-            e.preventDefault();
-            window.openPromoteModal(targetBtn.getAttribute("data-id"));
-            return;
-          } else if (targetBtn.classList.contains("btn-close")) {
-            e.preventDefault();
-            forceHideModal(targetBtn.getAttribute("data-modal"));
-            return;
-          } else if (targetBtn.classList.contains("btn-submit-promote")) {
-            e.preventDefault();
-            window.submitPromotion();
-            return;
-          } else if (targetBtn.classList.contains("btn-submit-schedule")) {
-            e.preventDefault();
-            window.submitSchedule();
-            return;
-          } else if (targetBtn.classList.contains("btn-approve")) {
-            e.preventDefault();
-            window.processApproval(
-              targetBtn.getAttribute("data-id"),
-              "approve",
-            );
-            return;
-          } else if (targetBtn.classList.contains("btn-reject")) {
-            e.preventDefault();
-            window.processApproval(targetBtn.getAttribute("data-id"), "reject");
-            return;
-          } else if (targetBtn.classList.contains("btn-copy-link")) {
-            e.preventDefault();
-            window.copyReferralLink();
-            return;
-          } else if (targetBtn.classList.contains("btn-logout")) {
-            e.preventDefault();
-            window.logout();
-            return;
+              targetBtn.getAttribute('data-id'),
+              targetBtn.getAttribute('data-job')
+            )
+            return
+          } else if (targetBtn.classList.contains('btn-promote')) {
+            e.preventDefault()
+            window.openPromoteModal(targetBtn.getAttribute('data-id'))
+            return
+          } else if (targetBtn.classList.contains('btn-close')) {
+            e.preventDefault()
+            forceHideModal(targetBtn.getAttribute('data-modal'))
+            return
+          } else if (targetBtn.classList.contains('btn-submit-promote')) {
+            e.preventDefault()
+            window.submitPromotion()
+            return
+          } else if (targetBtn.classList.contains('btn-submit-schedule')) {
+            e.preventDefault()
+            window.submitSchedule()
+            return
+          } else if (targetBtn.classList.contains('btn-approve')) {
+            e.preventDefault()
+            window.processApproval(targetBtn.getAttribute('data-id'), 'approve')
+            return
+          } else if (targetBtn.classList.contains('btn-reject')) {
+            e.preventDefault()
+            window.processApproval(targetBtn.getAttribute('data-id'), 'reject')
+            return
+          } else if (targetBtn.classList.contains('btn-copy-link')) {
+            e.preventDefault()
+            window.copyReferralLink()
+            return
+          } else if (targetBtn.classList.contains('btn-logout')) {
+            e.preventDefault()
+            window.logout()
+            return
           }
         }
 
         // Check for Clickable Smart Pills
-        if (e.target.classList.contains("suggestion-pill")) {
-          e.preventDefault();
-          const targetInputId = e.target.getAttribute("data-target");
+        if (e.target.classList.contains('suggestion-pill')) {
+          e.preventDefault()
+          const targetInputId = e.target.getAttribute('data-target')
           if (targetInputId) {
-            document.getElementById(targetInputId).value = e.target.innerText;
+            document.getElementById(targetInputId).value = e.target.innerText
           }
         }
-      });
+      })
 
       // Global Change Listener for Validator Role Checkbox
-      document.addEventListener("change", function (e) {
+      document.addEventListener('change', function (e) {
         if (
-          e.target.classList.contains("role-cb") &&
-          e.target.value === "Validator"
+          e.target.classList.contains('role-cb') &&
+          e.target.value === 'Validator'
         ) {
-          const scopeGroup = document.getElementById("validator-scopes-group");
+          const scopeGroup = document.getElementById('validator-scopes-group')
           if (scopeGroup)
-            scopeGroup.style.display = e.target.checked ? "block" : "none";
+            scopeGroup.style.display = e.target.checked ? 'block' : 'none'
         }
-      });
+      })
 
       // --- DATA FETCHING ---
       async function fetchCandidates() {
         try {
           const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/admin/applications?email=${user.email}`,
-          );
-          allCandidates = await res.json();
-          const tbody = document.getElementById("candidateTableBody");
-          tbody.innerHTML = "";
+            `https://voxa-pi-three.vercel.app/api/admin/applications?email=${user.email}`
+          )
+          allCandidates = await res.json()
+          const tbody = document.getElementById('candidateTableBody')
+          tbody.innerHTML = ''
 
           let countAccepted = 0,
             countRejected = 0,
-            countPending = 0;
+            countPending = 0
           if (allCandidates.length === 0)
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-muted);">No candidates generated yet.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-muted);">No candidates generated yet.</td></tr>`
 
           allCandidates.forEach((app) => {
-            const safeAppId = app.ApplicationID || app.id || "0";
+            const safeAppId = app.ApplicationID || app.id || '0'
             let status =
               app.Status ||
-              (app.AI_Rating && app.AI_Rating !== "null"
-                ? "Analyzed"
-                : "In Review");
+              (app.AI_Rating && app.AI_Rating !== 'null'
+                ? 'Analyzed'
+                : 'In Review')
 
-            if (status === "Accepted") countAccepted++;
-            else if (status === "Rejected") countRejected++;
-            else countPending++;
-            let badgeClass = "status-pending";
-            if (status === "Accepted") badgeClass = "status-accepted";
-            if (status === "Rejected") badgeClass = "status-rejected";
+            if (status === 'Accepted') countAccepted++
+            else if (status === 'Rejected') countRejected++
+            else countPending++
+            let badgeClass = 'status-pending'
+            if (status === 'Accepted') badgeClass = 'status-accepted'
+            if (status === 'Rejected') badgeClass = 'status-rejected'
 
             // Generate QA Grade Badge
-            let qaBadgeHtml = "";
+            let qaBadgeHtml = ''
             if (app.AgencyGrade) {
               let gradeColor =
-                app.AgencyGrade === "Failed" ? "#ef4444" : "#8b5cf6";
+                app.AgencyGrade === 'Failed' ? '#ef4444' : '#8b5cf6'
               let gradeBg =
-                app.AgencyGrade === "Failed"
-                  ? "rgba(239, 68, 68, 0.1)"
-                  : "rgba(139, 92, 246, 0.1)";
-              qaBadgeHtml = `<div style="margin-top: 8px;"><span style="background: ${gradeBg}; color: ${gradeColor}; border: 1px solid ${gradeColor}; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;"><i class="fas fa-check-double"></i> QA: ${app.AgencyGrade}</span></div>`;
+                app.AgencyGrade === 'Failed'
+                  ? 'rgba(239, 68, 68, 0.1)'
+                  : 'rgba(139, 92, 246, 0.1)'
+              qaBadgeHtml = `<div style="margin-top: 8px;"><span style="background: ${gradeBg}; color: ${gradeColor}; border: 1px solid ${gradeColor}; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;"><i class="fas fa-check-double"></i> QA: ${app.AgencyGrade}</span></div>`
             } else {
-              qaBadgeHtml = `<div style="margin-top: 8px;"><span style="background: rgba(107, 114, 128, 0.1); color: #9ca3af; border: 1px dashed #9ca3af; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem;"><i class="fas fa-hourglass-half"></i> QA: Pending</span></div>`;
+              qaBadgeHtml = `<div style="margin-top: 8px;"><span style="background: rgba(107, 114, 128, 0.1); color: #9ca3af; border: 1px dashed #9ca3af; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem;"><i class="fas fa-hourglass-half"></i> QA: Pending</span></div>`
             }
 
             let scheduleText = app.InterviewDate
               ? `<span style="color:var(--primary-color); font-weight:bold;">${app.InterviewDate} @ ${app.InterviewTime}</span>`
-              : "<span style='color:var(--text-muted);'>Not Scheduled</span>";
+              : "<span style='color:var(--text-muted);'>Not Scheduled</span>"
 
-            let lineageHtml = "";
+            let lineageHtml = ''
             if (app.RecruiterUnit)
-              lineageHtml += `<span class="lineage-tag"><i class="fas fa-building"></i> ${app.RecruiterUnit}</span>`;
+              lineageHtml += `<span class="lineage-tag"><i class="fas fa-building"></i> ${app.RecruiterUnit}</span>`
             if (app.RecruiterTeam)
-              lineageHtml += `<span class="lineage-tag"><i class="fas fa-users"></i> ${app.RecruiterTeam}</span>`;
+              lineageHtml += `<span class="lineage-tag"><i class="fas fa-users"></i> ${app.RecruiterTeam}</span>`
 
-            let actionBtn = "";
-            if (!app.InterviewDate && (isLeader || isUM || isCEO)) {
-              actionBtn += `<button type="button" class="btn-action-schedule btn-schedule-call" data-id="${safeAppId}" data-job="${app.JobTitle}">Schedule Interview</button> `;
+            let actionBtn = ''
+            if (!app.InterviewDate && (isLeader || isUM || isAgencyAdmin)) {
+              actionBtn += `<button type="button" class="btn-action-schedule btn-schedule-call" data-id="${safeAppId}" data-job="${app.JobTitle}">Schedule Interview</button> `
             } else if (app.InterviewLink) {
-              actionBtn += `<a href="${app.InterviewLink}" target="_blank" style="background:#10b981; color:white; padding:5px 12px; border-radius:4px; font-size: 0.8rem; font-weight:bold; text-decoration:none; margin-right: 5px;">Join Call</a> `;
+              actionBtn += `<a href="${app.InterviewLink}" target="_blank" style="background:#10b981; color:white; padding:5px 12px; border-radius:4px; font-size: 0.8rem; font-weight:bold; text-decoration:none; margin-right: 5px;">Join Call</a> `
             }
-            actionBtn += `<button type="button" class="btn-action-details btn-details" data-id="${safeAppId}"><i class="fas fa-eye"></i> Details</button>`;
+            actionBtn += `<button type="button" class="btn-action-details btn-details" data-id="${safeAppId}"><i class="fas fa-eye"></i> Details</button>`
 
             tbody.innerHTML += `
               <tr style="border-bottom: 1px solid var(--border-color);">
                   <td style="padding: 15px 10px;">
                     <div style="font-weight:bold; color:var(--text-main);">${app.FullName}</div>
-                    <div style="font-size:0.8rem; color:var(--text-muted);"><span style="color: var(--primary-color); font-weight: 500;">${app.Company || "N/A"}</span> &bull; ${app.JobTitle}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);"><span style="color: var(--primary-color); font-weight: 500;">${app.Company || 'N/A'}</span> &bull; ${app.JobTitle}</div>
                   </td>
                   <td style="padding: 15px 10px;">
-                    <div style="color: var(--primary-color); font-weight: 500;">${app.RecruiterSource || "Direct/Organic"}</div>
+                    <div style="color: var(--primary-color); font-weight: 500;">${app.RecruiterSource || 'Direct/Organic'}</div>
                     ${lineageHtml}
                   </td>
                   <td style="padding: 15px 10px;">
@@ -984,397 +1066,447 @@
                   </td>
                   <td style="padding: 15px 10px; font-size: 0.9rem;">${scheduleText}</td>
                   <td style="padding: 15px 10px;">${actionBtn}</td>
-              </tr>`;
-          });
+              </tr>`
+          })
 
-          document.getElementById("kpi-total").innerText = allCandidates.length;
-          document.getElementById("kpi-accepted").innerText = countAccepted;
-          document.getElementById("kpi-rejected").innerText = countRejected;
-          document.getElementById("kpi-pending").innerText = countPending;
+          document.getElementById('kpi-total').innerText = allCandidates.length
+          document.getElementById('kpi-accepted').innerText = countAccepted
+          document.getElementById('kpi-rejected').innerText = countRejected
+          document.getElementById('kpi-pending').innerText = countPending
         } catch (e) {
-          console.error(e);
+          console.error(e)
         }
       }
 
       async function fetchLeaderboard() {
         try {
           const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/team-stats?role=${userRole}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`,
-          );
-          const stats = await res.json();
-          const container = document.getElementById("leaderboardContent");
+            `https://voxa-pi-three.vercel.app/api/team-stats?role=${userRole}&agency=${user.agencyName}&unit=${user.unitName || ''}&team=${user.teamName || ''}`
+          )
+          const stats = await res.json()
+          const container = document.getElementById('leaderboardContent')
           if (stats.length === 0)
-            return (container.innerHTML = `<p style="color: var(--text-muted);">No candidates recruited yet.</p>`);
-          const maxCount = Math.max(...stats.map((s) => s.count));
+            return (container.innerHTML = `<p style="color: var(--text-muted);">No candidates recruited yet.</p>`)
+          const maxCount = Math.max(...stats.map((s) => s.count))
           container.innerHTML = stats
             .map(
               (stat) => `
               <div class="leader-row">
-                  <div class="leader-name">${stat.recruiter || "Direct/Organic"}</div>
+                  <div class="leader-name">${stat.recruiter || 'Direct/Organic'}</div>
                   <div class="leader-bar-container"><div class="leader-bar" style="width: ${(stat.count / maxCount) * 100}%;"></div></div>
                   <div class="leader-score">${stat.count}</div>
-              </div>`,
+              </div>`
             )
-            .join("");
+            .join('')
         } catch (e) {
-          console.error(e);
+          console.error(e)
         }
       }
 
       async function fetchPendingStaff() {
         try {
           const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/pending-staff?role=${userRole}&agency=${user.agencyName}&unit=${user.unitName || ""}&team=${user.teamName || ""}`,
-          );
-          const pendingUsers = await res.json();
-          const section = document.getElementById("approvals-section");
-          const tbody = document.getElementById("pendingTableBody");
-          if (pendingUsers.length === 0)
-            return (section.style.display = "none");
-          section.style.display = "block";
+            `https://voxa-pi-three.vercel.app/api/pending-staff?role=${userRole}&agency=${user.agencyName}&unit=${user.unitName || ''}&team=${user.teamName || ''}`
+          )
+          const pendingUsers = await res.json()
+          const section = document.getElementById('approvals-section')
+          const tbody = document.getElementById('pendingTableBody')
+          if (pendingUsers.length === 0) return (section.style.display = 'none')
+          section.style.display = 'block'
           tbody.innerHTML = pendingUsers
             .map((p) => {
-              let placement = p.unit || "Direct Report";
-              if (p.team) placement += ` / ${p.team}`;
-              return `<tr style="border-bottom: 1px solid var(--border-color);"><td style="padding: 12px 10px; font-weight: 500;">${p.name} <br><span style="font-size: 0.8rem; color: var(--text-muted);">${p.email}</span></td><td style="padding: 12px 10px; color: var(--primary-color);">${p.role}</td><td style="padding: 12px 10px; color: var(--text-muted);">${placement}</td><td style="padding: 12px 10px; display: flex; gap: 10px;"><button type="button" class="btn-approve" data-id="${p.id}" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-check"></i> Accept</button><button type="button" class="btn-reject" data-id="${p.id}" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-times"></i> Reject</button></td></tr>`;
+              let placement = p.unit || 'Direct Report'
+              if (p.team) placement += ` / ${p.team}`
+              return `<tr style="border-bottom: 1px solid var(--border-color);"><td style="padding: 12px 10px; font-weight: 500;">${p.name} <br><span style="font-size: 0.8rem; color: var(--text-muted);">${p.email}</span></td><td style="padding: 12px 10px; color: var(--primary-color);">${p.role}</td><td style="padding: 12px 10px; color: var(--text-muted);">${placement}</td><td style="padding: 12px 10px; display: flex; gap: 10px;"><button type="button" class="btn-approve" data-id="${p.id}" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-check"></i> Accept</button><button type="button" class="btn-reject" data-id="${p.id}" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;"><i class="fas fa-times"></i> Reject</button></td></tr>`
             })
-            .join("");
+            .join('')
         } catch (e) {
-          console.error(e);
+          console.error(e)
         }
       }
 
       async function fetchStaffDirectory() {
         try {
           const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/agency/staff?email=${user.email}`,
-          );
-          allStaff = await res.json();
+            `https://voxa-pi-three.vercel.app/api/agency/staff?email=${user.email}`
+          )
+          allStaff = await res.json()
 
           // GENERATE SMART PILLS
-          populateStructureDropdowns();
+          populateStructureDropdowns()
 
-          const tbody = document.getElementById("staffDirectoryBody");
+          const tbody = document.getElementById('staffDirectoryBody')
           if (allStaff.length === 0)
-            return (tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No staff found under your management.</td></tr>`);
+            return (tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No staff found under your management.</td></tr>`)
 
           tbody.innerHTML = allStaff
             .map((s) => {
-              const safeStaffId = s.id || "0";
-              let roleBadges = (s.role || "Pending Role")
-                .split(",")
+              const safeStaffId = s.id || '0'
+              let roleBadges = (s.role || 'Pending Role')
+                .split(',')
                 .map(
                   (r) =>
-                    `<span style="background:rgba(0, 229, 255, 0.1); color:var(--primary-color); padding:2px 6px; border-radius:4px; font-size:0.75rem; border:1px solid var(--primary-color); margin-right:4px; display:inline-block; margin-bottom:4px;">${r.trim()}</span>`,
+                    `<span style="background:rgba(0, 229, 255, 0.1); color:var(--primary-color); padding:2px 6px; border-radius:4px; font-size:0.75rem; border:1px solid var(--primary-color); margin-right:4px; display:inline-block; margin-bottom:4px;">${r.trim()}</span>`
                 )
-                .join("");
-              let placement = s.unit || "None";
-              if (s.team) placement += ` / ${s.team}`;
+                .join('')
+              let placement = s.unit || 'None'
+              if (s.team) placement += ` / ${s.team}`
 
               return `<tr style="border-bottom: 1px solid var(--border-color);">
                 <td style="padding: 12px 10px; font-weight: bold;">${s.name}<br><small style="color:var(--text-muted); font-weight:normal;">${s.email}</small></td>
                 <td style="padding: 12px 10px;">${roleBadges}</td>
                 <td style="padding: 12px 10px; font-size:0.85rem; color:var(--text-muted);">${placement}</td>
                 <td style="padding: 12px 10px;"><button type="button" class="btn-action-promote btn-promote" data-id="${safeStaffId}"><i class="fas fa-edit"></i> Edit / Promote</button></td>
-            </tr>`;
+            </tr>`
             })
-            .join("");
+            .join('')
         } catch (e) {
-          console.error(e);
+          console.error(e)
         }
       }
 
       // --- MODAL POPUP LOGIC ---
       function calculateAge(dobString) {
-        if (!dobString || dobString === "None" || dobString === "null")
-          return "N/A";
-        const dob = new Date(dobString);
-        if (isNaN(dob.getTime())) return "N/A";
+        if (!dobString || dobString === 'None' || dobString === 'null')
+          return 'N/A'
+        const dob = new Date(dobString)
+        if (isNaN(dob.getTime())) return 'N/A'
         return Math.abs(
-          new Date(Date.now() - dob.getTime()).getUTCFullYear() - 1970,
-        );
+          new Date(Date.now() - dob.getTime()).getUTCFullYear() - 1970
+        )
       }
 
       window.openViewPanel = function (appId) {
         const app = allCandidates.find(
-          (a) => String(a.ApplicationID || a.id) === String(appId),
-        );
+          (a) => String(a.ApplicationID || a.id) === String(appId)
+        )
         if (!app) {
-          alert("Candidate data not found locally.");
-          return;
+          alert('Candidate data not found locally.')
+          return
         }
-        const age = calculateAge(app.DateOfBirth);
+        const age = calculateAge(app.DateOfBirth)
         const aiSum =
-          app.ClientPanel || app.AI_Summary || "Pending AI Assessment...";
+          app.ClientPanel || app.AI_Summary || 'Pending AI Assessment...'
 
         // Fetch Validator Grade and Notes
-        const valGrade = app.AgencyGrade || "Pending QA Validation";
+        const valGrade = app.AgencyGrade || 'Pending QA Validation'
         const valNotes =
           app.ValidatorNotes ||
           app.ValidatorFeedback ||
-          "No notes provided yet.";
+          'No notes provided yet.'
 
-        document.getElementById("viewPanelContent").innerText =
-          `Candidate: ${app.FullName}\nEmail: ${app.Email}\nPhone: ${app.Phone}\nWhatsApp: ${app.WhatsApp || "N/A"}\nAge: ${age}\nLocation: ${app.Address || "N/A"}\n\n✅ OFFICIAL QA GRADE: ${valGrade}\n💬 QA Notes:\n${valNotes}\n\n🤖 AI Assessment:\n${aiSum}`;
+        document.getElementById('viewPanelContent').innerText =
+          `Candidate: ${app.FullName}\nEmail: ${app.Email}\nPhone: ${app.Phone}\nWhatsApp: ${app.WhatsApp || 'N/A'}\nAge: ${age}\nLocation: ${app.Address || 'N/A'}\n\n✅ OFFICIAL QA GRADE: ${valGrade}\n💬 QA Notes:\n${valNotes}\n\n🤖 AI Assessment:\n${aiSum}`
 
-        forceShowModal("viewPanelModal");
-      };
+        forceShowModal('viewPanelModal')
+      }
 
       window.openPromoteModal = function (staffId) {
-        const s = allStaff.find(
-          (staff) => String(staff.id) === String(staffId),
-        );
+        const s = allStaff.find((staff) => String(staff.id) === String(staffId))
         if (!s) {
-          alert("Staff data not found locally.");
-          return;
+          alert('Staff data not found locally.')
+          return
         }
 
         // 1. Set standard user text data
-        document.getElementById("editStaffId").value = s.id;
-        document.getElementById("editStaffName").innerText =
-          "Managing: " + s.name;
-        document.getElementById("editStaffUnit").value = s.unit || "";
-        document.getElementById("editStaffTeam").value = s.team || "";
+        document.getElementById('editStaffId').value = s.id
+        document.getElementById('editStaffName').innerText =
+          'Managing: ' + s.name
+        document.getElementById('editStaffUnit').value = s.unit || ''
+        document.getElementById('editStaffTeam').value = s.team || ''
 
         // 2. Clear all checkboxes first
-        const roleBoxes = document.querySelectorAll(".role-cb");
-        roleBoxes.forEach((cb) => (cb.checked = false));
+        const roleBoxes = document.querySelectorAll('.role-cb')
+        roleBoxes.forEach((cb) => (cb.checked = false))
 
         // Check the boxes the user currently has
-        const rolesArray = (s.role || "").split(",").map((r) => r.trim());
+        const rolesArray = (s.role || '').split(',').map((r) => r.trim())
         roleBoxes.forEach((cb) => {
-          if (rolesArray.includes(cb.value)) cb.checked = true;
-        });
+          if (rolesArray.includes(cb.value)) cb.checked = true
+        })
 
         // 🚀 Generate Dynamic Checkboxes for Validator Units
-        const units = new Set();
+        const units = new Set()
         allStaff.forEach((staff) => {
-          if (staff.unit && staff.unit.trim() !== "" && staff.unit !== "None")
-            units.add(staff.unit.trim());
-        });
-        units.add("Direct");
+          if (staff.unit && staff.unit.trim() !== '' && staff.unit !== 'None')
+            units.add(staff.unit.trim())
+        })
+        units.add('Direct')
 
-        const currentScopes = (s.scopes || "").split(",").map((x) => x.trim());
-        document.getElementById("validatorScopesCheckboxes").innerHTML =
+        const currentScopes = (s.scopes || '').split(',').map((x) => x.trim())
+        document.getElementById('validatorScopesCheckboxes').innerHTML =
           Array.from(units)
             .map(
               (u) => `
             <label style="display:flex; align-items:center; gap:5px; background:var(--bg-card); border: 1px solid var(--border-color); padding:6px 12px; border-radius:20px; font-size:0.85rem; cursor:pointer;">
-                <input type="checkbox" class="scope-cb" value="${u}" ${currentScopes.includes(u) ? "checked" : ""}> ${u}
+                <input type="checkbox" class="scope-cb" value="${u}" ${currentScopes.includes(u) ? 'checked' : ''}> ${u}
             </label>
-        `,
+        `
             )
-            .join("");
-        document.getElementById("validator-scopes-group").style.display =
-          rolesArray.includes("Validator") ? "block" : "none";
+            .join('')
+        document.getElementById('validator-scopes-group').style.display =
+          rolesArray.includes('Validator') ? 'block' : 'none'
 
         // 🚀 3. ENFORCE STRICT RBAC VISIBILITY RULES
-        // Only CEOs see the top 4 roles
-        const showTopRoles = isCEO ? "block" : "none";
-        document.getElementById("role-opt-ceo").style.display = showTopRoles;
-        document.getElementById("role-opt-hr").style.display = showTopRoles;
-        document.getElementById("role-opt-validator").style.display =
-          showTopRoles;
-        document.getElementById("role-opt-um").style.display = showTopRoles;
+        const showTopRoles = isAgencyAdmin ? 'block' : 'none'
+        document.getElementById('role-opt-ceo').style.display = isCEO
+          ? 'block'
+          : 'none'
+        document.getElementById('role-opt-top').style.display = isCEO
+          ? 'block'
+          : 'none'
+        document.getElementById('role-opt-hr').style.display = showTopRoles
+        document.getElementById('role-opt-validator').style.display =
+          showTopRoles
+        document.getElementById('role-opt-um').style.display = showTopRoles
 
         // CEOs and Unit Managers can see the Leader role
-        document.getElementById("role-opt-leader").style.display =
-          isCEO || isUM ? "block" : "none";
+        document.getElementById('role-opt-leader').style.display =
+          isAgencyAdmin || isUM ? 'block' : 'none'
 
         // CEOs, Unit Managers, and Leaders can all see the Recruiter role
-        document.getElementById("role-opt-recruiter").style.display =
-          isCEO || isUM || isLeader ? "block" : "none";
+        document.getElementById('role-opt-recruiter').style.display =
+          isAgencyAdmin || isUM || isLeader ? 'block' : 'none'
 
         // 4. Finally, show the modal
-        forceShowModal("promoteModal");
-      };
+        forceShowModal('promoteModal')
+      }
 
       window.openScheduleModal = async function (appId, targetJobTitle) {
-        document.getElementById("modalAppId").value = appId;
-        const jobSelect = document.getElementById("modalJob");
-        const slotSelect = document.getElementById("modalSlot");
+        document.getElementById('modalAppId').value = appId
+        const jobSelect = document.getElementById('modalJob')
+        const slotSelect = document.getElementById('modalSlot')
 
         jobSelect.innerHTML =
-          '<option value="" disabled selected>Loading jobs...</option>';
+          '<option value="" disabled selected>Loading jobs...</option>'
         slotSelect.innerHTML =
-          '<option value="" disabled selected>Select a job first...</option>';
-        document.getElementById("modalPanel").value = "";
+          '<option value="" disabled selected>Select a job first...</option>'
+        document.getElementById('modalPanel').value = ''
 
-        forceShowModal("scheduleModal");
+        forceShowModal('scheduleModal')
 
         try {
           const res = await fetch(
-            `https://voxa-pi-three.vercel.app/api/hr/slots`,
-          );
-          const allSlots = await res.json();
+            `https://voxa-pi-three.vercel.app/api/hr/slots`
+          )
+          const allSlots = await res.json()
 
           currentAgencySlots = allSlots.filter(
-            (s) => s.AgencyName === user.agencyName && s.Booked < s.Capacity,
-          );
+            (s) => s.AgencyName === user.agencyName && s.Booked < s.Capacity
+          )
 
           if (currentAgencySlots.length === 0) {
             jobSelect.innerHTML =
-              '<option value="" disabled selected>No slots available for your agency.</option>';
-            return;
+              '<option value="" disabled selected>No slots available for your agency.</option>'
+            return
           }
 
           const uniqueJobs = [
             ...new Set(currentAgencySlots.map((s) => s.JobTitle)),
-          ];
+          ]
 
           jobSelect.innerHTML =
-            '<option value="" disabled selected>Select Target Job Offer...</option>';
+            '<option value="" disabled selected>Select Target Job Offer...</option>'
           uniqueJobs.forEach((job) => {
-            const jobData = globalJobsData.find((j) => j.JobTitle === job);
+            const jobData = globalJobsData.find((j) => j.JobTitle === job)
             const companyName = jobData
               ? jobData.CompanyName
-              : "Unknown Company";
-            const displayTitle = `${companyName} - ${job}`;
+              : 'Unknown Company'
+            const displayTitle = `${companyName} - ${job}`
 
-            const isSelected = job === targetJobTitle ? "selected" : "";
-            jobSelect.innerHTML += `<option value="${job}" ${isSelected}>${displayTitle}</option>`;
-          });
+            const isSelected = job === targetJobTitle ? 'selected' : ''
+            jobSelect.innerHTML += `<option value="${job}" ${isSelected}>${displayTitle}</option>`
+          })
 
           if (uniqueJobs.includes(targetJobTitle)) {
-            jobSelect.value = targetJobTitle;
+            jobSelect.value = targetJobTitle
           }
-          window.updateModalSlots();
+          window.updateModalSlots()
         } catch (e) {
           jobSelect.innerHTML =
-            '<option value="" disabled selected>Error loading jobs.</option>';
+            '<option value="" disabled selected>Error loading jobs.</option>'
         }
-      };
+      }
 
       window.updateModalSlots = function () {
-        const selectedJob = document.getElementById("modalJob").value;
-        const slotSelect = document.getElementById("modalSlot");
+        const selectedJob = document.getElementById('modalJob').value
+        const slotSelect = document.getElementById('modalSlot')
 
         if (!selectedJob) {
           slotSelect.innerHTML =
-            '<option value="" disabled selected>Select a job first...</option>';
-          return;
+            '<option value="" disabled selected>Select a job first...</option>'
+          return
         }
 
         const relevantSlots = currentAgencySlots.filter(
-          (s) => s.JobTitle === selectedJob,
-        );
+          (s) => s.JobTitle === selectedJob
+        )
 
         if (relevantSlots.length === 0) {
           slotSelect.innerHTML =
-            '<option value="" disabled selected>No slots available for this job.</option>';
+            '<option value="" disabled selected>No slots available for this job.</option>'
         } else {
           slotSelect.innerHTML =
-            '<option value="" disabled selected>Select a time block...</option>';
+            '<option value="" disabled selected>Select a time block...</option>'
           relevantSlots.forEach((s) => {
-            const remaining = s.Capacity - s.Booked;
-            slotSelect.innerHTML += `<option value="${s.SlotID}">${s.SlotDate} @ ${s.SlotTime} (${remaining} slots left)</option>`;
-          });
+            const remaining = s.Capacity - s.Booked
+            slotSelect.innerHTML += `<option value="${s.SlotID}">${s.SlotDate} @ ${s.SlotTime} (${remaining} slots left)</option>`
+          })
         }
-      };
+      }
 
       // --- ACTION SUBMISSIONS ---
       window.submitPromotion = async function () {
-        const id = document.getElementById("editStaffId").value;
-        const unit = document.getElementById("editStaffUnit").value;
-        const team = document.getElementById("editStaffTeam").value;
+        const id = document.getElementById('editStaffId').value
+        const unit = document.getElementById('editStaffUnit').value
+        const team = document.getElementById('editStaffTeam').value
         const selectedRoles = Array.from(
-          document.querySelectorAll(".role-cb:checked"),
+          document.querySelectorAll('.role-cb:checked')
         )
           .map((cb) => cb.value)
-          .join(", ");
+          .join(', ')
 
         const selectedScopes = Array.from(
-          document.querySelectorAll(".scope-cb:checked"),
+          document.querySelectorAll('.scope-cb:checked')
         )
           .map((cb) => cb.value)
-          .join(",");
+          .join(',')
 
-        if (selectedRoles === "")
-          return alert("Staff must have at least one role!");
+        if (selectedRoles === '')
+          return alert('Staff must have at least one role!')
         try {
           const res = await fetch(
             `https://voxa-pi-three.vercel.app/api/agency/staff/${id}`,
             {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 role: selectedRoles,
                 unit: unit,
                 team: team,
                 scopes: selectedScopes,
               }),
-            },
-          );
+            }
+          )
           if (res.ok) {
-            alert("✅ Profile updated successfully!");
-            forceHideModal("promoteModal");
-            fetchStaffDirectory();
-          } else alert("Failed to update profile.");
+            alert('✅ Profile updated successfully!')
+            forceHideModal('promoteModal')
+            fetchStaffDirectory()
+          } else alert('Failed to update profile.')
         } catch (e) {
-          console.error(e);
+          console.error(e)
         }
-      };
+      }
 
       window.submitSchedule = async function () {
         const payload = {
-          application_id: document.getElementById("modalAppId").value,
-          slot_id: document.getElementById("modalSlot").value,
-          panel: document.getElementById("modalPanel").value,
-        };
+          application_id: document.getElementById('modalAppId').value,
+          slot_id: document.getElementById('modalSlot').value,
+          panel: document.getElementById('modalPanel').value,
+        }
         try {
           const res = await fetch(
-            "https://voxa-pi-three.vercel.app/api/schedule-interview",
+            'https://voxa-pi-three.vercel.app/api/schedule-interview',
             {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload),
-            },
-          );
+            }
+          )
           if (res.ok) {
-            alert("✅ Interview Scheduled!");
-            forceHideModal("scheduleModal");
-            fetchCandidates();
-          } else alert("❌ Error scheduling interview.");
+            alert('✅ Interview Scheduled!')
+            forceHideModal('scheduleModal')
+            fetchCandidates()
+          } else alert('❌ Error scheduling interview.')
         } catch (e) {
-          console.error(e);
+          console.error(e)
         }
-      };
+      }
 
       window.processApproval = async function (userId, action) {
         if (!confirm(`Are you sure you want to ${action} this staff member?`))
-          return;
+          return
         try {
           const res = await fetch(
-            "https://voxa-pi-three.vercel.app/api/approve-staff",
+            'https://voxa-pi-three.vercel.app/api/approve-staff',
             {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ user_id: userId, action: action }),
-            },
-          );
+            }
+          )
           if (res.ok) {
-            alert(`✅ Staff member ${action}d!`);
-            fetchPendingStaff();
-            fetchStaffDirectory();
-          } else alert("❌ Error processing request.");
+            alert(`✅ Staff member ${action}d!`)
+            fetchPendingStaff()
+            fetchStaffDirectory()
+          } else alert('❌ Error processing request.')
         } catch (e) {
-          console.error(e);
+          console.error(e)
         }
-      };
+      }
 
       window.copyReferralLink = function () {
         navigator.clipboard.writeText(
-          `https://voxa-pi-three.vercel.app/index.html?recruiter=${encodeURIComponent(user.fullName)}&agency=${encodeURIComponent(user.agencyName)}&unit=${encodeURIComponent(user.unitName || "")}&team=${encodeURIComponent(user.teamName || "")}`,
-        );
+          `https://voxa-pi-three.vercel.app/index.html?recruiter=${encodeURIComponent(user.fullName)}&agency=${encodeURIComponent(user.agencyName)}&unit=${encodeURIComponent(user.unitName || '')}&team=${encodeURIComponent(user.teamName || '')}`
+        )
         alert(
-          "✅ Invite link copied! Candidates will land on the homepage and your referral will be tracked globally.",
-        );
-      };
+          '✅ Invite link copied! Candidates will land on the homepage and your referral will be tracked globally.'
+        )
+      }
+
+      window.openInviteModal = function () {
+        const select = document.getElementById('inviteRoleSelect')
+        select.innerHTML = ''
+        if (isCEO) {
+          select.innerHTML += `<option value="HR">HR</option>`
+          select.innerHTML += `<option value="Validator">Validator (QA)</option>`
+          select.innerHTML += `<option value="UnitManager">Unit Manager</option>`
+          select.innerHTML += `<option value="Leader">Team Leader</option>`
+          select.innerHTML += `<option value="Recruiter">Recruiter</option>`
+        } else if (isTopManagement) {
+          select.innerHTML += `<option value="HR">HR</option>`
+          select.innerHTML += `<option value="Validator">Validator (QA)</option>`
+          select.innerHTML += `<option value="UnitManager">Unit Manager</option>`
+          select.innerHTML += `<option value="Leader">Team Leader</option>`
+          select.innerHTML += `<option value="Recruiter">Recruiter</option>`
+        } else if (isUM) {
+          select.innerHTML += `<option value="Leader">Team Leader</option>`
+          select.innerHTML += `<option value="Recruiter">Recruiter</option>`
+        } else if (isLeader) {
+          select.innerHTML += `<option value="Recruiter">Recruiter</option>`
+        }
+        forceShowModal('inviteStaffModal')
+      }
+
+      window.generateAndCopyInvite = function () {
+        const role = document.getElementById('inviteRoleSelect').value
+        let link =
+          window.location.origin +
+          `/staff-signup.html?agency=${encodeURIComponent(user.agencyName)}&role=${role}`
+        if (
+          user.unitName &&
+          user.unitName !== 'Direct' &&
+          user.unitName !== 'None'
+        )
+          link += `&unit=${encodeURIComponent(user.unitName)}`
+        if (
+          user.teamName &&
+          user.teamName !== 'Direct' &&
+          user.teamName !== 'None'
+        )
+          link += `&team=${encodeURIComponent(user.teamName)}`
+
+        navigator.clipboard.writeText(link)
+        alert(
+          `✅ ${role} Invite Link copied!\n\n${link}\n\nSend this to your new team member. Their role and placement will be locked automatically.`
+        )
+        forceHideModal('inviteStaffModal')
+      }
 
       window.logout = function () {
-        localStorage.removeItem("user");
-        window.location.href = "login.html";
-      };
+        localStorage.removeItem('user')
+        window.location.href = 'login.html'
+      }
     </script>
   </body>
 </html>

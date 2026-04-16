@@ -6,6 +6,7 @@ import psycopg2
 import time
 import datetime
 import bcrypt
+import random
 import boto3 # NEW: AWS/Cloudflare SDK
 from botocore.client import Config
 from flask import Flask, jsonify, request, send_from_directory, redirect
@@ -98,6 +99,11 @@ def init_db():
             c.execute('ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "NationalityReq" TEXT DEFAULT \'All Nationalities\'')
             c.execute('ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "GraduationReq" TEXT DEFAULT \'Graduates Only\'')
             c.execute('ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "MinExperience" TEXT DEFAULT \'0\'')
+            
+            # --- AUTH MIGRATIONS ---
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "IsVerified" BOOLEAN DEFAULT TRUE')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "VerificationCode" TEXT')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "CodeExpiry" TIMESTAMP')
             conn.commit()
             print("✅ Database Migrations Complete (ValidatorScopes synced).")
         except Exception as e:
@@ -106,6 +112,45 @@ def init_db():
             conn.close()
 
 init_db()
+
+# --- EMAIL VERIFICATION SENDER ---
+def send_verification_email(to_email, code, subject="Voxa Verification Code"):
+    SMTP_USER = os.getenv("SMTP_USER", "voxaa.business@gmail.com")
+    SMTP_PASS = os.getenv("SMTP_PASS")
+    if not SMTP_PASS:
+        print("❌ SMTP_PASS is missing. Cannot send email.")
+        return False
+    try:
+        msg = EmailMessage()
+        msg['Subject'] = subject
+        msg['From'] = SMTP_USER
+        msg['To'] = to_email
+        msg.set_content(f"Your verification code is: {code}\n\nThis code will expire in 10 minutes. Please do not share it with anyone.")
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login(SMTP_USER, SMTP_PASS)
+            smtp.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"❌ Email Error: {e}")
+        return False
+
+# --- CRON JOB: CLEANUP EXPIRED CODES ---
+def cleanup_expired_codes():
+    while True:
+        try:
+            conn = get_db_connection()
+            if conn:
+                c = conn.cursor()
+                # Strips out expired 6-digit codes to keep database size low
+                c.execute('UPDATE "Users" SET "VerificationCode" = NULL, "CodeExpiry" = NULL WHERE "CodeExpiry" < CURRENT_TIMESTAMP')
+                conn.commit()
+                conn.close()
+        except Exception as e:
+            print(f"❌ Cleanup Error: {e}")
+        
+        time.sleep(3600) # Run safely in background every 60 minutes
+
+threading.Thread(target=cleanup_expired_codes, daemon=True).start()
 
 # --- THE NATIVE MULTIMODAL CLOUD AI ---
 def run_gemini_audio_analysis(file_path):
@@ -527,23 +572,25 @@ def create_user():
     # 🛡️ THE STRICT PERMISSION FIREWALL 🛡️
     # ==========================================
     
-    if creator_role in ['SuperAdmin', 'Admin']:
+    if 'SuperAdmin' in creator_role or 'Admin' in creator_role:
         # You are God. You can do anything.
         pass 
         
-    elif creator_role == 'CEO':
+    elif 'CEO' in creator_role or 'TopManagement' in creator_role:
         if target_agency != creator_agency:
-            return jsonify({"error": "CEOs can only create staff within their own agency."}), 403
+            return jsonify({"error": "You can only manage staff within your own agency."}), 403
         if target_role in ['SuperAdmin', 'Admin', 'CEO']:
-            return jsonify({"error": "CEOs cannot create other CEOs or Admins."}), 403
+            return jsonify({"error": "You cannot create Admins or CEOs."}), 403
+        if 'CEO' not in creator_role and target_role == 'TopManagement':
+            return jsonify({"error": "Only CEOs can create other Top Management."}), 403
             
-    elif creator_role == 'UnitManager':
+    elif 'UnitManager' in creator_role:
         if target_agency != creator_agency or target_unit != creator_unit:
             return jsonify({"error": "Unit Managers can only manage staff in their exact Unit."}), 403
         if target_role not in ['Leader', 'Recruiter']:
             return jsonify({"error": "Unit Managers can only create Leaders and Recruiters."}), 403
             
-    elif creator_role == 'Leader':
+    elif 'Leader' in creator_role:
         if target_agency != creator_agency or target_unit != creator_unit or target_team != creator_team:
             return jsonify({"error": "Leaders can only manage staff in their exact Team."}), 403
         if target_role != 'Recruiter':
@@ -633,13 +680,153 @@ def signup():
             if c.fetchone(): return jsonify({"error": "Email already exists"}), 400
 
             hashed_pw = bcrypt.hashpw(data.get('password').encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-            c.execute("""INSERT INTO "Users" ("FullName", "Email", "PasswordHash", "Role", "TeamName") VALUES (%s, %s, %s, 'Candidate', 'None')""", 
-                      (data.get('fullName'), data.get('email'), hashed_pw))
+            
+            # Generate 6-digit code with a 10-minute timer
+            code = str(random.randint(100000, 999999))
+            expiry = datetime.datetime.now() + datetime.timedelta(minutes=10)
+            
+            c.execute("""INSERT INTO "Users" ("FullName", "Email", "PasswordHash", "Role", "TeamName", "IsVerified", "VerificationCode", "CodeExpiry") VALUES (%s, %s, %s, 'Candidate', 'None', FALSE, %s, %s)""", 
+                      (data.get('fullName'), data.get('email'), hashed_pw, code, expiry))
             conn.commit()
             conn.close()
-            return jsonify({"message": "Signup successful"}), 201
+            
+            # Send email securely in the background
+            threading.Thread(target=send_verification_email, args=(data.get('email'), code, "Welcome to Voxa! Verify your email")).start()
+            
+            return jsonify({"message": "Signup successful! Please check your email for the verification code."}), 201
         return jsonify({"error": "Database connection failed"}), 500
     except Exception as e: return jsonify({"error": str(e)}), 500
+
+@app.route('/api/verify-email', methods=['POST'])
+def verify_email():
+    data = request.get_json()
+    email = data.get('email')
+    code = data.get('code')
+    
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute('SELECT "VerificationCode", "CodeExpiry" FROM "Users" WHERE "Email"=%s', (email,))
+    user = c.fetchone()
+    
+    if not user: 
+        return jsonify({"error": "User not found"}), 404
+    if user[0] != code: 
+        return jsonify({"error": "Invalid verification code"}), 400
+    if user[1] and datetime.datetime.now() > user[1]: 
+        return jsonify({"error": "Verification code has expired. Please request a new one."}), 400
+
+    c.execute('UPDATE "Users" SET "IsVerified"=TRUE, "VerificationCode"=NULL, "CodeExpiry"=NULL WHERE "Email"=%s', (email,))
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Account successfully verified!"}), 200
+
+@app.route('/api/verify-code-only', methods=['POST'])
+def verify_code_only():
+    email = request.json.get('email')
+    code = request.json.get('code')
+    
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute('SELECT "VerificationCode", "CodeExpiry" FROM "Users" WHERE "Email"=%s', (email,))
+    user = c.fetchone()
+    conn.close()
+    
+    if not user or user[0] != code: 
+        return jsonify({"error": "Invalid verification code"}), 400
+    if user[1] and datetime.datetime.now() > user[1]: 
+        return jsonify({"error": "Verification code has expired."}), 400
+    return jsonify({"message": "Code verified successfully!"}), 200
+
+@app.route('/api/forgot-password', methods=['POST'])
+def forgot_password():
+    email = request.json.get('email')
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute('SELECT "UserID" FROM "Users" WHERE "Email"=%s', (email,))
+    if c.fetchone():
+        code = str(random.randint(100000, 999999))
+        expiry = datetime.datetime.now() + datetime.timedelta(minutes=10)
+        c.execute('UPDATE "Users" SET "VerificationCode"=%s, "CodeExpiry"=%s WHERE "Email"=%s', (code, expiry, email))
+        conn.commit()
+        threading.Thread(target=send_verification_email, args=(email, code, "Voxa Password Reset Code")).start()
+    conn.close()
+    # Always return success to prevent email enumeration hacking
+    return jsonify({"message": "If the email exists in our system, a recovery code has been sent."}), 200
+
+@app.route('/api/reset-password', methods=['POST'])
+def reset_password():
+    email = request.json.get('email')
+    code = request.json.get('code')
+    new_password = request.json.get('password')
+    
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute('SELECT "VerificationCode", "CodeExpiry" FROM "Users" WHERE "Email"=%s', (email,))
+    user = c.fetchone()
+    
+    if not user or user[0] != code: 
+        return jsonify({"error": "Invalid recovery code"}), 400
+    if user[1] and datetime.datetime.now() > user[1]: 
+        return jsonify({"error": "Recovery code has expired"}), 400
+
+    hashed_pw = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    c.execute('UPDATE "Users" SET "PasswordHash"=%s, "VerificationCode"=NULL, "CodeExpiry"=NULL WHERE "Email"=%s', (hashed_pw, email))
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Password reset successfully! You can now log in."}), 200
+
+@app.route('/api/oauth-login', methods=['POST'])
+def oauth_login():
+    data = request.get_json()
+    email = data.get('email')
+    name = data.get('fullName')
+    
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("""SELECT "FullName", "Email", "PasswordHash", "Role", "AgencyName", "UnitName", "TeamName", "ValidatorScopes", "IsVerified" FROM "Users" WHERE "Email"=%s""", (email,))
+    user_row = c.fetchone()
+    
+    if user_row:
+        role = user_row[3] if len(user_row) > 3 else 'Candidate'
+        if not user_row[8]: # Verify them instantly if they used OAuth
+            c.execute('UPDATE "Users" SET "IsVerified"=TRUE WHERE "Email"=%s', (email,))
+            conn.commit()
+        
+        conn.close()
+        return jsonify({
+            "message": "Login successful", 
+            "user": {
+                "fullName": user_row[0], 
+                "email": user_row[1], 
+                "role": role, 
+                "agencyName": user_row[4],
+                "unitName": user_row[5],
+                "teamName": user_row[6],
+                "validatorScopes": user_row[7] if len(user_row) > 7 else "",
+                "isAdmin": role in ['Admin', 'SuperAdmin']
+            }
+        }), 200
+    else:
+        # New user signing up via OAuth
+        random_pw = str(random.randint(10000000, 99999999))
+        hashed_pw = bcrypt.hashpw(random_pw.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        c.execute("""INSERT INTO "Users" ("FullName", "Email", "PasswordHash", "Role", "TeamName", "IsVerified") VALUES (%s, %s, %s, 'Candidate', 'None', TRUE)""", 
+                  (name, email, hashed_pw))
+        conn.commit()
+        conn.close()
+        return jsonify({
+            "message": "Signup successful", 
+            "user": {
+                "fullName": name, 
+                "email": email, 
+                "role": 'Candidate',
+                "agencyName": "Voxa",
+                "unitName": "Direct",
+                "teamName": "Direct",
+                "validatorScopes": "",
+                "isAdmin": False
+            }
+        }), 201
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -783,7 +970,7 @@ def apps():
             # Support Dual Roles by using "in u_role" instead of "u_role =="
             if 'Admin' in u_role or 'SuperAdmin' in u_role:
                 c.execute(base_select + """ORDER BY a."SubmittedAt" DESC""")
-            elif 'CEO' in u_role:
+            elif 'CEO' in u_role or 'TopManagement' in u_role:
                 c.execute(base_select + """WHERE COALESCE(NULLIF(TRIM(a."AgencyName"), ''), 'Voxa') = %s ORDER BY a."SubmittedAt" DESC""", (u_agency,))
             elif 'UnitManager' in u_role:
                 c.execute(base_select + """WHERE COALESCE(NULLIF(TRIM(a."AgencyName"), ''), 'Voxa') = %s AND COALESCE(NULLIF(TRIM(a."UnitName"), ''), 'Direct') = %s ORDER BY a."SubmittedAt" DESC""", (u_agency, u_unit))
@@ -901,23 +1088,25 @@ def create_staff():
     # 🛡️ THE STRICT PERMISSION FIREWALL 🛡️
     # ==========================================
     
-    if creator_role == 'SuperAdmin':
+    if 'SuperAdmin' in creator_role or 'Admin' in creator_role:
         # You are God. You can do anything.
         pass 
         
-    elif creator_role == 'CEO':
+    elif 'CEO' in creator_role or 'TopManagement' in creator_role:
         if target_agency != creator_agency:
-            return jsonify({"error": "CEOs can only create staff within their own agency."}), 403
-        if target_role in ['SuperAdmin', 'CEO']:
-            return jsonify({"error": "CEOs cannot create other CEOs or SuperAdmins."}), 403
+            return jsonify({"error": "You can only manage staff within your own agency."}), 403
+        if target_role in ['SuperAdmin', 'Admin', 'CEO']:
+            return jsonify({"error": "You cannot create other CEOs or Admins."}), 403
+        if 'CEO' not in creator_role and target_role == 'TopManagement':
+            return jsonify({"error": "Only the CEO can assign the Top Management role."}), 403
             
-    elif creator_role == 'UnitManager':
+    elif 'UnitManager' in creator_role:
         if target_agency != creator_agency or target_unit != creator_unit:
             return jsonify({"error": "Unit Managers can only manage staff in their exact Unit."}), 403
         if target_role not in ['Leader', 'Recruiter']:
             return jsonify({"error": "Unit Managers can only create Leaders and Recruiters."}), 403
             
-    elif creator_role == 'Leader':
+    elif 'Leader' in creator_role:
         if target_agency != creator_agency or target_unit != creator_unit or target_team != data.get('creator_team'):
             return jsonify({"error": "Leaders can only manage staff in their exact Team."}), 403
         if target_role != 'Recruiter':
@@ -968,7 +1157,7 @@ def get_agency_staff():
         base_query = 'SELECT "UserID", "FullName", "Email", "Role", "UnitName", "TeamName", "ValidatorScopes" FROM "Users" WHERE "Status" = \'Approved\' AND COALESCE(NULLIF(TRIM("AgencyName"), \'\'), \'Voxa\') = %s'
         params = [u_agency]
 
-        if 'CEO' in u_role or 'SuperAdmin' in u_role or 'Admin' in u_role: pass
+        if 'CEO' in u_role or 'TopManagement' in u_role or 'SuperAdmin' in u_role or 'Admin' in u_role: pass
         elif 'UnitManager' in u_role:
             base_query += ' AND "UnitName" = %s'
             params.append(u_unit)
@@ -1129,15 +1318,15 @@ def get_pending_staff():
         base_query = 'SELECT "UserID", "FullName", "Email", "Role", "AgencyName", "UnitName", "TeamName" FROM "Users" WHERE "Status" = \'Pending\''
         params = []
 
-        if role in ['SuperAdmin', 'Admin']:
+        if 'SuperAdmin' in role or 'Admin' in role:
             pass # SuperAdmins see ALL pending users across the whole system
-        elif role == 'CEO':
-            base_query += ' AND COALESCE(NULLIF(TRIM("AgencyName"), \'\'), \'Voxa\') = %s AND "Role" IN (\'UnitManager\', \'Validator\', \'Leader\', \'Recruiter\', \'HR\')'
+        elif 'CEO' in role or 'TopManagement' in role:
+            base_query += ' AND COALESCE(NULLIF(TRIM("AgencyName"), \'\'), \'Voxa\') = %s AND "Role" IN (\'TopManagement\', \'UnitManager\', \'Validator\', \'Leader\', \'Recruiter\', \'HR\')'
             params.append(agency)
-        elif role == 'UnitManager':
+        elif 'UnitManager' in role:
             base_query += ' AND COALESCE(NULLIF(TRIM("AgencyName"), \'\'), \'Voxa\') = %s AND COALESCE(NULLIF(TRIM("UnitName"), \'\'), \'Direct\') = %s AND "Role" IN (\'Leader\', \'Recruiter\')'
             params.extend([agency, unit])
-        elif role == 'Leader':
+        elif 'Leader' in role:
             base_query += ' AND COALESCE(NULLIF(TRIM("AgencyName"), \'\'), \'Voxa\') = %s AND COALESCE(NULLIF(TRIM("UnitName"), \'\'), \'Direct\') = %s AND COALESCE(NULLIF(TRIM("TeamName"), \'\'), \'Direct\') = %s AND "Role" = \'Recruiter\''
             params.extend([agency, unit, team])
         else:

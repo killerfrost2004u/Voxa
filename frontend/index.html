@@ -8,10 +8,12 @@
     <link rel="stylesheet" href="css/style.css" />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet" />
+      rel="stylesheet"
+    />
     <style>
       .flex-center {
         display: flex;
@@ -72,11 +74,13 @@
             font-weight: 700;
             color: white;
             text-decoration: none;
-          ">
+          "
+        >
           <img
             src="images/voxa-logo.png"
             alt="Voxa Logo"
-            style="height: 40px; width: auto; border-radius: 8px" />
+            style="height: 40px; width: auto; border-radius: 8px"
+          />
           Voxa
         </a>
         <ul class="nav-links">
@@ -111,7 +115,8 @@
               type="text"
               id="job-search"
               placeholder="Job title or keyword"
-              onkeypress="if (event.key === 'Enter') searchJobs();" />
+              onkeypress="if (event.key === 'Enter') searchJobs()"
+            />
           </div>
           <div class="input-group">
             <i class="fas fa-map-marker-alt"></i>
@@ -119,7 +124,8 @@
               type="text"
               id="location-search"
               placeholder="City or Country"
-              onkeypress="if (event.key === 'Enter') searchJobs();" />
+              onkeypress="if (event.key === 'Enter') searchJobs()"
+            />
           </div>
           <button class="btn-primary" onclick="searchJobs()">Search</button>
         </div>
@@ -129,25 +135,29 @@
           <button
             type="button"
             onclick="smartTagSearch('customer service')"
-            class="tag-btn">
+            class="tag-btn"
+          >
             Customer Support
           </button>
           <button
             type="button"
             onclick="smartTagSearch('remote')"
-            class="tag-btn">
+            class="tag-btn"
+          >
             Remote
           </button>
           <button
             type="button"
             onclick="smartTagSearch('sales')"
-            class="tag-btn">
+            class="tag-btn"
+          >
             Telesales
           </button>
           <button
             type="button"
             onclick="smartTagSearch('tech')"
-            class="tag-btn">
+            class="tag-btn"
+          >
             Tech Support
           </button>
         </div>
@@ -235,11 +245,8 @@
         <div class="footer-col">
           <a href="index.html" class="logo">Vo<span>xa</span></a>
           <p
-            style="
-              margin-top: 15px;
-              color: var(--text-muted);
-              line-height: 1.6;
-            ">
+            style="margin-top: 15px; color: var(--text-muted); line-height: 1.6"
+          >
             The next-generation AI-powered Applicant Tracking System. Elevating
             the standard for BPO and tech recruitment worldwide.
           </p>
