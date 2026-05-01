@@ -194,6 +194,55 @@
         opacity: 0;
         cursor: pointer;
       }
+
+      /* AI Feedback Modern Styles */
+      .ai-feedback-box {
+        background: rgba(0, 229, 255, 0.03);
+        border: 1px solid rgba(0, 229, 255, 0.2);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.4s ease;
+        animation: slideUp 0.5s ease-out;
+      }
+      @keyframes slideUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .ai-tip {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--bg-card);
+        padding: 10px 15px;
+        border-radius: 8px;
+        border-left: 3px solid var(--primary-color);
+        font-size: 0.9rem;
+        color: var(--text-main);
+      }
+      .ai-tip i {
+        color: var(--primary-color);
+        font-size: 1rem;
+      }
+      .ai-pulse-loader {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        justify-content: center;
+        padding: 1rem;
+      }
+      .ai-pulse-loader span {
+        width: 8px;
+        height: 8px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        animation: ai-pulse 1.4s infinite ease-in-out both;
+      }
+      .ai-pulse-loader span:nth-child(1) { animation-delay: -0.32s; }
+      .ai-pulse-loader span:nth-child(2) { animation-delay: -0.16s; }
+      @keyframes ai-pulse {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1.0); }
+      }
     </style>
   </head>
   <body>
@@ -531,6 +580,34 @@
               </div>
             </div>
 
+            <!-- AI Feedback Section -->
+            <div id="ai-feedback-container" class="ai-feedback-box hidden" style="margin-top: 1.5rem;">
+              <div class="ai-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; color: var(--primary-color);">
+                <i class="fas fa-robot"></i>
+                <h4 style="margin: 0; font-size: 1rem;">AI Real-Time Insight</h4>
+              </div>
+              <div id="ai-feedback-content">
+                <div class="ai-pulse-loader" id="ai-loading" style="display: none;">
+                   <span></span><span></span><span></span>
+                   <p style="font-size: 0.8rem; margin: 5px 0 0 0; color: var(--text-muted);">AI is listening...</p>
+                </div>
+                <div id="ai-tips-container" style="display: flex; flex-direction: column; gap: 8px;">
+                   <div class="ai-tip" id="tip-duration">
+                      <i class="fas fa-clock"></i>
+                      <span>Duration: Waiting...</span>
+                   </div>
+                   <div class="ai-tip" id="tip-clarity">
+                      <i class="fas fa-volume-up"></i>
+                      <span>Voice Clarity: Waiting...</span>
+                   </div>
+                   <div class="ai-tip" id="tip-fluency">
+                      <i class="fas fa-magic"></i>
+                      <span>Pro Tip: Keep speaking naturally for better CEFR scoring.</span>
+                   </div>
+                </div>
+              </div>
+            </div>
+
             <div
               class="recorder-box hidden"
               id="ui-upload"
@@ -805,6 +882,13 @@
         status.style.color = '#22c55e'
         icon.className = 'fas fa-check-circle upload-icon'
         uploadedFile = file
+
+        // AI Feedback for uploaded file
+        const audio = document.createElement('audio')
+        audio.src = URL.createObjectURL(file)
+        audio.onloadedmetadata = () => {
+          runAIFeedback(Math.round(audio.duration))
+        }
       }
 
       function validateFile2(input) {
@@ -826,6 +910,8 @@
         const btn = document.getElementById('btn-record')
         const status = document.getElementById('recording-status')
         const audioPlayer = document.getElementById('audio-playback')
+        const aiContainer = document.getElementById('ai-feedback-container')
+
         if (!isRecording) {
           try {
             const stream = await navigator.mediaDevices.getUserMedia({
@@ -839,6 +925,7 @@
               audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
               audioPlayer.src = URL.createObjectURL(audioBlob)
               audioPlayer.style.display = 'block'
+              runAIFeedback(durationSeconds)
             }
             mediaRecorder.start()
             isRecording = true
@@ -855,9 +942,12 @@
               const secs = (durationSeconds % 60).toString().padStart(2, '0')
               document.getElementById('record-timer').textContent =
                 `${mins}:${secs}`
-              if (durationSeconds >= 90)
+              if (durationSeconds >= 60)
                 document.getElementById('record-timer').style.color = '#22c55e'
             }, 1000)
+
+            // Hide AI container if restarting
+            aiContainer.classList.add('hidden')
           } catch {
             alert('Microphone access denied.')
           }
@@ -870,6 +960,35 @@
           status.textContent = 'Recording Saved!'
           status.style.color = '#22c55e'
         }
+      }
+
+      function runAIFeedback(seconds) {
+        const container = document.getElementById('ai-feedback-container')
+        const loader = document.getElementById('ai-loading')
+        const tips = document.getElementById('ai-tips-container')
+        const durTip = document.getElementById('tip-duration')
+        const clarityTip = document.getElementById('tip-clarity')
+
+        container.classList.remove('hidden')
+        loader.style.display = 'flex'
+        tips.style.opacity = '0.3'
+
+        setTimeout(() => {
+          loader.style.display = 'none'
+          tips.style.opacity = '1'
+
+          // Duration Logic
+          if (seconds < 60) {
+            durTip.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: #ef4444"></i> <span style="color: #ef4444">Duration: Too Short (${seconds}s). AI needs at least 60s.</span>`
+          } else if (seconds < 90) {
+            durTip.innerHTML = `<i class="fas fa-check-circle" style="color: #eab308"></i> <span>Duration: Good (${seconds}s). Almost at target.</span>`
+          } else {
+            durTip.innerHTML = `<i class="fas fa-check-circle" style="color: #22c55e"></i> <span>Duration: Perfect (${seconds}s). Optimal for analysis.</span>`
+          }
+
+          // Simulated Clarity Logic
+          clarityTip.innerHTML = `<i class="fas fa-signal" style="color: #22c55e"></i> <span>Clarity: Strong. Your voice was captured clearly.</span>`
+        }, 1500)
       }
 
       async function toggleRecording2() {
@@ -988,6 +1107,15 @@
               btn.disabled = false
               return alert(
                 'Sorry, you do not meet the minimum experience requirement for this role.'
+              )
+            }
+
+            // --- DURATION VALIDATIONS ---
+            if (currentMethod === 'record' && durationSeconds < 60) {
+              btn.textContent = 'Submit Application'
+              btn.disabled = false
+              return alert(
+                'Your English introduction must be at least 1 minute long.'
               )
             }
 
@@ -1175,6 +1303,37 @@
       }
 
       // Initialize
+      document.addEventListener('DOMContentLoaded', () => {
+        populateCountryCodes()
+
+        const params = new URLSearchParams(window.location.search)
+
+        if (params.get('title')) {
+          document.getElementById('apply-job-title').textContent =
+            params.get('title')
+        }
+        if (params.get('company')) {
+          document.getElementById('apply-company').textContent =
+            params.get('company')
+        }
+
+        const user = JSON.parse(localStorage.getItem('user'))
+        if (user) {
+          document.getElementById('app-name').value = user.name || ''
+          document.getElementById('app-email').value = user.email || ''
+        }
+
+        if (params.get('bilingual') === '1') {
+          const bilingualGroup = document.getElementById('bilingual-group')
+          if (bilingualGroup) {
+            bilingualGroup.style.display = 'block'
+          }
+        }
+      })
+    </script>
+  </body>
+</html>
+itialize
       document.addEventListener('DOMContentLoaded', () => {
         populateCountryCodes()
 

@@ -3,14 +3,9 @@ import json
 import psycopg2
 import datetime
 import re
+import time
+from tqdm import tqdm
 from PIL import Image
-import torch
-
-try:
-    from diffusers import AutoPipelineForText2Image
-except ImportError:
-    print("⚠️  `diffusers` library not found. Local image generation will be skipped. Install with: pip install diffusers transformers accelerate")
-    AutoPipelineForText2Image = None
 
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -41,9 +36,12 @@ TONE OF VOICE: Innovative, empowering, energetic, Egyptian-youth friendly, and h
 
 def get_active_jobs():
     """Fetch active jobs from the Voxa database."""
-    conn = psycopg2.connect(DATABASE_URL)
-    cur = conn.cursor()
+    print("⏳ Connecting to the Neon database to fetch active jobs...")
+    conn = None
     try:
+        # Added a 15-second timeout to prevent indefinite network hanging
+        conn = psycopg2.connect(DATABASE_URL, connect_timeout=15)
+        cur = conn.cursor()
         cur.execute('SELECT "JobID", "JobTitle", "CompanyName", "SalaryPackage", "Location", "WorkingHours" FROM "Jobs" WHERE "Status" = \'Active\'')
         cols = [desc[0] for desc in cur.description]
         jobs = [dict(zip(cols, row)) for row in cur.fetchall()]
@@ -52,8 +50,9 @@ def get_active_jobs():
         print(f"❌ Database Error: {e}")
         return []
     finally:
-        cur.close()
-        conn.close()
+        if conn:
+            cur.close()
+            conn.close()
 
 def get_past_analytics():
     """
@@ -84,10 +83,15 @@ def generate_local_media(prompt, media_type, post_date, job_title):
         print("❌ Local video generation is not supported. This feature requires specialized hardware (typically 24GB+ VRAM) and is beyond the scope of this script.")
         return
 
-    if not AutoPipelineForText2Image:
-        return # Skip if diffusers is not installed
-
     print(f"\n🖼️  Generating {media_type} for {post_date}...")
+    print("⏳ Loading local image models into RAM (this may take a few minutes on an 8GB laptop)...")
+    
+    try:
+        import torch
+        from diffusers import AutoPipelineForText2Image
+    except ImportError:
+        print("⚠️  `diffusers` or `torch` library not found. Local image generation will be skipped. Install with: pip install diffusers transformers accelerate torch")
+        return
 
     # --- ⚠️ HARDWARE WARNING ⚠️ ---
     # Running modern diffusion models is very resource-intensive.
@@ -120,8 +124,46 @@ def generate_local_media(prompt, media_type, post_date, job_title):
     except Exception as e:
         print(f"❌ Failed to generate local image: {e}\n   This might be due to memory constraints or a model download issue.")
 
+def query_local_llm(prompt, task_name="Task", max_retries=3):
+    """A robust function to query the local LLM with retries and live streaming."""
+    if "Schedule Check" in task_name and "LinkedIn" in task_name:
+        tqdm.write("\n   ⚠️ Note: The very FIRST query takes the longest (often 5-10 minutes) because your computer is loading the AI model into RAM and reading the massive guidelines file. Please be patient!")
+    tqdm.write(f"   -> 🧠 AI Thinking: {task_name} (Ingesting prompt...)")
+    for attempt in range(max_retries):
+        try:
+            response = client.chat.completions.create(
+                model=LOCAL_MODEL_NAME,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+                max_tokens=800,
+                stream=True
+            )
+            
+            result_text = ""
+            print("      ", end="", flush=True) # Indent the stream visually
+            for chunk in response:
+                if chunk.choices and len(chunk.choices) > 0:
+                    content = chunk.choices[0].delta.content
+                    if content:
+                        result_text += content
+                        # Print the text live to the console so you can watch it think
+                        print(content, end="", flush=True)
+            print("\n", flush=True)
+            
+            # Clean <think> tags completely
+            result_text = re.sub(r'<think>.*?</think>\s*', '', result_text, flags=re.DOTALL)
+            # Clean common markdown wrappers and other tags
+            result_text = re.sub(r'</?output_format>', '', result_text)
+            result_text = re.sub(r'^```[a-zA-Z]*\n', '', result_text, flags=re.MULTILINE)
+            result_text = re.sub(r'```$', '', result_text, flags=re.MULTILINE)
+            return result_text.strip()
+        except Exception as e:
+            tqdm.write(f"      ⚠️ Attempt {attempt + 1} failed: {e}")
+            time.sleep(2)
+    return "Failed to generate content after retries."
+
 def generate_weekly_schedule(jobs, analytics_data):
-    """Use a local LLM to generate a full weekly markdown schedule based on jobs and analytics."""
+    """Use a local LLM in a nested loop to safely generate a highly detailed weekly markdown schedule."""
     
     # 1. Load the latest guidelines
     guidelines_path = os.path.join(os.path.dirname(__file__), "platform_guidelines.json")
@@ -131,113 +173,137 @@ def generate_weekly_schedule(jobs, analytics_data):
                 rules = json.load(f)
         except json.JSONDecodeError as e:
             print(f"⚠️ Warning: platform_guidelines.json contains invalid JSON generated by the AI ({e}). Falling back to default rules.")
-            rules = {"linkedin": "Professional", "facebook": "Engaging", "instagram": "Visual, no links in caption", "tiktok": "Short hook"}
+            rules = {}
     else:
         print("⚠️ Warning: platform_guidelines.json not found. Run update_guidelines.py first! Falling back to default rules.")
-        rules = {"linkedin": "Professional", "facebook": "Engaging", "instagram": "Visual, no links in caption", "tiktok": "Short hook"}
-
-    # Take up to 7 jobs for the week
-    jobs_sample = jobs[:7]
-    jobs_text = json.dumps(jobs_sample, indent=2)
-
-    # Read actual date and exact time directly from the system clock
-    start_date = datetime.datetime.now()
-    current_time = start_date.strftime("%A, %B %d, %Y at %I:%M %p")
-
-    prompt = f"""
-    <role>
-    You are Voxa's Elite Marketing Agency, Lead Copywriter, and Expert Social Media Strategist. Your primary goal is to drive massive traffic to the Voxa website via the Egyptian job market. You are a world-class prompt engineer and your thinking process is as detailed and analytical as Google's Gemini 3.1 Pro or Anthropic's Claude Opus 4.6.
-    </role>
-    
-    <brand_identity>
-    {VOXA_BRAND_IDENTITY}
-    AUDIENCE PSYCHOLOGY: Egyptian job seekers are frustrated with traditional CVs, slow responses, and complicated portals. They want speed, respect, and tech.
-    LANGUAGE INSTRUCTIONS: You MUST write the social media captions using a highly engaging, natural mix of English and Egyptian Arabic dialect (Franco-Arabic). Ensure it sounds completely human, using slang and avoiding overly formal AI-speak.
-    </brand_identity>
-    
-    <context>
-    CURRENT LOCAL LAPTOP DATE & TIME: {current_time}
-    You MUST plan the optimal schedule for the next 7 days starting from right now. CRITICAL: For posts scheduled for TODAY (Day 1), you MUST schedule them for a time LATER than the CURRENT TIME ({current_time}). Do not schedule posts in the past!
-    
-    AVAILABLE JOBS TO PROMOTE THIS WEEK:
-    {jobs_text}
-    
-    PAST ANALYTICS (CRITICAL - DO NOT REPEAT MISTAKES):
-    {analytics_data}
-    </context>
-    
-    <platform_guidelines>
-    - LinkedIn Rules: {rules.get('linkedin', '')}
-    - Facebook Rules: {rules.get('facebook', '')}
-    - Instagram Rules: {rules.get('instagram', '')}
-    - TikTok Rules: {rules.get('tiktok', '')}
-    </platform_guidelines>
-    
-    <task>
-    Create a complete and fully detailed 7-Day Social Media Content Calendar in beautifully formatted Markdown.
-    
-    FIRST, start with a "📈 Platform Growth Strategy" section. 
-    Based on the guidelines, briefly explain to me exactly how often we should be posting on each platform this week to satisfy their algorithms, and what type of engagement we are targeting.
-    
-    THEN, construct the full 7-day schedule day by day. To hit high engagement, you MUST post on MULTIPLE platforms per day.
-    </task>
-    
-    <rules>
-    1. CRITICAL FAILURE CONDITION: You MUST generate a post for ALL 7 DAYS of the week. Do NOT stop early. Do NOT write "Due to constraints...", "I'll provide a sample", or any similar excuses. You are an AI, you have no constraints. Generate Day 1, Day 2, Day 3, Day 4, Day 5, Day 6, AND Day 7 completely. Failure to generate a full 7-day plan is a critical error.
-    2. CRITICAL ABSOLUTE RULE: You MUST choose AT LEAST TWO OR THREE platforms for EVERY SINGLE DAY you generate. Never output a day with only one platform.
-    3. Under "Post Content", you MUST write the specific, complete, and final caption/script variations for ALL platforms you chose for that day. Do not summarize.
-    4. Include an Instagram/Facebook Story or Reel strategy to boost engagement, but ONLY if Facebook or Instagram is chosen for that day.
-    </rules>
-    
-    <thinking_process>
-    You are equipped with a Deep-Thinking Protocol inspired by world-class models like Gemini 3.1 Pro and Claude Opus 4.6. You must think for a very long time before outputting the final schedule. Your thinking process must be exceptionally detailed.
-    Inside the <think> block, you must complete these exact steps in extreme detail (minimum 800 words of thinking):
-    1. Market Analysis: Deeply analyze the Egyptian target audience, their pain points with job hunting, and the specific Franco-Arabic nuances required for each of the selected jobs. How does a "Senior Accountant" post differ in tone from a "Customer Service" post?
-    2. Frequency Math & Scheduling Logic: Write out exactly how many times each platform needs a post this week based on the guidelines. Then, create a day-by-day grid mapping jobs to platforms. You have 7 jobs and 7 days. Logically assign one primary job per day, but ensure each day has multiple platform posts (e.g., Day 1 promotes Job 1 on LinkedIn & TikTok; Day 2 promotes Job 2 on Facebook & Instagram). Justify your choices for platform pairings.
-    3. Visual & Narrative Brainstorming: For each day, brainstorm the actual cinematic descriptions for the images and videos. What is the story? What emotion are you evoking? How does the visual connect to the job and Voxa's brand? Be a film director.
-    Take your absolute time. Do not rush. Be as verbose, meticulous, and analytical as possible. Your thought process is as important as the final output.
-    </thinking_process>
-    
-    <output_format>
-    WARNING: You MUST include TikTok and its VIDEO PROMPT at least 3-4 times this week!
-    DO NOT wrap your daily schedules in XML tags.
-    
-    For EACH of the 7 days, you MUST copy and fill out this exact template (calculate the actual dates starting from {start_date.strftime('%B %d, %Y')}):
-    
-    ### [Day of the Week], [Actual Calculated Date, e.g., April 16, 2026]
-    **Time to Post:** [List the exact Cairo Time for EACH platform chosen, based on the guidelines. e.g., LinkedIn: 10:00 AM, TikTok: 9:00 PM]
-    **Platforms Chosen:** [e.g., LinkedIn, TikTok]
-    **IMAGE PROMPT (for Google Gemini):** [If an image is needed, write a massive, highly-detailed 5 to 9 sentence paragraph for Google Gemini's image generator. Be cinematic and specific. DO NOT write instructions like "Describe the actors", you must ACTUALLY write the visual description (e.g., "A young Egyptian professional stands in a sunlit Cairo office..."). YOU MUST COPY AND PASTE THIS EXACT SENTENCE into your prompt: "A stylized letter V with the left side formed by tech-inspired circuit board lines and nodes, transitioning from light blue to purple." Write "None" if an image is not needed.]
-    **VIDEO PROMPT (for Google Gemini):** [If a video is needed, write a massive, highly-detailed 5 to 9 sentence paragraph for Google Gemini's video generator. You MUST explicitly describe the camera movements (e.g., slow pan, dynamic drone shot, cinematic zoom), the exact lighting conditions (e.g., golden hour, moody neon, soft natural light), frame rate / speed (e.g., slow motion, hyper-lapse), the subject's actions, and the background details. DO NOT give meta-instructions; write the actual visual prompt. YOU MUST COPY AND PASTE THIS EXACT SENTENCE into your prompt: "A stylized letter V with the left side formed by tech-inspired circuit board lines and nodes, transitioning from light blue to purple." Write "None" if a video is not needed.]
-    **Post Content:**
-    [ONLY list the platforms chosen above. For example, if you chose Facebook and TikTok, output:]
-    - **Facebook/LinkedIn Caption:** [Write the complete, final, ready-to-post caption. 3-5 paragraphs, mix of English and Egyptian Arabic, highly engaging...]
-    - **TikTok Script & Text:** [Write the complete, final, ready-to-film 30-to-60 second spoken script, including camera directions, hand gestures, and on-screen text overlays...]
-    **Stories & Reels Strategy:**
-    [ONLY output this section if Facebook or Instagram was chosen for this day.]
-    - **Concept:** [Describe an interactive Facebook/Instagram Story or a quick Reel. E.g., a "Yes/No" poll about traditional CVs, a "Day in the life" clip, or a quick application tip.]
-    - **Media Prompt (for Google Gemini):** [If it requires custom media, provide a highly detailed visual prompt. YOU MUST COPY AND PASTE THIS EXACT SENTENCE: "A stylized letter V with the left side formed by tech-inspired circuit board lines and nodes, transitioning from light blue to purple."]
-    - **Interactive Elements:** [Describe exactly what native features to use: e.g., the exact text overlay, a specific poll question with the two answer options, a slider, or a 'Apply Now' link sticker.]
-    **Hashtags:** [List 3-5 relevant and trending tags]
-    
-    Output your <think> block first, followed immediately by the beautifully formatted Markdown text for the FULL 7-DAY schedule. Do not output JSON.
-    </output_format>
-    """
-    
-    print(f"🤖 Local AI ({LOCAL_MODEL_NAME}) is thinking to craft the ultimate Weekly Egyptian Social Schedule...")
-    try:
-        response = client.chat.completions.create(
-            model=LOCAL_MODEL_NAME,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.6
-        )
+        rules = {}
         
-        # Return raw Markdown text
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        print(f"\n❌ Error communicating with local LLM API: {e}")
-        print("⚠️ Please ensure your local LLM server is running and the model name is correct.")
-        return None
+    # 2. Load Social Memory (RAG / History) to prevent redundancy
+    memory_path = os.path.join(os.path.dirname(__file__), "social_memory.json")
+    try:
+        if os.path.exists(memory_path):
+            with open(memory_path, "r", encoding="utf-8") as f:
+                social_memory = json.load(f)
+        else:
+            social_memory = {"recent_posts": []}
+    except json.JSONDecodeError:
+        social_memory = {"recent_posts": []}
+
+    # Start the schedule from tomorrow to always exclude "today"
+    start_date = datetime.datetime.now() + datetime.timedelta(days=1)
+    schedule_md = "# Voxa 7-Day Social Media Master Plan\n\n"
+    
+    print("\n🤖 Launching AI Loop: Day-by-Day, Platform-by-Platform Generation...")
+    
+    days_of_week = [start_date + datetime.timedelta(days=i) for i in range(7)]
+    scheduled_days_this_week = {p: [] for p in ["LinkedIn", "Facebook", "Instagram", "TikTok"]}
+    
+    for day_date in tqdm(days_of_week, desc="Planning Week", unit="day"):
+        day_idx = (day_date - start_date).days
+        date_str = day_date.strftime("%B %d, %Y")
+        day_name = day_date.strftime("%A")
+        
+        job = jobs[day_idx % len(jobs)] if jobs else {"JobTitle": "Voxa Platform", "CompanyName": "Voxa", "Location": "Egypt"}
+        
+        schedule_md += f"## 📅 {day_name}, {date_str}\n"
+        schedule_md += f"**Focus:** {job['JobTitle']} at {job['CompanyName']}\n\n"
+        
+        tqdm.write(f"\n🗓️  Generating for Day {day_idx + 1}/7 ({day_name})...")
+        
+        platforms_used_today = []
+        
+        for platform in ["LinkedIn", "Facebook", "Instagram", "TikTok"]:
+            platform_rules = rules.get(platform.lower(), {})
+            if isinstance(platform_rules, str): 
+                schedule_guidance = platform_rules
+            else:
+                schedule_guidance = platform_rules.get("posting_schedule", "Post daily.")
+                
+            # --- LOOP STEP 1: RAG Memory & Decision ---
+            decision_prompt = f"""
+            <role>Voxa Social Media Scheduler</role>
+            <task>
+            Platform: {platform} | Day: {day_name}
+            Already scheduled for {platform} this week on: {', '.join(scheduled_days_this_week[platform]) if scheduled_days_this_week[platform] else 'None yet'}
+            Guidelines: {schedule_guidance}
+            
+            Based EXACTLY on the guidelines above, and knowing our schedule history this week, should we generate a post for {platform} on a {day_name}? 
+            Use <think> tags to reason, then output ONLY the word YES or NO.
+            </task>
+            """
+            decision = query_local_llm(decision_prompt, f"Schedule Check for {platform}")
+            
+            if "NO" in decision.upper() and "YES" not in decision.upper():
+                tqdm.write(f"   ⏸️  Skipping {platform} (Guideline limit).")
+                continue
+                
+            scheduled_days_this_week[platform].append(day_name)
+            platforms_used_today.append(platform)
+            
+            # --- LOOP STEP 2: Content Generation ---
+            recent_history = "\n".join(social_memory["recent_posts"][-10:])
+            anti_spam = platform_rules.get("guidelines_and_anti_spam", "") if isinstance(platform_rules, dict) else ""
+            growth_tactics = platform_rules.get("reach_and_growth_tactics", "") if isinstance(platform_rules, dict) else ""
+            
+            content_prompt = f"""
+            <role>Lead Copywriter for Voxa in Egypt</role>
+            <task>
+            Write a highly engaging social media caption/script for {platform} to promote this job:
+            Job: {job['JobTitle']} at {job['CompanyName']} ({job['Location']})
+            
+            <brand_identity>{VOXA_BRAND_IDENTITY}</brand_identity>
+            
+            <rules>
+            1. Follow {platform}'s anti-spam rules: {anti_spam}
+            2. Use these reach tactics: {growth_tactics}
+            3. Apply learnings from past analytics: {analytics_data}
+            4. MEMORY CHECK: DO NOT repeat these recent concepts we already posted:
+            {recent_history}
+            5. CRITICAL LANGUAGE RULE: The primary language of the post MUST be **Egyptian Arabic (العامية المصرية)** written in Arabic script. Mix in English corporate/tech words (like 'Voice Note', 'Interview', 'Tele-sales') exactly how Egyptian youth and professionals speak today. DO NOT write the whole post in English!
+            6. CRITICAL CTA RULE: You MUST end every post with a strong Call-to-Action (CTA) encouraging the user to apply, followed exactly by the website link: https://voxa-pi-three.vercel.app/
+            </rules>
+            
+            Use <think> tags to brainstorm, then output ONLY the final text. Do NOT wrap in JSON.
+            </task>
+            """
+            caption = query_local_llm(content_prompt, f"Caption for {platform}")
+            social_memory["recent_posts"].append(f"[{platform} / {day_name}] Promoted {job['JobTitle']} - Theme: {caption[:50]}...")
+            
+            # --- LOOP STEP 3: Media Generation ---
+            is_video = platform in ["TikTok", "Instagram"]
+            media_type_label = "VIDEO PROMPT" if is_video else "IMAGE PROMPT"
+            
+            media_prompt = f"""
+            You are the Creative Director for Voxa in Egypt.
+            
+            TASK: Write exactly ONE ultra-detailed {media_type_label} for an AI media generator.
+            
+            REFERENCE SOCIAL MEDIA POST:
+            "{caption[:300]}..."
+            
+            REQUIREMENTS:
+            1. The visual must be cinematic, set in Egypt, and match the vibe of the post above.
+            2. You MUST include this exact sentence somewhere in your output: "A stylized letter V with the left side formed by tech-inspired circuit board lines and nodes, transitioning from light blue to purple."
+            3. Output ONLY the visual description paragraph. Do NOT generate multiple prompts. Do NOT write for other companies. Do NOT output fake tasks.
+            
+            Begin with <think> tags to plan, then provide the final prompt.
+            """
+            media_desc = query_local_llm(media_prompt, f"{media_type_label} for {platform}")
+            
+            schedule_md += f"### 📱 {platform}\n"
+            schedule_md += f"**Caption/Script:**\n{caption}\n\n"
+            schedule_md += f"**{media_type_label} (for Canva AI / Gemini):**\n{media_desc}\n\n"
+            schedule_md += "---\n\n"
+            
+        if not platforms_used_today:
+            schedule_md += "*No posts scheduled for this day based on platform guidelines.*\n\n---\n\n"
+            
+    # Save memory safely to persist between runs
+    social_memory["recent_posts"] = social_memory["recent_posts"][-40:] # Keep memory from growing too large
+    with open(memory_path, "w", encoding="utf-8") as f:
+        json.dump(social_memory, f, indent=4)
+        
+    return schedule_md
 
 if __name__ == "__main__":
     print("🚀 Voxa AI Social Media Bot Initialized!")
@@ -257,27 +323,9 @@ if __name__ == "__main__":
                 f.write(cleaned_schedule)
             print(f"\n✅ Generation Complete! Your weekly plan has been saved to: {output_path}")
 
-            # --- LOCAL MEDIA GENERATION ---
-            print("\n🎨 Now attempting to generate local media based on prompts...")
-            # This parsing is basic. A more robust solution would be for the AI to return structured JSON
-            # alongside the markdown, but this works with the current text-based flow.
-            days = cleaned_schedule.split('### ')[1:] # Split by day headers
-            current_day = start_date
-            for i, day_content in enumerate(days):
-                try:
-                    post_date_str = current_day.strftime('%Y-%m-%d')
-                    job_title_for_file = jobs[i]['JobTitle'] if i < len(jobs) else f"day_{i+1}"
-
-                    image_prompt_match = re.search(r"\*\*IMAGE PROMPT \(for Google Gemini\):\*\* (.*?)\n", day_content, re.DOTALL)
-                    if image_prompt_match and image_prompt_match.group(1).strip().lower() != 'none':
-                        generate_local_media(image_prompt_match.group(1).strip(), "image", post_date_str, job_title_for_file)
-
-                    video_prompt_match = re.search(r"\*\*VIDEO PROMPT \(for Google Gemini\):\*\* (.*?)\n", day_content, re.DOTALL)
-                    if video_prompt_match and video_prompt_match.group(1).strip().lower() != 'none':
-                        generate_local_media(video_prompt_match.group(1).strip(), "video", post_date_str, job_title_for_file)
+            # --- SKIPPING LOCAL MEDIA GENERATION ---
+            print("\n🎨 Local media generation has been skipped to save system resources.")
+            print("You can copy the highly detailed IMAGE and VIDEO prompts directly from the Markdown file and paste them into Canva AI or Google Gemini.")
                     
-                    current_day += datetime.timedelta(days=1)
-                except IndexError:
-                    print(f"⚠️  Could not find a matching job for Day {i+1} to name the media file.")
         else:
             print("\n❌ Failed to generate social content due to an API error.")
