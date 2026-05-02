@@ -8,8 +8,11 @@
   --text-main: #f8f9fa; /* White/Light text */
   --text-muted: #9ca3af; /* Gray/Blue-ish text */
   --border-color: #232635; /* Dark indigo borders */
-  --shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  --shadow-hover: 0 8px 25px rgba(0, 229, 255, 0.15); /* Neon glow */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --transition: all 0.3s ease;
 }
 
 /* =========================================
@@ -41,7 +44,7 @@ body {
 a {
   text-decoration: none;
   color: inherit;
-  transition: 0.3s;
+  transition: var(--transition);
 }
 ul {
   list-style: none;
@@ -111,7 +114,7 @@ select {
   background-color: var(--primary-color);
   color: #000000;
   padding: 0.6rem 1.2rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-weight: 700;
   border: none;
   cursor: pointer;
@@ -121,6 +124,8 @@ select {
 .btn-primary:hover {
   background-color: var(--primary-dark);
   color: #000000;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-hover);
 }
 .btn-text {
   font-weight: 600;
@@ -175,7 +180,7 @@ select {
   align-items: center;
   background: var(--bg-input);
   padding: 0.5rem 1rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
 }
 .input-group i {
@@ -222,7 +227,7 @@ select {
   background: transparent;
   color: var(--text-main);
   padding: 0.8rem 2rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-weight: 600;
   transition: all 0.3s ease;
   display: inline-flex;
@@ -476,10 +481,10 @@ select {
   background: transparent;
   border: 1px solid var(--primary-color);
   color: var(--primary-color);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-weight: 600;
   cursor: pointer;
-  transition: 0.3s;
+  transition: var(--transition);
 }
 .apply-btn:hover {
   background: var(--primary-color);
@@ -531,7 +536,7 @@ select {
   border: 1px solid #ef4444;
   color: #ef4444;
   padding: 0.5rem 1rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -584,7 +589,7 @@ select {
   padding: 0.6rem 0.6rem 0.6rem 2.2rem;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   outline: none;
   color: var(--text-main);
 }
@@ -648,7 +653,7 @@ select {
   border-radius: 12px;
   padding: 2rem;
   text-align: center;
-  transition: 0.3s;
+  transition: var(--transition);
 }
 .company-card:hover {
   box-shadow: var(--shadow);
@@ -822,7 +827,7 @@ select {
   align-items: center;
   opacity: 0;
   visibility: hidden;
-  transition: 0.3s;
+  transition: var(--transition);
   z-index: 1000;
   backdrop-filter: blur(5px);
 }
@@ -838,7 +843,7 @@ select {
   max-width: 600px;
   position: relative;
   transform: translateY(20px);
-  transition: 0.3s;
+  transition: var(--transition);
   border: 1px solid var(--border-color);
   max-height: 90vh;
   overflow-y: auto;
@@ -1155,7 +1160,7 @@ footer .container {
   }
   .btn-save {
     width: 100%;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     margin-top: 0;
   }
 

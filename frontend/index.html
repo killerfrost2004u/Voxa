@@ -32,9 +32,7 @@
         color: var(--text-muted, #94a3b8);
         margin-right: 15px;
         font-size: 1.2rem;
-        transition:
-          color 0.3s ease,
-          transform 0.3s ease;
+        transition: var(--transition);
         display: inline-block;
       }
       .social-link:hover {
@@ -43,21 +41,6 @@
       }
       .modal-logo-override {
         margin: 0 !important;
-      }
-      /* Enhance micro-interactions per UI/UX Skill */
-      button,
-      .btn-primary,
-      .btn-secondary,
-      .btn-text,
-      .tag-btn {
-        transition: all 0.3s ease;
-      }
-      button:hover,
-      .btn-primary:hover,
-      .btn-secondary:hover,
-      .tag-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
       }
     </style>
   </head>

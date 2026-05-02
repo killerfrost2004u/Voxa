@@ -14,7 +14,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   padding: 2.5rem;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   width: 100%;
   max-width: 450px;
   box-shadow: var(--shadow);
@@ -48,11 +48,11 @@
   padding: 0.8rem 1rem;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text-main);
   font-size: 1rem;
   outline: none;
-  transition: 0.3s;
+  transition: var(--transition);
 }
 
 .auth-form input:focus {
@@ -101,7 +101,7 @@
   color: #ef4444;
   border: 1px solid #ef4444;
   padding: 10px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
   margin-bottom: 1rem;
   text-align: center;
@@ -113,7 +113,7 @@
   color: #10b981;
   border: 1px solid #10b981;
   padding: 10px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
   margin-bottom: 1rem;
   text-align: center;

@@ -50,7 +50,7 @@ body {
   align-items: center;
   padding: 1rem;
   color: var(--text-muted);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   margin-bottom: 0.5rem;
   cursor: default;
   font-weight: 500;
@@ -99,11 +99,11 @@ header p {
   background: var(--bg-input);
   color: var(--text-main);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   min-width: 300px;
   font-size: 0.95rem;
   outline: none;
-  transition: 0.3s;
+  transition: var(--transition);
 }
 #app-search:focus {
   border-color: var(--primary-color);
@@ -112,7 +112,7 @@ header p {
 /* Table Container */
 .admin-card {
   background: var(--bg-card);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow);
   overflow: hidden;
