@@ -1,4 +1,4 @@
-const API_URL = 'https://voxa-pi-three.vercel.app/api'
+var API_URL = 'https://voxa-pi-three.vercel.app/api'
 let companies = []
 let salaryStats = []
 

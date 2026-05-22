@@ -1334,34 +1334,3 @@
     </script>
   </body>
 </html>
-itialize
-      document.addEventListener('DOMContentLoaded', () => {
-        populateCountryCodes()
-
-        const params = new URLSearchParams(window.location.search)
-
-        if (params.get('title')) {
-          document.getElementById('apply-job-title').textContent =
-            params.get('title')
-        }
-        if (params.get('company')) {
-          document.getElementById('apply-company').textContent =
-            params.get('company')
-        }
-
-        const user = JSON.parse(localStorage.getItem('user'))
-        if (user) {
-          document.getElementById('app-name').value = user.name || ''
-          document.getElementById('app-email').value = user.email || ''
-        }
-
-        if (params.get('bilingual') === '1') {
-          const bilingualGroup = document.getElementById('bilingual-group')
-          if (bilingualGroup) {
-            bilingualGroup.style.display = 'block'
-          }
-        }
-      })
-    </script>
-  </body>
-</html>

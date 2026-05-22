@@ -229,15 +229,13 @@
         const user = JSON.parse(userStr)
 
         // Populate User Info
-        document.getElementById('user-name').textContent = user.name
-        document.getElementById('header-name').textContent =
-          user.name.split(' ')[0]
-        document.getElementById('user-avatar').textContent = user.name
-          .charAt(0)
-          .toUpperCase()
+        const userName = user.name || 'User'
+        document.getElementById('user-name').textContent = userName
+        document.getElementById('header-name').textContent = userName.split(' ')[0]
+        document.getElementById('user-avatar').textContent = userName.charAt(0).toUpperCase()
 
         // Populate Settings Form
-        document.getElementById('settings-name').value = user.name
+        document.getElementById('settings-name').value = userName
         document.getElementById('settings-email').value =
           user.email || 'hunter@darkwolves.com'
 
