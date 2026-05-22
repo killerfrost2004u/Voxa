@@ -6,9 +6,8 @@ Voxa is an AI-powered HR recruitment platform that allows candidates to apply vi
 
 ### Frontend
 
-- **Strictly Vanilla:** HTML5, CSS3, and Vanilla JavaScript.
-- **No Frameworks:** Do NOT suggest or use React, Next.js, Vue, or Angular.
-- **State Management:** Rely on standard DOM manipulation and `localStorage` (as seen in `frontend/js/script.js`).
+- **Tech Stack Flexibility:** You are permitted to use modern frameworks (React, Vite) or Tailwind CSS if it results in the absolute best UI/UX. However, native web platform APIs (Vanilla HTML/CSS) are preferred if they can achieve the same modern result with less bloat.
+- **State Management:** Use standard DOM manipulation, `localStorage`, or modern state management depending on the chosen stack.
 
 ### UI/UX & Design "Skills"
 

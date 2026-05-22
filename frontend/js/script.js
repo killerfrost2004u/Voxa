@@ -2,11 +2,47 @@ const API_URL = 'https://voxa-pi-three.vercel.app/api'
 let companies = []
 let salaryStats = []
 
+// --- STATE MANAGEMENT (OBSERVER PATTERN) ---
+class JobStore {
+    constructor() {
+        this.jobs = [];
+        this.filteredJobs = [];
+        this.observers = [];
+    }
+    
+    subscribe(fn) {
+        this.observers.push(fn);
+    }
+    
+    setAllJobs(newJobs) {
+        this.jobs = newJobs;
+        this.setFilteredJobs([...newJobs]);
+    }
+    
+    setFilteredJobs(filtered) {
+        this.filteredJobs = filtered;
+        this.notify();
+    }
+    
+    notify() {
+        this.observers.forEach(observerFn => observerFn(this.filteredJobs));
+    }
+}
+
+window.jobStore = new JobStore();
+
 // --- GLOBAL VARIABLES ---
 window.allJobs = []
 window.filteredJobs = []
 window.currentPage = 1
 const jobsPerPage = 10
+
+// Connect the Observer to update the UI
+window.jobStore.subscribe((filtered) => {
+    window.filteredJobs = filtered;
+    updateJobCount();
+    window.renderJobs();
+});
 
 // --- INITIALIZE SCRIPT ON EVERY PAGE ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -34,7 +70,7 @@ async function loadJobs() {
     let fetchedJobs = await res.json()
 
     // --- DATA NORMALIZATION (NEW RULES APPLIED) ---
-    window.allJobs = fetchedJobs.map((job) => {
+    const processedJobs = fetchedJobs.map((job) => {
       // Safely grab strings and make them lowercase so it catches everything
       const loc = (job.location || '').toLowerCase()
       const req = (job.requirements || '').toLowerCase() // Includes your "Working Hours"
@@ -68,7 +104,8 @@ async function loadJobs() {
       return job
     })
 
-    window.filteredJobs = [...window.allJobs]
+    window.allJobs = processedJobs;
+    window.jobStore.setAllJobs(processedJobs);
 
     // --- PAGE SPECIFIC ROUTING ---
     const path = window.location.pathname
@@ -214,7 +251,7 @@ window.applyFilters = function () {
     document.querySelectorAll('.checkbox-group input:checked')
   ).map((cb) => cb.value.toLowerCase())
 
-  window.filteredJobs = window.allJobs.filter((job) => {
+  let newFiltered = window.jobStore.jobs.filter((job) => {
     const matchKeyword =
       (job.title && job.title.toLowerCase().includes(keyword)) ||
       (job.company && job.company.toLowerCase().includes(keyword)) ||
@@ -243,16 +280,15 @@ window.applyFilters = function () {
   })
 
   if (sortValue === 'salary') {
-    window.filteredJobs.sort(
+    newFiltered.sort(
       (a, b) => extractSalaryNumber(b) - extractSalaryNumber(a)
     )
   } else {
-    window.filteredJobs.sort((a, b) => b.id - a.id)
+    newFiltered.sort((a, b) => b.id - a.id)
   }
 
   window.currentPage = 1
-  updateJobCount()
-  window.renderJobs()
+  window.jobStore.setFilteredJobs(newFiltered)
 }
 
 window.resetFilters = function () {

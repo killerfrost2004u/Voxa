@@ -39,6 +39,8 @@ body {
   overflow-x: hidden; /* CRITICAL: Prevents horizontal scrolling globally */
   width: 100%;
   max-width: 100vw;
+  scroll-behavior: smooth;
+  accent-color: var(--primary-color);
 }
 
 a {
@@ -69,9 +71,11 @@ select {
    1. NAVBAR
    ========================================= */
 .navbar {
-  background: var(--bg-card);
+  background: rgba(21, 23, 32, 0.7); /* var(--bg-card) with opacity */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   padding: 1rem 0;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(35, 38, 53, 0.5); /* var(--border-color) with opacity */
   position: fixed;
   top: 0;
   left: 0;
@@ -122,10 +126,10 @@ select {
   text-align: center;
 }
 .btn-primary:hover {
-  background-color: var(--primary-dark);
+  background-color: var(--primary-color);
   color: #000000;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.4), 0 0 5px rgba(0, 229, 255, 0.2);
 }
 .btn-text {
   font-weight: 600;
@@ -182,6 +186,11 @@ select {
   padding: 0.5rem 1rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+.input-group:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
 }
 .input-group i {
   color: var(--text-muted);
@@ -243,8 +252,8 @@ select {
   border-color: var(--primary-color);
   color: var(--primary-color);
   background: rgba(0, 229, 255, 0.05); /* Adds a subtle neon glow */
-  box-shadow: 0 4px 12px rgba(0, 229, 255, 0.1);
-  transform: translateY(-1px);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+  transform: translateY(-2px) scale(1.02);
 }
 
 .section-padding {
@@ -827,13 +836,21 @@ select {
   align-items: center;
   opacity: 0;
   visibility: hidden;
-  transition: var(--transition);
+  transition: opacity 0.3s ease, visibility 0.3s ease, overlay 0.3s ease;
+  transition-behavior: allow-discrete;
   z-index: 1000;
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .modal-overlay.open {
   opacity: 1;
   visibility: visible;
+}
+@starting-style {
+  .modal-overlay.open {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
 }
 .modal-content {
   background: var(--bg-card);
@@ -842,15 +859,21 @@ select {
   width: 90%;
   max-width: 600px;
   position: relative;
-  transform: translateY(20px);
-  transition: var(--transition);
+  transform: scale(0.95) translateY(20px);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
   border: 1px solid var(--border-color);
   max-height: 90vh;
   overflow-y: auto;
   color: var(--text-main);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 229, 255, 0.1);
 }
 .modal-overlay.open .modal-content {
-  transform: translateY(0);
+  transform: scale(1) translateY(0);
+}
+@starting-style {
+  .modal-overlay.open .modal-content {
+    transform: scale(0.9) translateY(20px);
+  }
 }
 .modal-header {
   display: flex;
@@ -941,6 +964,28 @@ footer .container {
   text-align: center;
   color: var(--text-muted);
   font-size: 0.9rem;
+}
+
+/* =========================================
+   6.5 SCROLL-DRIVEN ANIMATIONS
+   ========================================= */
+@supports (animation-timeline: view()) {
+  .job-card, .job-card-wide, .company-card, .salary-card {
+    animation: fade-in-up linear both;
+    animation-timeline: view();
+    animation-range: entry 5% cover 25%;
+  }
+  
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
 }
 
 /* =========================================
