@@ -185,6 +185,8 @@ def cleanup_expired_codes():
 
 threading.Thread(target=cleanup_expired_codes, daemon=True).start()
 
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from ai_evaluator import AIAnalyzerFactory
 
 # --- WORKER ---
