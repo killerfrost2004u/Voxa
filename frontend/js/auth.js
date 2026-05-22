@@ -1,4 +1,5 @@
-var API_URL = 'https://voxa-pi-three.vercel.app/api'
+window.AUTH_API_URL = window.AUTH_API_URL || 'https://voxa-pi-three.vercel.app/api';
+const AUTH_API_URL = window.AUTH_API_URL;
 
 let currentEmail = ''
 let verifyMode = 'signup' // 'signup' or 'reset'
@@ -68,7 +69,7 @@ if (signupForm) {
     }
 
     try {
-      const response = await fetch(`${API_URL}/signup`, {
+      const response = await fetch(`${AUTH_API_URL}/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fullName, email, password }),
@@ -111,7 +112,7 @@ if (forgotForm) {
     btn.disabled = true
 
     try {
-      const response = await fetch(`${API_URL}/forgot-password`, {
+      const response = await fetch(`${AUTH_API_URL}/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -152,7 +153,7 @@ if (verifyForm) {
         verifyMode === 'signup' ? '/verify-email' : '/verify-code-only'
       const payload = { email: currentEmail, code: code }
 
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetch(`${AUTH_API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -210,7 +211,7 @@ if (resetPasswordForm) {
     btn.disabled = true
 
     try {
-      const response = await fetch(`${API_URL}/reset-password`, {
+      const response = await fetch(`${AUTH_API_URL}/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -244,7 +245,7 @@ if (loginForm) {
     const errorMsg = document.getElementById('login-error')
 
     try {
-      const response = await fetch(`${API_URL}/login`, {
+      const response = await fetch(`${AUTH_API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -330,7 +331,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Decode the JWT Payload (Base64)
         const payload = JSON.parse(atob(idToken.split('.')[1]))
 
-        const response = await fetch(`${API_URL}/oauth-login`, {
+        const response = await fetch(`${AUTH_API_URL}/oauth-login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -1,4 +1,4 @@
-var API_URL = 'https://voxa-pi-three.vercel.app/api'
+var SCRIPT_API_URL = 'https://voxa-pi-three.vercel.app/api'
 let companies = []
 let salaryStats = []
 
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- LOAD JOBS (GLOBAL) ---
 async function loadJobs() {
   try {
-    const res = await fetch(`${API_URL}/jobs`)
+    const res = await fetch(`${SCRIPT_API_URL}/jobs`)
     let fetchedJobs = await res.json()
 
     // --- DATA NORMALIZATION (NEW RULES APPLIED) ---
