@@ -72,10 +72,10 @@ async function loadJobs() {
     // --- DATA NORMALIZATION (NEW RULES APPLIED) ---
     const processedJobs = fetchedJobs.map((job) => {
       // Safely grab strings and make them lowercase so it catches everything
-      const loc = (job.location || '').toLowerCase()
-      const req = (job.requirements || '').toLowerCase() // Includes your "Working Hours"
-      const comp = (job.company || '').toLowerCase()
-      const title = (job.title || '').toLowerCase()
+      const loc = String(job.location || '').toLowerCase()
+      const req = String(job.requirements || '').toLowerCase() // Includes your "Working Hours"
+      const comp = String(job.company || '').toLowerCase()
+      const title = String(job.title || '').toLowerCase()
 
       // 1. Remote Check (WFH, From Home, Remotely, etc.)
       job.isRemote =
@@ -455,7 +455,7 @@ window.renderCompanyProfile = function (companyName, allJobsArray) {
 
 function extractSalaryNumber(job) {
   if (!job.salary) return 0
-  let text = job.salary.toLowerCase().replace(/,/g, '')
+  let text = String(job.salary).toLowerCase().replace(/,/g, '')
   text = text.replace(/\d+%/g, '')
   text = text.replace(/\d+\s*(months?|years?|days?)/g, '')
 
@@ -576,7 +576,9 @@ window.filterSalaries = function () {
 
 function appendJobCard(container, job, isWide) {
   const card = document.createElement('div')
-  const saveJobCode = `event.stopPropagation(); saveJob(${job.id}, '${job.title.replace(/'/g, "\\'")}', '${job.company.replace(/'/g, "\\'")}', '${job.logo}')`
+  const safeTitle = (job.title || 'General').replace(/'/g, "\\'")
+  const safeCompany = (job.company || 'Voxa').replace(/'/g, "\\'")
+  const saveJobCode = `event.stopPropagation(); saveJob(${job.id}, '${safeTitle}', '${safeCompany}', '${job.logo}')`
 
   if (isWide) {
     card.classList.add('job-card-wide')
