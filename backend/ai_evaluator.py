@@ -1,11 +1,8 @@
 import re
 import json
 import time
-import torch
-import librosa
 import google.generativeai as genai
 from abc import ABC, abstractmethod
-from transformers import AutoProcessor, Qwen2AudioForConditionalGeneration, BitsAndBytesConfig
 
 # Global LALM instances
 processor = None
@@ -13,6 +10,9 @@ audio_model = None
 
 def get_audio_model():
     global processor, audio_model
+    import torch
+    from transformers import AutoProcessor, Qwen2AudioForConditionalGeneration, BitsAndBytesConfig
+    
     if audio_model is None:
         print("\n⏳ Initializing 4-bit Quantized LALM (Qwen2-Audio-7B)...")
         print("⚙️ Automatically dividing workload across ALL available GPUs, System RAM, and CPU...")
@@ -154,6 +154,8 @@ class GeminiAnalyzer(IAudioAnalyzer):
 
 class LocalLALMAnalyzer(IAudioAnalyzer):
     def analyze(self, file_path: str) -> dict:
+        import torch
+        import librosa
         print(f"🧠 Local LALM is evaluating {file_path} natively...")
         try:
             proc, mod = get_audio_model()
