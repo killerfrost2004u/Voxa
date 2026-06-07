@@ -64,7 +64,7 @@ app = Flask(__name__)
 CORS(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-print("✅ System Ready. Connected to Neon Cloud Postgres & Cloudflare R2.")
+print("[OK] System Ready. Connected to Neon Cloud Postgres & Cloudflare R2.")
 
 from psycopg2 import pool
 
@@ -135,12 +135,82 @@ def init_db():
             
             # --- AUTH MIGRATIONS ---
             c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "IsVerified" BOOLEAN DEFAULT TRUE')
+            
+            # --- SAVED JOBS TABLE ---
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS "SavedJobs" (
+                    "ID" SERIAL PRIMARY KEY,
+                    "UserEmail" TEXT,
+                    "JobID" INTEGER,
+                    "SavedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE("UserEmail", "JobID")
+                )
+            """)
+
+            # --- SAVED COMPANIES TABLE ---
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS "SavedCompanies" (
+                    "ID" SERIAL PRIMARY KEY,
+                    "UserEmail" TEXT,
+                    "CompanyID" INTEGER,
+                    "SavedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE("UserEmail", "CompanyID")
+                )
+            """)
             c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "VerificationCode" TEXT')
             c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "CodeExpiry" TIMESTAMP')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "ProfilePic" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "NationalID" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "Nationality" TEXT DEFAULT \'Egyptian\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "DOB" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "Faculty" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "Address" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "Phone" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "WhatsApp" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "Gender" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "GradStatus" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "MilitaryStatus" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "EnglishLevel" TEXT DEFAULT \'B2\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "Experience" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "ExperienceDetails" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "LinkedInUrl" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "ResumeUrl" TEXT DEFAULT \'\'')
+            c.execute('ALTER TABLE "Users" ADD COLUMN IF NOT EXISTS "DefaultVoiceNote" TEXT DEFAULT \'\'')
+            # --- COMPANIES MIGRATION ---
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS "Companies" (
+                    "CompanyID" SERIAL PRIMARY KEY,
+                    "Name" TEXT NOT NULL,
+                    "LogoUrl" TEXT,
+                    "Description" TEXT,
+                    "Status" TEXT DEFAULT 'Active'
+                )''')
+            c.execute('ALTER TABLE "Jobs" ADD COLUMN IF NOT EXISTS "CompanyID" INTEGER')
+            
+            # --- NOTIFICATIONS & MESSAGES MIGRATION ---
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS "Notifications" (
+                    "NotificationID" SERIAL PRIMARY KEY,
+                    "Email" TEXT NOT NULL,
+                    "Content" TEXT NOT NULL,
+                    "Type" TEXT DEFAULT 'Alert',
+                    "IsRead" BOOLEAN DEFAULT FALSE,
+                    "CreatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )''')
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS "Messages" (
+                    "MessageID" SERIAL PRIMARY KEY,
+                    "SenderEmail" TEXT NOT NULL,
+                    "ReceiverEmail" TEXT NOT NULL,
+                    "Content" TEXT NOT NULL,
+                    "IsRead" BOOLEAN DEFAULT FALSE,
+                    "CreatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )''')
+            
             conn.commit()
-            print("✅ Database Migrations Complete (ValidatorScopes synced).")
+            print("[OK] Database Migrations Complete (ValidatorScopes synced, Companies created).")
         except Exception as e:
-            print(f"❌ Migration Error: {e}")
+            print(f"[Error] Migration Error: {e}")
         finally:
             conn.close()
 
@@ -164,7 +234,7 @@ def send_verification_email(to_email, code, subject="Voxa Verification Code"):
             smtp.send_message(msg)
         return True
     except Exception as e:
-        print(f"❌ Email Error: {e}")
+        print(f"[Error] Email Error: {e}")
         return False
 
 # --- CRON JOB: CLEANUP EXPIRED CODES ---
@@ -179,7 +249,7 @@ def cleanup_expired_codes():
                 conn.commit()
                 conn.close()
         except Exception as e:
-            print(f"❌ Cleanup Error: {e}")
+            print(f"[Error] Cleanup Error: {e}")
         
         time.sleep(3600) # Run safely in background every 60 minutes
 
@@ -197,7 +267,7 @@ def ai_worker(app_id, file_name):
     try:
         s3_client.download_file(R2_BUCKET_NAME, file_name, local_path)
     except Exception as e:
-        print(f"❌ Failed to download from R2: {e}")
+        print(f"[Error] Failed to download from R2: {e}")
         return
 
     analyzer_type = os.getenv("AI_ENGINE", "gemini")
@@ -229,9 +299,9 @@ def ai_worker(app_id, file_name):
                 conn.commit()
                 conn.close()
         else:
-            print(f"❌ AI returned nothing for App #{app_id}. Database was NOT updated.")
+            print(f"[Error] AI returned nothing for App #{app_id}. Database was NOT updated.")
     except Exception as e:
-        print(f"❌ Worker Error: {e}")
+        print(f"[Error] Worker Error: {e}")
     finally:
         # 2. Delete the temporary local file to save server space!
         if os.path.exists(local_path):
@@ -248,9 +318,28 @@ def send_offer(id):
 @app.route('/api/jobs', methods=['GET'])
 def get_public_jobs():
     try:
+        email = request.args.get('email')
         conn = get_db_connection()
         c = conn.cursor()
-        c.execute("""SELECT * FROM "Jobs" WHERE "Status" = 'Active'""")
+        if email:
+            c.execute("""
+                SELECT j.*, c."Name" as "LinkedCompanyName", c."LogoUrl" as "CompanyLogo", c."Status" as "CompanyStatus",
+                       (CASE WHEN sj."ID" IS NOT NULL THEN TRUE ELSE FALSE END) as "isSaved"
+                FROM "Jobs" j
+                LEFT JOIN "Companies" c ON j."CompanyID" = c."CompanyID"
+                LEFT JOIN "SavedJobs" sj ON j."JobID" = sj."JobID" AND sj."UserEmail" = %s
+                WHERE j."Status" = 'Active' 
+                AND (c."Status" IS NULL OR c."Status" = 'Active')
+            """, (email,))
+        else:
+            c.execute("""
+                SELECT j.*, c."Name" as "LinkedCompanyName", c."LogoUrl" as "CompanyLogo", c."Status" as "CompanyStatus",
+                       FALSE as "isSaved"
+                FROM "Jobs" j
+                LEFT JOIN "Companies" c ON j."CompanyID" = c."CompanyID"
+                WHERE j."Status" = 'Active' 
+                AND (c."Status" IS NULL OR c."Status" = 'Active')
+            """)
         cols = [column[0] for column in c.description]
         raw_jobs = [dict(zip(cols, row)) for row in c.fetchall()]
         conn.close()
@@ -260,7 +349,7 @@ def get_public_jobs():
             formatted_jobs.append({
                 "id": j.get("JobID"),
                 "title": j.get("JobTitle", "Unknown Title"),
-                "company": j.get("CompanyName", "Voxa"),
+                "company": j.get("LinkedCompanyName") or j.get("CompanyName") or "Voxa",
                 "location": j.get("Location") or "Remote",
                 "salary": j.get("SalaryPackage") or "Competitive",
                 "accountType": j.get("AccountType") or "N/A",
@@ -275,19 +364,145 @@ def get_public_jobs():
                 "training": j.get("Training") or "Not specified.",
                 "requirements": f"Account: {j.get('AccountType', 'N/A')} | Hours: {j.get('WorkingHours', 'N/A')} | Target: {j.get('TargetAudience', 'N/A')}",
                 "description": j.get("OfferDetails", ""),
-                "logo": j.get("CompanyName", "VO")[:2].upper(),
-                "bilingual": bool(j.get("RequiresSecondLanguage", False))
+                "logo": j.get("LinkedCompanyName") or j.get("CompanyName") or "VO",
+                "logoUrl": j.get("CompanyLogo"),
+                "companyId": j.get("CompanyID"),
+                "bilingual": bool(j.get("RequiresSecondLanguage", False)),
+                "isSaved": bool(j.get("isSaved", False))
             })
         return jsonify(formatted_jobs)
     except Exception as e: 
         return jsonify([])
 
-@app.route('/api/jobs/<int:id>', methods=['GET'])
-def get_public_job(id):
+@app.route('/api/companies', methods=['GET'])
+def get_public_companies():
     try:
         conn = get_db_connection()
         c = conn.cursor()
-        c.execute("""SELECT * FROM "Jobs" WHERE "JobID" = %s AND "Status" = 'Active'""", (id,))
+        c.execute("""
+            SELECT c."CompanyID" as id, c."Name" as name, c."LogoUrl" as "logoUrl",
+                   (SELECT COUNT(*) FROM "Jobs" j WHERE j."CompanyID" = c."CompanyID" AND j."Status" = 'Active') as "openJobs"
+            FROM "Companies" c
+            WHERE c."Status" = 'Active'
+            ORDER BY "openJobs" DESC
+        """)
+        cols = [column[0] for column in c.description]
+        companies = [dict(zip(cols, row)) for row in c.fetchall()]
+        conn.close()
+        
+        # Format for frontend which expects 'logo' string if no logoUrl, we can just use logoUrl
+        for comp in companies:
+            if not comp.get('logoUrl'):
+                comp['logo'] = comp.get('name', 'VO')[:2].upper()
+            else:
+                comp['logo'] = comp['logoUrl']
+        return jsonify(companies)
+    except Exception as e:
+        return jsonify([])
+
+@app.route('/api/companies/<int:id>', methods=['GET'])
+def get_public_company(id):
+    print("HITTING get_public_company FOR ID:", id, flush=True)
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("""
+            SELECT "CompanyID" as id, "Name" as name, "LogoUrl" as "logoUrl", "Description" as description
+            FROM "Companies"
+            WHERE "CompanyID" = %s AND "Status" = 'Active'
+        """, (id,))
+        comp_row = c.fetchone()
+        if not comp_row:
+            conn.close()
+            return jsonify({"error": "Company not found"}), 404
+            
+        cols = [column[0] for column in c.description]
+        company = dict(zip(cols, comp_row))
+
+        email = request.args.get('email')
+        if email:
+            c.execute('SELECT "ID" FROM "SavedCompanies" WHERE "UserEmail" = %s AND "CompanyID" = %s', (email, id))
+            company['isSaved'] = bool(c.fetchone())
+        else:
+            company['isSaved'] = False
+        
+        if not company.get('logoUrl'):
+            company['logo'] = company.get('name', 'VO')[:2].upper()
+        else:
+            company['logo'] = company['logoUrl']
+            
+        c.execute("""
+            SELECT "JobID" as id, "JobTitle" as title, "Location" as location, "SalaryPackage" as salary, "AccountType" as "accountType", "RequiresSecondLanguage" as bilingual
+            FROM "Jobs"
+            WHERE "CompanyID" = %s AND "Status" = 'Active'
+        """, (id,))
+        jcols = [column[0] for column in c.description]
+        company['jobs'] = [dict(zip(jcols, row)) for row in c.fetchall()]
+        
+        conn.close()
+        return jsonify(company)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/salaries', methods=['GET'])
+def get_public_salaries():
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("""
+            SELECT "JobTitle" as title, COUNT(*) as samples, MAX("SalaryPackage") as max_salary
+            FROM "Jobs"
+            WHERE "Status" = 'Active'
+            GROUP BY "JobTitle"
+            ORDER BY samples DESC
+        """)
+        cols = [column[0] for column in c.description]
+        raw_salaries = [dict(zip(cols, row)) for row in c.fetchall()]
+        conn.close()
+        
+        formatted_salaries = []
+        for index, row in enumerate(raw_salaries):
+            salary_str = row.get("max_salary", "") or ""
+            nums = re.findall(r'\d+', str(salary_str).replace(',', ''))
+            avg = int(nums[0]) if nums else 25000
+            if "k" in str(salary_str).lower() and avg < 1000:
+                avg *= 1000
+            
+            formatted_salaries.append({
+                "id": index + 1,
+                "title": row.get("title", "Unknown Role"),
+                "avg": avg,
+                "samples": row.get("samples", 1)
+            })
+        return jsonify(formatted_salaries)
+    except Exception as e:
+        return jsonify([])
+
+@app.route('/api/jobs/<int:id>', methods=['GET'])
+def get_public_job(id):
+    try:
+        email = request.args.get('email')
+        conn = get_db_connection()
+        c = conn.cursor()
+        if email:
+            c.execute("""
+                SELECT j.*, c."Name" as "LinkedCompanyName", c."LogoUrl" as "CompanyLogo", c."Status" as "CompanyStatus",
+                       (CASE WHEN sj."ID" IS NOT NULL THEN TRUE ELSE FALSE END) as "isSaved"
+                FROM "Jobs" j
+                LEFT JOIN "Companies" c ON j."CompanyID" = c."CompanyID"
+                LEFT JOIN "SavedJobs" sj ON j."JobID" = sj."JobID" AND sj."UserEmail" = %s
+                WHERE j."JobID" = %s AND j."Status" = 'Active'
+                AND (c."Status" IS NULL OR c."Status" = 'Active')
+            """, (email, id))
+        else:
+            c.execute("""
+                SELECT j.*, c."Name" as "LinkedCompanyName", c."LogoUrl" as "CompanyLogo", c."Status" as "CompanyStatus",
+                       FALSE as "isSaved"
+                FROM "Jobs" j
+                LEFT JOIN "Companies" c ON j."CompanyID" = c."CompanyID"
+                WHERE j."JobID" = %s AND j."Status" = 'Active'
+                AND (c."Status" IS NULL OR c."Status" = 'Active')
+            """, (id,))
         cols = [column[0] for column in c.description]
         row = c.fetchone()
         conn.close()
@@ -296,7 +511,7 @@ def get_public_job(id):
             return jsonify({
                 "id": j.get("JobID"),
                 "title": j.get("JobTitle", "Unknown Title"),
-                "company": j.get("CompanyName", "Voxa"),
+                "company": j.get("LinkedCompanyName") or j.get("CompanyName") or "Voxa",
                 "location": j.get("Location") or "Remote",
                 "salary": j.get("SalaryPackage") or "Competitive",
                 "accountType": j.get("AccountType") or "N/A",
@@ -311,8 +526,13 @@ def get_public_job(id):
                 "training": j.get("Training") or "Not specified.",
                 "requirements": f"Account: {j.get('AccountType', 'N/A')} | Hours: {j.get('WorkingHours', 'N/A')} | Target: {j.get('TargetAudience', 'N/A')}",
                 "description": j.get("OfferDetails", ""),
-                "logo": j.get("CompanyName", "VO")[:2].upper(),
-                "bilingual": bool(j.get("RequiresSecondLanguage", False))
+                "logo": j.get("CompanyLogo") or j.get("CompanyName", "VO")[:2].upper(),
+                "bilingual": bool(j.get("RequiresSecondLanguage", False)),
+                "languageRequirement": j.get("LanguageRequirement") or "English Only",
+                "targetLanguage": j.get("TargetLanguage") or "",
+                "type": j.get("type") or "Full Time",
+                "companyId": j.get("CompanyID"),
+                "isSaved": bool(j.get("isSaved", False))
             })
         return jsonify({"error": "Job not found"}), 404
     except Exception as e:
@@ -322,9 +542,11 @@ def get_public_job(id):
 def handle_admin_jobs():
     conn = get_db_connection()
     c = conn.cursor()
-    
     if request.method == 'GET':
-        c.execute("""SELECT * FROM "Jobs" ORDER BY "JobID" DESC""")
+        if request.args.get('companyId'):
+            c.execute("""SELECT * FROM "Jobs" WHERE "CompanyID" = %s ORDER BY "JobID" DESC""", (request.args.get('companyId'),))
+        else:
+            c.execute("""SELECT * FROM "Jobs" ORDER BY "JobID" DESC""")
         cols = [column[0] for column in c.description]
         jobs = [dict(zip(cols, row)) for row in c.fetchall()]
         conn.close()
@@ -333,12 +555,12 @@ def handle_admin_jobs():
     if request.method == 'POST':
         d = request.get_json()
         c.execute(
-            """INSERT INTO "Jobs" ("CompanyName", "JobTitle", "AccountType", "WorkingHours", "SalaryPackage", "Location", "Training", "OfferDetails", "Status", "RequiresSecondLanguage", "InterviewType", "MinEnglishLevel", "MinSecondLangLevel", "MaxAge", "NationalityReq", "GraduationReq", "MinExperience") 
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-            (d.get('companyName'), d.get('jobTitle'), d.get('accountType'), d.get('workingHours'), 
+            """INSERT INTO "Jobs" ("CompanyID", "CompanyName", "JobTitle", "AccountType", "WorkingHours", "SalaryPackage", "Location", "Training", "OfferDetails", "Status", "RequiresSecondLanguage", "InterviewType", "MinEnglishLevel", "MinSecondLangLevel", "MaxAge", "NationalityReq", "GraduationReq", "MinExperience", "type", "LanguageRequirement", "TargetLanguage") 
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            (d.get('companyId'), d.get('companyName'), d.get('jobTitle'), d.get('accountType'), d.get('workingHours'), 
              d.get('salaryPackage'), d.get('location'), 
              d.get('training'), d.get('offerDetails'), d.get('status', 'Active'), int(d.get('requiresSecondLanguage', 0)),
-             d.get('interviewType', 'Onsite Interview'), d.get('minEnglishLevel', 'B2'), d.get('minSecondLangLevel', ''), d.get('maxAge', 35), d.get('nationalityReq', 'All Nationalities'), d.get('graduationReq', 'Graduates Only'), d.get('minExperience', '0'))
+             d.get('interviewType', 'Onsite Interview'), d.get('minEnglishLevel', 'B2'), d.get('minSecondLangLevel', ''), d.get('maxAge', 35), d.get('nationalityReq', 'All Nationalities'), d.get('graduationReq', 'Graduates Only'), d.get('minExperience', '0'), d.get('type', 'Full Time'), d.get('languageRequirement', 'English Only'), d.get('targetLanguage', ''))
         )
         conn.commit()
         conn.close()
@@ -353,15 +575,15 @@ def update_delete_job(id):
         if 'jobTitle' in data:
             c.execute(
                 """UPDATE "Jobs" 
-                   SET "CompanyName"=%s, "JobTitle"=%s, "AccountType"=%s, "WorkingHours"=%s, 
+                   SET "CompanyID"=%s, "CompanyName"=%s, "JobTitle"=%s, "AccountType"=%s, "WorkingHours"=%s, 
                        "SalaryPackage"=%s, "Location"=%s, "Training"=%s, "OfferDetails"=%s, "RequiresSecondLanguage"=%s,
-                       "InterviewType"=%s, "MinEnglishLevel"=%s, "MinSecondLangLevel"=%s, "MaxAge"=%s, "NationalityReq"=%s, "GraduationReq"=%s, "MinExperience"=%s
+                       "InterviewType"=%s, "MinEnglishLevel"=%s, "MinSecondLangLevel"=%s, "MaxAge"=%s, "NationalityReq"=%s, "GraduationReq"=%s, "MinExperience"=%s, "type"=%s, "LanguageRequirement"=%s, "TargetLanguage"=%s
                    WHERE "JobID"=%s""",
-                (data.get('companyName'), data.get('jobTitle'), data.get('accountType'), 
+                (data.get('companyId'), data.get('companyName'), data.get('jobTitle'), data.get('accountType'), 
                  data.get('workingHours'), data.get('salaryPackage'), 
                  data.get('location'), data.get('training'), 
                  data.get('offerDetails'), int(data.get('requiresSecondLanguage', 0)),
-                 data.get('interviewType'), data.get('minEnglishLevel'), data.get('minSecondLangLevel'), data.get('maxAge'), data.get('nationalityReq'), data.get('graduationReq'), data.get('minExperience'), id)
+                 data.get('interviewType'), data.get('minEnglishLevel'), data.get('minSecondLangLevel'), data.get('maxAge'), data.get('nationalityReq'), data.get('graduationReq'), data.get('minExperience'), data.get('type', 'Full Time'), data.get('languageRequirement', 'English Only'), data.get('targetLanguage', ''), id)
             )
         else:
             c.execute("""UPDATE "Jobs" SET "Status"=%s WHERE "JobID"=%s""", (data.get('status'), id))
@@ -374,6 +596,57 @@ def update_delete_job(id):
         conn.commit()
         conn.close()
         return jsonify({"message": "Job deleted"})
+
+@app.route('/api/admin/companies', methods=['GET', 'POST'])
+def handle_admin_companies():
+    conn = get_db_connection()
+    c = conn.cursor()
+    
+    if request.method == 'GET':
+        c.execute("""SELECT * FROM "Companies" ORDER BY "CompanyID" DESC""")
+        cols = [column[0] for column in c.description]
+        companies = [dict(zip(cols, row)) for row in c.fetchall()]
+        
+        c.execute("""SELECT "CompanyID", COUNT(*) FROM "Jobs" WHERE "Status" = 'Active' GROUP BY "CompanyID" """)
+        jobs_counts = {row[0]: row[1] for row in c.fetchall()}
+        
+        for comp in companies:
+            comp['activeJobs'] = jobs_counts.get(comp['CompanyID'], 0)
+            
+        conn.close()
+        return jsonify(companies)
+        
+    if request.method == 'POST':
+        d = request.get_json()
+        c.execute(
+            """INSERT INTO "Companies" ("Name", "LogoUrl", "Description", "Status") VALUES (%s, %s, %s, %s) RETURNING "CompanyID" """,
+            (d.get('name'), d.get('logoUrl'), d.get('description'), d.get('status', 'Active'))
+        )
+        new_id = c.fetchone()[0]
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Company added", "id": new_id}), 201
+
+@app.route('/api/admin/companies/<int:id>', methods=['PUT', 'DELETE'])
+def update_delete_company(id):
+    conn = get_db_connection()
+    c = conn.cursor()
+    if request.method == 'PUT':
+        data = request.get_json()
+        c.execute(
+            """UPDATE "Companies" SET "Name"=%s, "LogoUrl"=%s, "Description"=%s, "Status"=%s WHERE "CompanyID"=%s""",
+            (data.get('name'), data.get('logoUrl'), data.get('description'), data.get('status'), id)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Company updated"})
+        
+    if request.method == 'DELETE':
+        c.execute("""DELETE FROM "Companies" WHERE "CompanyID"=%s""", (id,))
+        c.execute("""DELETE FROM "Jobs" WHERE "CompanyID"=%s""", (id,))
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Company deleted"})
 
 @app.route('/api/admin/applications/<int:id>/status', methods=['PUT'])
 def update_application_status(id):
@@ -464,7 +737,7 @@ def create_user():
         conn.commit()
         return jsonify({"message": f"{target_role} {name} successfully created in {target_agency}!"}), 201
     except Exception as e:
-        print(f"❌ Database Error: {e}")
+        print(f"[Error] Database Error: {e}")
         return jsonify({"error": "Failed to create staff member."}), 500
     finally:
         if 'cur' in locals(): cur.close()
@@ -505,7 +778,7 @@ def staff_signup():
         conn.commit()
         return jsonify({"message": "Registration successful! Your account is pending approval from your manager."}), 201
     except Exception as e:
-        print(f"❌ Staff Signup Error: {e}")
+        print(f"[Error] Staff Signup Error: {e}")
         return jsonify({"error": "Failed to register account."}), 500
     finally:
         if 'cur' in locals(): cur.close()
@@ -617,6 +890,255 @@ def reset_password():
     conn.close()
     return jsonify({"message": "Password reset successfully! You can now log in."}), 200
 
+@app.route('/api/candidate/stats', methods=['GET'])
+def get_candidate_stats():
+    email = request.args.get('email')
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        c.execute('SELECT COUNT(*) FROM "JobApplications" WHERE "Email"=%s', (email,))
+        total_apps = c.fetchone()[0]
+        
+        c.execute('SELECT COUNT(*) FROM "JobApplications" WHERE "Email"=%s AND "Status" = \'Accepted\'', (email,))
+        interviews_scheduled = c.fetchone()[0]
+        
+        # We don't have profile views, so we'll mock it for now or return 0
+        profile_views = 0
+        
+        conn.close()
+        return jsonify({
+            "applicationsSent": total_apps,
+            "interviewsScheduled": interviews_scheduled,
+            "profileViews": profile_views
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/candidate/saved-jobs/toggle', methods=['POST'])
+def toggle_saved_job():
+    data = request.json
+    email = data.get('email')
+    job_id = data.get('jobId')
+    if not email or not job_id:
+        return jsonify({"error": "Missing email or jobId"}), 400
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('SELECT "ID" FROM "SavedJobs" WHERE "UserEmail" = %s AND "JobID" = %s', (email, job_id))
+        row = c.fetchone()
+        if row:
+            c.execute('DELETE FROM "SavedJobs" WHERE "ID" = %s', (row[0],))
+            saved = False
+        else:
+            c.execute('INSERT INTO "SavedJobs" ("UserEmail", "JobID") VALUES (%s, %s)', (email, job_id))
+            saved = True
+        conn.commit()
+        conn.close()
+        return jsonify({"saved": saved}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/candidate/saved-companies/toggle', methods=['POST'])
+def toggle_saved_company():
+    data = request.json
+    email = data.get('email')
+    company_id = data.get('companyId')
+    if not email or not company_id:
+        return jsonify({"error": "Missing email or companyId"}), 400
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('SELECT "ID" FROM "SavedCompanies" WHERE "UserEmail" = %s AND "CompanyID" = %s', (email, company_id))
+        row = c.fetchone()
+        if row:
+            c.execute('DELETE FROM "SavedCompanies" WHERE "ID" = %s', (row[0],))
+            saved = False
+        else:
+            c.execute('INSERT INTO "SavedCompanies" ("UserEmail", "CompanyID") VALUES (%s, %s)', (email, company_id))
+            saved = True
+        conn.commit()
+        conn.close()
+        return jsonify({"saved": saved}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/candidate/saved-companies', methods=['GET'])
+def get_saved_companies():
+    email = request.args.get('email')
+    if not email:
+        return jsonify({"error": "Missing email"}), 400
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("""
+            SELECT c."CompanyID" as id, c."Name" as name, c."LogoUrl" as "logoUrl", c."Description" as description,
+                   TRUE as "isSaved"
+            FROM "SavedCompanies" sc
+            JOIN "Companies" c ON sc."CompanyID" = c."CompanyID"
+            WHERE sc."UserEmail" = %s AND c."Status" = 'Active'
+            ORDER BY sc."SavedAt" DESC
+        """, (email,))
+        cols = [column[0] for column in c.description]
+        companies = [dict(zip(cols, row)) for row in c.fetchall()]
+        conn.close()
+        return jsonify(companies), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/candidate/saved-jobs', methods=['GET'])
+def get_saved_jobs():
+    email = request.args.get('email')
+    if not email:
+        return jsonify({"error": "Missing email"}), 400
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("""
+            SELECT j.*, c."Name" as "LinkedCompanyName", c."LogoUrl" as "CompanyLogo", c."Status" as "CompanyStatus",
+                   TRUE as "isSaved"
+            FROM "SavedJobs" sj
+            JOIN "Jobs" j ON sj."JobID" = j."JobID"
+            LEFT JOIN "Companies" c ON j."CompanyID" = c."CompanyID"
+            WHERE sj."UserEmail" = %s AND j."Status" = 'Active'
+            AND (c."Status" IS NULL OR c."Status" = 'Active')
+            ORDER BY sj."SavedAt" DESC
+        """, (email,))
+        cols = [column[0] for column in c.description]
+        raw_jobs = [dict(zip(cols, row)) for row in c.fetchall()]
+        conn.close()
+        
+        formatted_jobs = []
+        for j in raw_jobs:
+            formatted_jobs.append({
+                "id": j.get("JobID"),
+                "title": j.get("JobTitle", "Unknown Title"),
+                "company": j.get("CompanyName", "Voxa"),
+                "location": j.get("Location") or "Remote",
+                "salary": j.get("SalaryPackage") or "Competitive",
+                "accountType": j.get("AccountType") or "N/A",
+                "workingHours": j.get("WorkingHours") or "N/A",
+                "interviewType": j.get("InterviewType") or "Onsite Interview",
+                "minEnglishLevel": j.get("MinEnglishLevel") or "B2",
+                "minSecondLangLevel": j.get("MinSecondLangLevel") or "",
+                "maxAge": j.get("MaxAge") or 35,
+                "nationalityReq": j.get("NationalityReq") or "All Nationalities",
+                "graduationReq": j.get("GraduationReq") or "Graduates Only",
+                "minExperience": j.get("MinExperience") or "0",
+                "training": j.get("Training") or "Not specified.",
+                "requirements": f"Account: {j.get('AccountType', 'N/A')} | Hours: {j.get('WorkingHours', 'N/A')} | Target: {j.get('TargetAudience', 'N/A')}",
+                "description": j.get("OfferDetails", ""),
+                "logo": j.get("LinkedCompanyName") or j.get("CompanyName") or "VO",
+                "logoUrl": j.get("CompanyLogo"),
+                "companyId": j.get("CompanyID"),
+                "isSaved": True
+            })
+        return jsonify(formatted_jobs), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/candidate/applications', methods=['GET'])
+def get_candidate_applications():
+    email = request.args.get('email')
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('''
+            SELECT "ApplicationID" as id, "JobTitle" as role, "Company" as company, 
+                   "Status" as status, "SubmittedAt" as date, "AI_Rating", "ValidatorFeedback"
+            FROM "JobApplications" 
+            WHERE "Email"=%s
+            ORDER BY "SubmittedAt" DESC
+        ''', (email,))
+        cols = [column[0] for column in c.description]
+        apps = [dict(zip(cols, row)) for row in c.fetchall()]
+        conn.close()
+        
+        # Normalize status
+        for app in apps:
+            if not app['status']:
+                app['status'] = 'Under Review'
+            elif app['status'] == 'Analyzed':
+                app['status'] = 'Reviewed'
+        
+        return jsonify(apps), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# --- NOTIFICATIONS API ---
+@app.route('/api/notifications', methods=['GET'])
+def get_notifications():
+    email = request.args.get('email')
+    if not email: return jsonify({"error": "Email required"}), 400
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('SELECT "NotificationID" as id, "Content" as content, "Type" as type, "IsRead" as is_read, "CreatedAt" as date FROM "Notifications" WHERE "Email"=%s ORDER BY "CreatedAt" DESC LIMIT 50', (email,))
+        cols = [column[0] for column in c.description]
+        notifs = [dict(zip(cols, row)) for row in c.fetchall()]
+        conn.close()
+        return jsonify(notifs), 200
+    except Exception as e: return jsonify({"error": str(e)}), 500
+
+@app.route('/api/notifications/read', methods=['PUT'])
+def mark_notifications_read():
+    email = request.json.get('email')
+    if not email: return jsonify({"error": "Email required"}), 400
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('UPDATE "Notifications" SET "IsRead" = TRUE WHERE "Email" = %s', (email,))
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Notifications marked as read"}), 200
+    except Exception as e: return jsonify({"error": str(e)}), 500
+
+# --- MESSAGES API ---
+@app.route('/api/messages', methods=['GET', 'POST'])
+def handle_messages():
+    if request.method == 'GET':
+        email = request.args.get('email')
+        if not email: return jsonify({"error": "Email required"}), 400
+        try:
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute('''
+                SELECT "MessageID" as id, "SenderEmail" as sender, "ReceiverEmail" as receiver, 
+                       "Content" as content, "IsRead" as is_read, "CreatedAt" as date 
+                FROM "Messages" 
+                WHERE "SenderEmail" = %s OR "ReceiverEmail" = %s 
+                ORDER BY "CreatedAt" ASC
+            ''', (email, email))
+            cols = [column[0] for column in c.description]
+            msgs = [dict(zip(cols, row)) for row in c.fetchall()]
+            
+            # Mark messages sent TO this user as read
+            c.execute('UPDATE "Messages" SET "IsRead" = TRUE WHERE "ReceiverEmail" = %s AND "IsRead" = FALSE', (email,))
+            conn.commit()
+            conn.close()
+            return jsonify(msgs), 200
+        except Exception as e: return jsonify({"error": str(e)}), 500
+        
+    elif request.method == 'POST':
+        data = request.get_json()
+        sender = data.get('sender')
+        receiver = data.get('receiver', 'admin@voxa.com') # Default fallback receiver
+        content = data.get('content')
+        if not all([sender, receiver, content]): return jsonify({"error": "Missing fields"}), 400
+        try:
+            conn = get_db_connection()
+            c = conn.cursor()
+            c.execute('INSERT INTO "Messages" ("SenderEmail", "ReceiverEmail", "Content") VALUES (%s, %s, %s)', (sender, receiver, content))
+            conn.commit()
+            conn.close()
+            return jsonify({"message": "Message sent successfully"}), 201
+        except Exception as e: return jsonify({"error": str(e)}), 500
+
 @app.route('/api/oauth-login', methods=['POST'])
 def oauth_login():
     data = request.get_json()
@@ -674,33 +1196,42 @@ def oauth_login():
 def login():
     try:
         data = request.get_json()
-        conn = get_db_connection()
-        if conn:
-            c = conn.cursor()
-            # 🚀 NEW: Select ALL the matrix columns!
-            c.execute("""SELECT "FullName", "Email", "PasswordHash", "Role", "AgencyName", "UnitName", "TeamName", "ValidatorScopes" FROM "Users" WHERE "Email"=%s""", (data.get('email'),))
-            user_row = c.fetchone()
-            conn.close()
+        if not data or not data.get('email') or not data.get('password'):
+            return jsonify({"error": "Missing email or password"}), 400
 
-            if user_row and bcrypt.checkpw(data.get('password').encode('utf-8'), user_row[2].encode('utf-8')):
-                role = user_row[3] if len(user_row) > 3 else 'Candidate'
-                
-                # 🚀 NEW: Send the exact matrix data back to the frontend!
-                return jsonify({
-                    "message": "Login successful", 
-                    "user": {
-                        "fullName": user_row[0], 
-                        "email": user_row[1], 
-                        "role": role, 
-                        "agencyName": user_row[4],
-                        "unitName": user_row[5],
-                        "teamName": user_row[6],
-                        "validatorScopes": user_row[7] if len(user_row) > 7 else "",
-                        "isAdmin": role in ['Admin', 'SuperAdmin']
-                    }
-                }), 200
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"error": "Database connection failed"}), 500
+
+        c = conn.cursor()
+        c.execute("""SELECT "FullName", "Email", "PasswordHash", "Role", "AgencyName", "UnitName", "TeamName", "ValidatorScopes", "ProfilePic" FROM "Users" WHERE "Email"=%s""", (data.get('email'),))
+        user_row = c.fetchone()
+        conn.close()
+
+        if not user_row:
             return jsonify({"error": "Invalid email or password"}), 401
-    except Exception as e: return jsonify({"error": str(e)}), 500
+
+        if not bcrypt.checkpw(data.get('password').encode('utf-8'), user_row[2].encode('utf-8')):
+            return jsonify({"error": "Invalid email or password"}), 401
+
+        role = user_row[3] if len(user_row) > 3 else 'Candidate'
+        
+        return jsonify({
+            "message": "Login successful", 
+            "user": {
+                "fullName": user_row[0], 
+                "email": user_row[1], 
+                "role": role, 
+                "agencyName": user_row[4],
+                "unitName": user_row[5],
+                "teamName": user_row[6],
+                "validatorScopes": user_row[7] if len(user_row) > 7 else "",
+                "profilePic": user_row[8] if len(user_row) > 8 else '',
+                "isAdmin": role in ['Admin', 'SuperAdmin', 'CEO', 'UnitManager', 'Leader', 'Recruiter', 'HR', 'AccountManager']
+            }
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/dashboard/<email>', methods=['GET'])
 def get_user_dashboard(email):
@@ -713,6 +1244,131 @@ def get_user_dashboard(email):
         conn.close()
         return jsonify(data)
     except: return jsonify([])
+
+@app.route('/api/profile/upload', methods=['POST'])
+def upload_profile_pic():
+    if 'file' not in request.files or 'email' not in request.form:
+        return jsonify({'error': 'Missing file or email'}), 400
+        
+    f = request.files['file']
+    email = request.form['email']
+    if f.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+        
+    try:
+        fn = f"profile_pics/{int(time.time())}_{f.filename}"
+        s3_client.upload_fileobj(f, R2_BUCKET_NAME, fn, ExtraArgs={'ContentType': f.content_type})
+        file_url = f"{R2_PUBLIC_URL}/{fn}"
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Database connection failed'}), 500
+            
+        c = conn.cursor()
+        c.execute('UPDATE "Users" SET "ProfilePic"=%s WHERE "Email"=%s', (file_url, email))
+        conn.commit()
+        conn.close()
+            
+        return jsonify({'message': 'Profile picture updated successfully', 'url': file_url}), 200
+    except Exception as e:
+        if conn: conn.close()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/profile/upload-resume', methods=['POST'])
+def upload_resume_file():
+    if 'file' not in request.files or 'email' not in request.form:
+        return jsonify({'error': 'Missing file or email'}), 400
+        
+    f = request.files['file']
+    email = request.form['email']
+    if f.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+        
+    try:
+        fn = f"resumes/{int(time.time())}_{f.filename}"
+        s3_client.upload_fileobj(f, R2_BUCKET_NAME, fn, ExtraArgs={'ContentType': f.content_type})
+        file_url = f"{R2_PUBLIC_URL}/{fn}"
+        
+        conn = get_db_connection()
+        if conn:
+            c = conn.cursor()
+            c.execute('UPDATE "Users" SET "ResumeUrl"=%s WHERE "Email"=%s', (file_url, email))
+            conn.commit()
+            conn.close()
+            
+        return jsonify({'message': 'Resume uploaded successfully', 'url': file_url}), 200
+    except Exception as e:
+        print(f"Resume Upload Error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/profile/upload-vn', methods=['POST'])
+def upload_default_vn():
+    email = request.form.get('email')
+    if 'voiceRecord' not in request.files or not email:
+        return jsonify({'error': 'File and email are required'}), 400
+        
+    f = request.files['voiceRecord']
+    try:
+        fn = f"VOICE_DEFAULT_{int(time.time())}.ogg"
+        s3_client.upload_fileobj(f, R2_BUCKET_NAME, fn, ExtraArgs={'ContentType': 'audio/ogg'})
+        
+        conn = get_db_connection()
+        if conn:
+            c = conn.cursor()
+            c.execute('UPDATE "Users" SET "DefaultVoiceNote"=%s WHERE "Email"=%s', (fn, email))
+            conn.commit()
+            conn.close()
+            
+        return jsonify({'message': 'Default Voice Note saved successfully!', 'fn': fn}), 200
+    except Exception as e:
+        print(f"Default VN Upload Error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/profile', methods=['GET'])
+def get_profile():
+    email = request.args.get('email')
+    if not email: return jsonify({"error": "Email required"}), 400
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('SELECT * FROM "Users" WHERE "Email" = %s', (email,))
+        cols = [column[0] for column in c.description]
+        row = c.fetchone()
+        conn.close()
+        if not row: return jsonify({"error": "Not found"}), 404
+        return jsonify(dict(zip(cols, row))), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/profile/update', methods=['PUT'])
+def update_profile():
+    data = request.get_json()
+    email = data.get('email')
+    if not email: return jsonify({"error": "Email required"}), 400
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("""
+            UPDATE "Users" SET
+                "FullName"=%s,
+                "NationalID"=%s, "Nationality"=%s, "DOB"=%s, "Faculty"=%s, "Address"=%s,
+                "Phone"=%s, "WhatsApp"=%s, "Gender"=%s, "GradStatus"=%s, "MilitaryStatus"=%s,
+                "EnglishLevel"=%s, "Experience"=%s, "ExperienceDetails"=%s,
+                "LinkedInUrl"=%s
+            WHERE "Email"=%s
+        """, (
+            data.get('fullName', ''),
+            data.get('nationalId', ''), data.get('nationality', 'Egyptian'), data.get('dob', ''), data.get('faculty', ''), data.get('address', ''),
+            data.get('phone', ''), data.get('whatsapp', ''), data.get('gender', ''), data.get('gradStatus', ''), data.get('militaryStatus', ''),
+            data.get('english', 'B2'), data.get('experience', ''), data.get('experienceDetails', ''),
+            data.get('linkedInUrl', ''), email
+        ))
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Profile updated successfully!"}), 200
+    except Exception as e:
+        print(f"Profile Update Error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/apply', methods=['POST'])
 def apply():
@@ -767,6 +1423,73 @@ def apply():
     except Exception as e: 
         print(f"Upload Error: {e}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/candidate/quick-apply', methods=['POST'])
+def quick_apply():
+    try:
+        email = request.form.get('email')
+        job_id = request.form.get('jobId')
+        use_default_vn = request.form.get('useDefaultVN') == 'true'
+        
+        if not email or not job_id:
+            return jsonify({"error": "Email and jobId are required"}), 400
+            
+        if not use_default_vn and 'voiceRecord' not in request.files:
+            return jsonify({"error": "Voice record is required if not using default"}), 400
+            
+        conn = get_db_connection()
+        c = conn.cursor()
+        
+        # Check if user profile is complete and get DefaultVoiceNote
+        c.execute("""SELECT "FullName", "NationalID", "Nationality", "DOB", "Faculty", "Address", "Phone", "WhatsApp", "Gender", "GradStatus", "MilitaryStatus", "EnglishLevel", "Experience", "DefaultVoiceNote" FROM "Users" WHERE "Email" = %s""", (email,))
+        user_row = c.fetchone()
+        if not user_row:
+            conn.close()
+            return jsonify({"error": "User not found"}), 404
+            
+        if not user_row[1] or not user_row[6]: # NationalID or Phone missing
+            conn.close()
+            return jsonify({"error": "PROFILE_INCOMPLETE", "message": "Please complete your profile details (National ID, Phone, etc.) before using Quick Apply."}), 400
+            
+        if use_default_vn and not user_row[13]:
+            conn.close()
+            return jsonify({"error": "No Default Voice Note found in your profile."}), 400
+            
+        # Get Job details
+        c.execute("""SELECT "JobTitle", "CompanyName" FROM "Jobs" WHERE "JobID" = %s""", (job_id,))
+        job_row = c.fetchone()
+        if not job_row:
+            conn.close()
+            return jsonify({"error": "Job not found"}), 404
+            
+        # Determine VN filename
+        fn = user_row[13] if use_default_vn else None
+        if not use_default_vn:
+            f = request.files['voiceRecord']
+            fn = f"VOICE_QUICK_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.ogg"
+            s3_client.upload_fileobj(f, R2_BUCKET_NAME, fn, ExtraArgs={'ContentType': 'audio/ogg'})
+        
+        # Insert Application
+        c.execute(
+            """INSERT INTO "JobApplications" 
+            ("JobTitle", "Company", "FullName", "Email", "Phone", "WhatsApp", "EnglishLevel", "Experience", 
+             "Gender", "GraduationStatus", "MilitaryStatus", "NationalID", "Nationality", "Address", 
+             "DateOfBirth", "FacultyUniversity", "VoiceRecordPath", "SubmittedAt", 
+             "RecruiterSource", "AgencyName", "UnitName", "TeamName") 
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,CURRENT_TIMESTAMP,%s,%s,%s,%s)""",
+            (job_row[0], job_row[1], user_row[0], email, user_row[6], user_row[7],
+             user_row[11], user_row[12], user_row[8], user_row[9], user_row[10],
+             user_row[1], user_row[2], user_row[5], user_row[3], user_row[4], 
+             fn, 'Direct/Organic', 'Voxa', 'Direct', 'Direct')
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Quick Apply Successful!"}), 201
+        
+    except Exception as e:
+        print(f"Quick Apply Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/admin/analyze/<int:id>', methods=['POST'])
 def analyze(id):
@@ -979,7 +1702,7 @@ def create_staff():
         conn.commit()
         return jsonify({"message": f"{target_role} {name} successfully created in {target_agency}!"}), 201
     except Exception as e:
-        print(f"❌ Database Error: {e}")
+        print(f"[Error] Database Error: {e}")
         return jsonify({"error": "Failed to create staff member."}), 500
     finally:
         cur.close()
@@ -1063,7 +1786,7 @@ def get_structure():
 
         return jsonify(structure), 200
     except Exception as e:
-        print(f"❌ Structure Fetch Error: {e}")
+        print(f"[Error] Structure Fetch Error: {e}")
         return jsonify({}), 500
 
 @app.route('/api/team-stats', methods=['GET'])
@@ -1100,7 +1823,7 @@ def get_team_stats():
         result = [{"recruiter": row[0], "count": row[1]} for row in stats]
         return jsonify(result), 200
     except Exception as e:
-        print(f"❌ Stats Error: {e}")
+        print(f"[Error] Stats Error: {e}")
         return jsonify({"error": "Failed to fetch stats"}), 500
     finally:
         cur.close()
@@ -1140,7 +1863,7 @@ def schedule_interview():
         return jsonify({"message": "Interview slot locked in!"}), 200
     except Exception as e:
         conn.rollback()
-        print(f"❌ Schedule Error: {e}")
+        print(f"[Error] Schedule Error: {e}")
         return jsonify({"error": "Failed to schedule interview"}), 500
     finally:
         cur.close()
@@ -1186,7 +1909,7 @@ def get_pending_staff():
             })
         return jsonify(result), 200
     except Exception as e:
-        print(f"❌ Pending Fetch Error: {e}")
+        print(f"[Error] Pending Fetch Error: {e}")
         return jsonify({"error": "Failed to fetch pending staff"}), 500
     finally:
         if 'cur' in locals(): cur.close()
@@ -1212,7 +1935,7 @@ def approve_staff():
         conn.commit()
         return jsonify({"message": f"Staff member successfully {action}d!"}), 200
     except Exception as e:
-        print(f"❌ Approval Error: {e}")
+        print(f"[Error] Approval Error: {e}")
         return jsonify({"error": "Failed to process approval"}), 500
     finally:
         if 'cur' in locals(): cur.close()
@@ -1321,7 +2044,7 @@ def get_admin_stats():
         }), 200
 
     except Exception as e:
-        print(f"❌ Admin Stats Error: {e}")
+        print(f"[Error] Admin Stats Error: {e}")
         return jsonify({"error": "Failed to fetch admin stats"}), 500
     finally:
         if 'cur' in locals() and cur: cur.close()
@@ -1408,7 +2131,7 @@ def handle_contact():
 
         return jsonify({"message": "Message sent successfully!"}), 200
     except Exception as e:
-        print(f"❌ Email Sending Error: {e}")
+        print(f"[Error] Email Sending Error: {e}")
         return jsonify({"error": "Failed to send the email. Please try again later."}), 500
 
 if __name__ == '__main__': app.run(debug=True, port=5000, use_reloader=False)
