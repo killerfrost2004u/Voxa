@@ -1,4 +1,6 @@
-# 🐺 Voxa (HR) - AI-Powered Recruitment & Voice Analysis
+# 🐺 Voxa - AI-Powered Recruitment & Voice Analysis
+
+![Voxa Social Profile Picture](public/voxa-v-logo.png)
 
 Voxa is an end-to-end automated recruitment platform designed to revolutionize how companies screen candidates for communication-heavy roles. Instead of reading traditional CVs, Voxa allows candidates to apply using **Voice Notes**, which are then processed by a native multimodal AI to act as an expert technical recruiter.
 
@@ -10,9 +12,9 @@ Voxa is an end-to-end automated recruitment platform designed to revolutionize h
   - Grammar, Fluency, and Pronunciation breakdowns
   - Blind Accent Profiling (e.g., "Clear Egyptian", "Native-like")
   - "Recruiter's Ear" calibration to detect script-reading vs. spontaneous storytelling.
-- **💼 Dynamic Job Management:** A full CRUD admin dashboard backed by SQL Server to create, hold, or delete job postings.
+- **💼 Dynamic Job Management:** A full CRUD admin dashboard built on a robust N-Tier architecture (Repositories, Policies, Blueprints).
 - **📱 Automated WhatsApp Integration:** Integrated with Twilio to automatically send beautifully formatted, dynamic job offers (or alternative role offers/rejections) directly to the candidate's WhatsApp with a single click.
-- **🔐 Secure Authentication:** Bcrypt-hashed passwords for admin/user portal access.
+- **🔐 Secure Authentication:** Bcrypt-hashed passwords for admin/user portal access backed by dynamic Role-Based Access Control (RBAC).
 
 ## 🚀 The Engineering Journey & AI Architecture
 
@@ -30,16 +32,33 @@ Building the AI pipeline for Voxa was an iterative process to find the perfect b
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** HTML5, CSS3, Vanilla JavaScript
-- **Backend:** Python, Flask, PyODBC (SQL Server)
+- **Frontend:** React, Vite, Tailwind CSS (Single Page Application)
+- **Backend:** Python, Flask (N-Tier Architecture with Blueprints)
 - **AI Engine:** Google Gemini 2.5 Flash API (Native Audio)
-- **Integrations:** Twilio API (WhatsApp Sandbox)
-- **Database:** Microsoft SQL Server
+- **Integrations:** Twilio API (WhatsApp Sandbox), Cloudflare R2 (Object Storage)
+- **Database:** PostgreSQL (Neon Cloud)
+- **Deployment:** Vercel
 
 ## ⚙️ Local Setup Instructions
 
 1. **Clone the repository**
    ```bash
-   git clone [https://github.com/killerfrost2004u/Voxa.git](https://github.com/killerfrost2004u/Voxa.git)
+   git clone https://github.com/killerfrost2004u/Voxa.git
    cd Voxa
+   ```
+
+2. **Frontend Setup**
+   ```bash
+   cd frontend-new
+   npm install
+   npm run dev
+   ```
+
+3. **Backend Setup**
+   ```bash
+   cd backend
+   python -m venv .venv
+   source .venv/bin/activate  # Or .venv\Scripts\activate on Windows
+   pip install -r requirements.txt
+   python app.py
    ```
