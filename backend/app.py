@@ -1447,9 +1447,10 @@ def quick_apply():
             conn.close()
             return jsonify({"error": "User not found"}), 404
             
-        if not user_row[1] or not user_row[6]: # NationalID or Phone missing
+        required_indices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        if any(not user_row[i] or str(user_row[i]).strip() == '' for i in required_indices):
             conn.close()
-            return jsonify({"error": "PROFILE_INCOMPLETE", "message": "Please complete your profile details (National ID, Phone, etc.) before using Quick Apply."}), 400
+            return jsonify({"error": "PROFILE_INCOMPLETE", "message": "Please complete your profile details (all personal info, education, and experience) before using Quick Apply."}), 400
             
         if use_default_vn and not user_row[13]:
             conn.close()
