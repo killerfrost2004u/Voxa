@@ -254,8 +254,8 @@ export default function CandidateProfile() {
       <div className="bg-[#111115] border border-white/5 rounded-3xl p-6 md:p-8 space-y-8 shadow-2xl">
         
         {/* Avatar Section */}
-        <div className="flex items-center gap-6 pb-8 border-b border-white/10">
-          <div className="relative group">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-6 pb-8 border-b border-white/10">
+          <div className="relative group shrink-0">
             <div className="w-28 h-28 rounded-full overflow-hidden bg-white/10 border-2 border-white/20 flex items-center justify-center">
               {user?.profilePic ? (
                 <img src={user.profilePic} alt="Profile" className="w-full h-full object-cover" />
@@ -272,13 +272,13 @@ export default function CandidateProfile() {
             </button>
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleProfilePicChange} />
           </div>
-          <div>
-            <h3 className="text-xl font-bold text-white mb-1">{formData.fullName || 'Candidate'}</h3>
-            <p className="text-gray-400 mb-3 text-sm">{user?.email}</p>
+          <div className="flex-1 min-w-0 w-full">
+            <h3 className="text-xl font-bold text-white mb-1 truncate">{formData.fullName || 'Candidate'}</h3>
+            <p className="text-gray-400 mb-4 text-sm truncate">{user?.email}</p>
             <button 
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingPic}
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-medium transition-colors"
+              className="w-full sm:w-auto px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-medium transition-colors"
             >
               Change Picture
             </button>
@@ -309,15 +309,15 @@ export default function CandidateProfile() {
             <div className="col-span-2">
               <label className="block text-xs text-gray-400 mb-1">Date of Birth</label>
               <div className="flex gap-2">
-                <select name="dobDay" value={formData.dobDay} onChange={handleChange} className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:border-voxa-cyan outline-none">
+                <select name="dobDay" value={formData.dobDay} onChange={handleChange} className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl px-2 sm:px-3 py-2 text-white text-sm focus:border-voxa-cyan outline-none">
                   <option value="" className="bg-[#0F0F12]">Day</option>
                   {days.map(d => <option key={d} value={d} className="bg-[#0F0F12]">{d}</option>)}
                 </select>
-                <select name="dobMonth" value={formData.dobMonth} onChange={handleChange} className="flex-[2] bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:border-voxa-cyan outline-none">
+                <select name="dobMonth" value={formData.dobMonth} onChange={handleChange} className="flex-[2] min-w-0 bg-white/5 border border-white/10 rounded-xl px-2 sm:px-3 py-2 text-white text-sm focus:border-voxa-cyan outline-none">
                   <option value="" className="bg-[#0F0F12]">Month</option>
                   {months.map(m => <option key={m.value} value={m.value} className="bg-[#0F0F12]">{m.label}</option>)}
                 </select>
-                <select name="dobYear" value={formData.dobYear} onChange={handleChange} className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:border-voxa-cyan outline-none">
+                <select name="dobYear" value={formData.dobYear} onChange={handleChange} className="flex-1 min-w-0 bg-white/5 border border-white/10 rounded-xl px-2 sm:px-3 py-2 text-white text-sm focus:border-voxa-cyan outline-none">
                   <option value="" className="bg-[#0F0F12]">Year</option>
                   {years.map(y => <option key={y} value={y} className="bg-[#0F0F12]">{y}</option>)}
                 </select>
