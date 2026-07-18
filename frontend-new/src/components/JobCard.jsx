@@ -47,7 +47,7 @@ export default function JobCard({ job }) {
     const previousState = isSaved;
     setIsSaved(!isSaved);
     try {
-      await api.candidate.toggleSavedJob(user.email, job.id || job.JobID);
+      await api.candidate.toggleSavedJob(job.id || job.JobID, user.email);
     } catch (err) {
       console.error('Failed to toggle save:', err);
       setIsSaved(previousState);
@@ -120,7 +120,7 @@ export default function JobCard({ job }) {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={handleSaveToggle} className="p-2 border border-white/10 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
-            <Star className="w-4 h-4" fill={isSaved ? "currentColor" : "none"} className={isSaved ? "w-5 h-5 text-yellow-400" : "w-5 h-5"} />
+            <Star fill={isSaved ? "currentColor" : "none"} className={isSaved ? "w-5 h-5 text-yellow-400" : "w-5 h-5 text-gray-400"} />
           </button>
           <button onClick={handleQuickApplyClick} className="bg-voxa-cyan text-black font-bold py-1.5 px-3 rounded-lg text-sm hover:bg-[#00cce6] transition-colors flex items-center gap-1 shadow-[0_0_10px_rgba(0,229,255,0.3)]">
             <Zap className="w-4 h-4" /> Quick

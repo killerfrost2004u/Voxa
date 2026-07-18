@@ -58,7 +58,7 @@ export default function JobDetails() {
     const previousState = isSaved;
     setIsSaved(!isSaved);
     try {
-      await api.candidate.toggleSavedJob(user.email, job.id);
+      await api.candidate.toggleSavedJob(job.id, user.email);
     } catch (err) {
       console.error('Failed to toggle save:', err);
       setIsSaved(previousState);

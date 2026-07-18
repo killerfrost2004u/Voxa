@@ -6,6 +6,7 @@ import useAudioRecorder from '../hooks/useAudioRecorder';
 import { api } from '../services/api';
 import DateOfBirthSelector from '../components/DateOfBirthSelector';
 import { useApplicationForm } from '../hooks/useApplicationForm';
+import { useAuth } from '../context/AuthContext';
 
 export default function ApplyPage() {
   const { id } = useParams();
